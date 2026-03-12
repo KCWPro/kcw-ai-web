@@ -17,7 +17,7 @@ Review this customer lead and return a professional internal summary.
 Customer info:
 - Name: ${body.customer_name}
 - Phone: ${body.phone}
-- City: ${body.city}
+- Service address: ${body.service_address}
 - Service type: ${body.service_type}
 - Urgency: ${body.urgency}
 - Property type: ${body.property_type}
@@ -46,7 +46,7 @@ Summary: <write a short internal summary in English, under 100 words, and mentio
       status: 'new',
       customer_name: body.customer_name,
       phone: body.phone,
-      city: body.city,
+      service_address: body.service_address,
       service_type: body.service_type,
       urgency: body.urgency,
       property_type: body.property_type,

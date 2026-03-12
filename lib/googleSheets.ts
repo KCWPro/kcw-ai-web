@@ -24,7 +24,7 @@ export async function appendLeadToGoogleSheet(lead: any) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:L',
+    range: 'Sheet1!A:M',
     valueInputOption: 'RAW',
     requestBody: {
       values: [[
@@ -33,10 +33,11 @@ export async function appendLeadToGoogleSheet(lead: any) {
         lead.status || '',
         lead.customer_name || '',
         lead.phone || '',
-        lead.city || '',
+        lead.service_address || '',
         lead.service_type || '',
         lead.urgency || '',
         lead.property_type || '',
+        lead.source || '',
         lead.problem_duration || '',
         lead.customer_notes || '',
         lead.ai_result || '',
