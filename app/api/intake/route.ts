@@ -60,13 +60,13 @@ Summary: <write a short internal summary in English, under 100 words>
       success: true,
       result: resultText,
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error(error);
 
     return Response.json(
       {
         success: false,
-        message: 'Something went wrong.',
+        message: error?.message || 'Something went wrong.',
       },
       { status: 500 }
     );
