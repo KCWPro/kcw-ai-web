@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { appendLeadToGoogleSheet } from '@/lib/googleSheets';
 
 const client = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -36,9 +37,28 @@ Summary: <write a short internal summary in English, under 100 words>
       input: prompt,
     });
 
+    const resultText = response.output_text;
+
+    const newLead = {
+      id: Date.now(),
+      created_at: new Date().toISOString(),
+      status: 'new',
+      customer_name: body.customer_name,
+      phone: body.phone,
+      city: body.city,
+      service_type: body.service_type,
+      urgency: body.urgency,
+      property_type: body.property_type,
+      problem_duration: body.problem_duration,
+      customer_notes: body.customer_notes,
+      ai_result: resultText,
+    };
+
+    await appendLeadToGoogleSheet(newLead);
+
     return Response.json({
       success: true,
-      result: response.output_text,
+      result: resultText,
     });
   } catch (error) {
     console.error(error);
