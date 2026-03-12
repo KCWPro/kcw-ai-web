@@ -21,7 +21,6 @@ Customer info:
 - Service type: ${body.service_type}
 - Urgency: ${body.urgency}
 - Property type: ${body.property_type}
-- Source: ${body.source || 'unknown'}
 - Problem duration: ${body.problem_duration}
 - Notes: ${body.customer_notes}
 
@@ -30,7 +29,7 @@ Please return in exactly this format:
 Lead Quality: high / medium / low
 Needs Visit: yes / no
 Priority: urgent / normal / low
-Summary: <write a short internal summary in English, under 100 words, and mention the source channel if provided>
+Summary: <write a short internal summary in English, under 100 words>
 `;
 
     const response = await client.responses.create({
@@ -50,7 +49,6 @@ Summary: <write a short internal summary in English, under 100 words, and mentio
       service_type: body.service_type,
       urgency: body.urgency,
       property_type: body.property_type,
-      source: body.source || '',
       problem_duration: body.problem_duration,
       customer_notes: body.customer_notes,
       ai_result: resultText,
