@@ -1,10 +1,10 @@
 import { google } from 'googleapis';
 
 export async function appendLeadToGoogleSheet(lead: any) {
-  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
+  const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_V2;
 
   if (!rawJson) {
-    throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_JSON');
+    throw new Error('Missing GOOGLE_SERVICE_ACCOUNT_JSON_V2');
   }
 
   const credentials = JSON.parse(rawJson);
