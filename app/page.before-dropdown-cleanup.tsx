@@ -7,10 +7,10 @@ export default function Home() {
     customer_name: '',
     phone: '',
     service_address: '',
-    service_type: '',
-    urgency: '',
-    property_type: '',
-    source: '',
+    service_type: 'water heater',
+    urgency: 'normal',
+    property_type: 'residential',
+    source: 'Google',
     problem_duration: '',
     customer_notes: '',
   });
@@ -147,63 +147,58 @@ export default function Home() {
             <select
               value={form.service_type}
               onChange={(e) => updateField('service_type', e.target.value)}
-              required
               style={inputStyle}
             >
-              <option value="" disabled>
-                Service Type / 服务类型
-              </option>
-              <option value="water heater">Water Heater / 热水器</option>
-              <option value="drain">Drain / 下水疏通</option>
-              <option value="main water line">Main Water Line / 主水管</option>
-              <option value="gas line">Gas Line / 煤气管</option>
-              <option value="other">Other / 其他</option>
+              <option>water heater</option>
+              <option>drain</option>
+              <option>main water line</option>
+              <option>gas line</option>
+              <option>other</option>
             </select>
 
             <select
               value={form.urgency}
               onChange={(e) => updateField('urgency', e.target.value)}
-              required
               style={inputStyle}
             >
-              <option value="" disabled>
-                Urgency / 紧急程度
-              </option>
-              <option value="urgent">Urgent / 紧急</option>
-              <option value="normal">Normal / 普通</option>
-              <option value="low">Low / 不急</option>
+              <option>urgent</option>
+              <option>normal</option>
+              <option>low</option>
             </select>
 
             <select
               value={form.property_type}
               onChange={(e) => updateField('property_type', e.target.value)}
-              required
               style={inputStyle}
             >
-              <option value="" disabled>
-                Property Type / 物业类型
-              </option>
-              <option value="residential">Residential / 住宅</option>
-              <option value="commercial">Commercial / 商业</option>
+              <option>residential</option>
+              <option>commercial</option>
             </select>
 
             <select
               value={form.source}
               onChange={(e) => updateField('source', e.target.value)}
-              required
               style={inputStyle}
             >
-              <option value="" disabled>
-                How did you find us? / 您是通过什么渠道找到我们的？
-              </option>
-              <option value="Google">Google</option>
-              <option value="Yelp">Yelp</option>
-              <option value="WeChat">WeChat / 微信</option>
-              <option value="Referral">Referral / 朋友介绍</option>
-              <option value="TikTok">TikTok</option>
-              <option value="Website">Website / 网站</option>
-              <option value="Other">Other / 其他</option>
+              <option>Google</option>
+              <option>Yelp</option>
+              <option>WeChat</option>
+              <option>Referral</option>
+              <option>TikTok</option>
+              <option>Website</option>
+              <option>Other</option>
             </select>
+
+            <div
+              style={{
+                fontSize: '13px',
+                color: '#6b7280',
+                marginTop: '-4px',
+                marginBottom: '4px',
+              }}
+            >
+              How did you find us? / 您是通过什么渠道找到我们的？
+            </div>
 
             <input
               placeholder="Problem Duration / 问题持续时间"
