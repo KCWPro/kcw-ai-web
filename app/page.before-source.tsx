@@ -10,7 +10,6 @@ export default function Home() {
     service_type: 'water heater',
     urgency: 'normal',
     property_type: 'residential',
-    source: 'Google',
     problem_duration: '',
     customer_notes: '',
   });
@@ -173,20 +172,6 @@ export default function Home() {
             >
               <option>residential</option>
               <option>commercial</option>
-            </select>
-
-            <select
-              value={form.source}
-              onChange={(e) => updateField('source', e.target.value)}
-              style={inputStyle}
-            >
-              <option>Google</option>
-              <option>Yelp</option>
-              <option>WeChat</option>
-              <option>Referral</option>
-              <option>TikTok</option>
-              <option>Website</option>
-              <option>Other</option>
             </select>
 
             <input
