@@ -11,7 +11,6 @@ export default function Home() {
     urgency: 'normal',
     property_type: 'residential',
     source: 'Google',
-    quote_amount: '',
     problem_duration: '',
     customer_notes: '',
   });
@@ -189,13 +188,6 @@ export default function Home() {
               <option>Website</option>
               <option>Other</option>
             </select>
-
-            <input
-              placeholder="Quote Amount / 报价金额 (optional)"
-              value={form.quote_amount}
-              onChange={(e) => updateField('quote_amount', e.target.value)}
-              style={inputStyle}
-            />
 
             <input
               placeholder="Problem Duration / 问题持续时间"
