@@ -38,6 +38,21 @@ export default function LeadsPage() {
     Record<string, EditableLeadFields>
   >({});
   const [savingId, setSavingId] = useState<string>('');
+  const [saveMessage, setSaveMessage] = useState('');
+  const [saveMessageType, setSaveMessageType] = useState<
+    'success' | 'error' | ''
+  >('');
+
+  function showMessage(message: string, type: 'success' | 'error') {
+    setSaveMessage(message);
+    setSaveMessageType(type);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+
+    window.setTimeout(() => {
+      setSaveMessage('');
+      setSaveMessageType('');
+    }, 3000);
+  }
 
   async function loadLeads() {
     try {
@@ -65,6 +80,7 @@ export default function LeadsPage() {
       setEditableFields(draftMap);
     } catch (error) {
       console.error(error);
+      showMessage('Failed to load leads', 'error');
     } finally {
       setLoading(false);
     }
@@ -104,6 +120,8 @@ export default function LeadsPage() {
 
     try {
       setSavingId(key);
+      setSaveMessage('');
+      setSaveMessageType('');
 
       const res = await fetch('/api/update-status', {
         method: 'POST',
@@ -121,13 +139,13 @@ export default function LeadsPage() {
 
       if (data.success) {
         await loadLeads();
-        alert('Saved successfully');
+        showMessage('Saved successfully', 'success');
       } else {
-        alert(data.message || 'Failed to save lead');
+        showMessage(data.message || 'Failed to save lead', 'error');
       }
     } catch (error) {
       console.error(error);
-      alert('Failed to save lead');
+      showMessage('Failed to save lead', 'error');
     } finally {
       setSavingId('');
     }
@@ -177,6 +195,30 @@ export default function LeadsPage() {
             ← Back to Intake Form
           </Link>
         </div>
+
+        {saveMessage ? (
+          <div
+            style={{
+              position: 'sticky',
+              top: '12px',
+              zIndex: 20,
+              marginBottom: '16px',
+              padding: '14px 16px',
+              borderRadius: '10px',
+              background: saveMessageType === 'success' ? '#dcfce7' : '#fee2e2',
+              color: saveMessageType === 'success' ? '#166534' : '#991b1b',
+              border:
+                saveMessageType === 'success'
+                  ? '1px solid #86efac'
+                  : '1px solid #fca5a5',
+              fontSize: '14px',
+              fontWeight: 700,
+              boxShadow: '0 4px 12px rgba(0,0,0,0.08)',
+            }}
+          >
+            {saveMessage}
+          </div>
+        ) : null}
 
         <div
           style={{
