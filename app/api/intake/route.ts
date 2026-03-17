@@ -1,29 +1,34 @@
 import OpenAI from 'openai';
 import { appendLeadToGoogleSheet } from '@/lib/googleSheets';
 
-const client = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+type IntakeBody = {
+  customer_name?: string;
+  phone?: string;
+  service_address?: string;
+  service_type?: string;
+  urgency?: string;
+  property_type?: string;
+  source?: string;
+  problem_duration?: string;
+  customer_notes?: string;
+};
 
-export async function POST(req: Request) {
-  try {
-    const body = await req.json();
-
-    const prompt = `
+function buildPrompt(body: IntakeBody) {
+  return `
 You are the intake assistant for KCW Construction & Plumbing Inc.
 
 Review this customer lead and return a professional internal summary.
 
 Customer info:
-- Name: ${body.customer_name}
-- Phone: ${body.phone}
-- Service address: ${body.service_address}
-- Service type: ${body.service_type}
-- Urgency: ${body.urgency}
-- Property type: ${body.property_type}
+- Name: ${body.customer_name || ''}
+- Phone: ${body.phone || ''}
+- Service address: ${body.service_address || ''}
+- Service type: ${body.service_type || ''}
+- Urgency: ${body.urgency || ''}
+- Property type: ${body.property_type || ''}
 - Source: ${body.source || 'unknown'}
-- Problem duration: ${body.problem_duration}
-- Notes: ${body.customer_notes}
+- Problem duration: ${body.problem_duration || ''}
+- Notes: ${body.customer_notes || ''}
 
 Please return in exactly this format:
 
@@ -32,13 +37,34 @@ Needs Visit: yes / no
 Priority: urgent / normal / low
 Summary: <write a short internal summary in English, under 100 words, and mention the source channel if provided>
 `;
+}
 
-    const response = await client.responses.create({
-      model: process.env.OPENAI_MODEL || 'gpt-5-mini',
-      input: prompt,
-    });
+function buildFallbackSummary(body: IntakeBody) {
+  const urgency = body.urgency || 'normal';
+  const source = body.source || 'unknown';
+  return `Lead Quality: medium\nNeeds Visit: yes\nPriority: ${urgency}\nSummary: Manual fallback summary for ${body.customer_name || 'new lead'} (${body.service_type || 'service request'}) from ${source}. Review intake details and call customer to confirm scope.`;
+}
 
-    const resultText = response.output_text;
+async function generateAiSummary(body: IntakeBody) {
+  const apiKey = process.env.OPENAI_API_KEY;
+
+  if (!apiKey) {
+    return buildFallbackSummary(body);
+  }
+
+  const client = new OpenAI({ apiKey });
+  const response = await client.responses.create({
+    model: process.env.OPENAI_MODEL || 'gpt-5-mini',
+    input: buildPrompt(body),
+  });
+
+  return response.output_text || buildFallbackSummary(body);
+}
+
+export async function POST(req: Request) {
+  try {
+    const body: IntakeBody = await req.json();
+    const resultText = await generateAiSummary(body);
 
     const newLead = {
       id: Date.now(),
@@ -62,13 +88,14 @@ Summary: <write a short internal summary in English, under 100 words, and mentio
       success: true,
       result: resultText,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error(error);
+    const message = error instanceof Error ? error.message : 'Something went wrong.';
 
     return Response.json(
       {
         success: false,
-        message: error?.message || 'Something went wrong.',
+        message,
       },
       { status: 500 }
     );
