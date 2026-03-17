@@ -1,8 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo, useState } from "react";
-import { internalLeads, LeadStatus, statusLabels } from "@/lib/internalLeads";
+import { useEffect, useMemo, useState } from "react";
+import { LeadStatus, statusLabels } from "@/lib/internalLeads";
+
+type InternalLeadRow = {
+  id: string;
+  customer_name: string;
+  phone: string;
+  city: string;
+  service_type: string;
+  urgency: string;
+  source: string;
+  status: string;
+};
 
 const statusOptions: Array<{ label: string; value: "all" | LeadStatus }> = [
   { label: "All Status", value: "all" },
@@ -17,9 +28,20 @@ const statusOptions: Array<{ label: string; value: "all" | LeadStatus }> = [
 export default function InternalLeadsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
+  const [leads, setLeads] = useState<InternalLeadRow[]>([]);
+
+  useEffect(() => {
+    async function loadLeads() {
+      const res = await fetch("/api/internal/leads", { cache: "no-store" });
+      const data = await res.json();
+      setLeads(data.leads || []);
+    }
+
+    loadLeads();
+  }, []);
 
   const filteredLeads = useMemo(() => {
-    return internalLeads.filter((lead) => {
+    return leads.filter((lead) => {
       const matchSearch =
         lead.customer_name.toLowerCase().includes(search.toLowerCase()) ||
         lead.phone.includes(search) ||
@@ -29,7 +51,7 @@ export default function InternalLeadsPage() {
       const matchStatus = status === "all" || lead.status === status;
       return matchSearch && matchStatus;
     });
-  }, [search, status]);
+  }, [search, status, leads]);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -86,7 +108,9 @@ export default function InternalLeadsPage() {
                     <td className="px-4 py-3">{lead.service_type}</td>
                     <td className="px-4 py-3 capitalize">{lead.urgency}</td>
                     <td className="px-4 py-3">{lead.source}</td>
-                    <td className="px-4 py-3">{statusLabels[lead.status]}</td>
+                    <td className="px-4 py-3">
+                      {statusLabels[lead.status as LeadStatus] || lead.status}
+                    </td>
                   </tr>
                 ))}
               </tbody>

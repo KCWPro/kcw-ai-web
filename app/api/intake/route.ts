@@ -1,14 +1,16 @@
 import OpenAI from 'openai';
-import { appendLeadToGoogleSheet } from '@/lib/googleSheets';
+import { appendInternalLeadToGoogleSheet, type StoredLead } from '@/lib/internalLeadsStore';
 
 type IntakeBody = {
   customer_name?: string;
   phone?: string;
+  city?: string;
   service_address?: string;
   service_type?: string;
   urgency?: string;
   property_type?: string;
   source?: string;
+  quote_amount?: string;
   problem_duration?: string;
   customer_notes?: string;
 };
@@ -22,6 +24,7 @@ Review this customer lead and return a professional internal summary.
 Customer info:
 - Name: ${body.customer_name || ''}
 - Phone: ${body.phone || ''}
+- City: ${body.city || ''}
 - Service address: ${body.service_address || ''}
 - Service type: ${body.service_type || ''}
 - Urgency: ${body.urgency || ''}
@@ -40,9 +43,8 @@ Summary: <write a short internal summary in English, under 100 words, and mentio
 }
 
 function buildFallbackSummary(body: IntakeBody) {
-  const urgency = body.urgency || 'normal';
   const source = body.source || 'unknown';
-  return `Lead Quality: medium\nNeeds Visit: yes\nPriority: ${urgency}\nSummary: Manual fallback summary for ${body.customer_name || 'new lead'} (${body.service_type || 'service request'}) from ${source}. Review intake details and call customer to confirm scope.`;
+  return `Lead Quality: medium\nNeeds Visit: yes\nPriority: normal\nSummary: Manual fallback summary for ${body.customer_name || 'new lead'} (${body.service_type || 'service request'}) from ${source}. Review intake details and call customer to confirm scope.`;
 }
 
 async function generateAiSummary(body: IntakeBody) {
@@ -61,32 +63,46 @@ async function generateAiSummary(body: IntakeBody) {
   return response.output_text || buildFallbackSummary(body);
 }
 
+function resolveCity(body: IntakeBody) {
+  if (body.city?.trim()) {
+    return body.city.trim();
+  }
+
+  if (body.service_address?.trim()) {
+    return body.service_address.split(',')[0]?.trim() || 'Unknown';
+  }
+
+  return 'Unknown';
+}
+
 export async function POST(req: Request) {
   try {
     const body: IntakeBody = await req.json();
-    const resultText = await generateAiSummary(body);
+    const aiSummary = await generateAiSummary(body);
 
-    const newLead = {
-      id: Date.now(),
-      created_at: new Date().toISOString(),
+    const lead: StoredLead = {
+      id: `lead-${Date.now()}`,
+      customer_name: body.customer_name || '',
+      phone: body.phone || '',
+      city: resolveCity(body),
+      service_type: body.service_type || '',
+      urgency: body.urgency || 'normal',
+      property_type: body.property_type || '',
+      source: body.source || 'website',
+      quote_amount: body.quote_amount || '',
+      problem_duration: body.problem_duration || '',
+      customer_notes: body.customer_notes || '',
+      ai_summary: aiSummary,
       status: 'new',
-      customer_name: body.customer_name,
-      phone: body.phone,
-      service_address: body.service_address,
-      service_type: body.service_type,
-      urgency: body.urgency,
-      property_type: body.property_type,
-      source: body.source || '',
-      problem_duration: body.problem_duration,
-      customer_notes: body.customer_notes,
-      ai_result: resultText,
+      created_at: new Date().toISOString(),
     };
 
-    await appendLeadToGoogleSheet(newLead);
+    await appendInternalLeadToGoogleSheet(lead);
 
     return Response.json({
       success: true,
-      result: resultText,
+      result: aiSummary,
+      lead,
     });
   } catch (error: unknown) {
     console.error(error);
