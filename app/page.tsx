@@ -94,7 +94,7 @@ export default function HomePage() {
                 Call Now
               </a>
               <a
-                href="tel:6265037777"
+                href="https://app.kcwpro.com"
                 className="inline-flex items-center justify-center rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
               >
                 Get Free Quote
