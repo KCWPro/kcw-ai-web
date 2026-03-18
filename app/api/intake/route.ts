@@ -1,3 +1,4 @@
+// app/api/intake/route.ts
 import OpenAI from 'openai';
 import { appendInternalLeadToGoogleSheet, type StoredLead } from '@/lib/internalLeadsStore';
 
