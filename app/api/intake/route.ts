@@ -1,3 +1,4 @@
+// app/api/intake/route.ts
 import OpenAI from 'openai';
 import { appendInternalLeadToGoogleSheet, type StoredLead } from '@/lib/internalLeadsStore';
 
@@ -5,7 +6,6 @@ type IntakeBody = {
   customer_name?: string;
   phone?: string;
   city?: string;
-  service_address?: string;
   service_type?: string;
   urgency?: string;
   property_type?: string;
@@ -25,11 +25,11 @@ Customer info:
 - Name: ${body.customer_name || ''}
 - Phone: ${body.phone || ''}
 - City: ${body.city || ''}
-- Service address: ${body.service_address || ''}
 - Service type: ${body.service_type || ''}
 - Urgency: ${body.urgency || ''}
 - Property type: ${body.property_type || ''}
 - Source: ${body.source || 'unknown'}
+- Quote amount: ${body.quote_amount || ''}
 - Problem duration: ${body.problem_duration || ''}
 - Notes: ${body.customer_notes || ''}
 
@@ -44,7 +44,26 @@ Summary: <write a short internal summary in English, under 100 words, and mentio
 
 function buildFallbackSummary(body: IntakeBody) {
   const source = body.source || 'unknown';
-  return `Lead Quality: medium\nNeeds Visit: yes\nPriority: normal\nSummary: Manual fallback summary for ${body.customer_name || 'new lead'} (${body.service_type || 'service request'}) from ${source}. Review intake details and call customer to confirm scope.`;
+  const city = body.city || 'unknown';
+  const quoteAmount = body.quote_amount || 'not provided';
+
+  return `Lead Quality: medium\nNeeds Visit: yes\nPriority: normal\nSummary: Manual fallback summary for ${body.customer_name || 'new lead'} in ${city} (${body.service_type || 'service request'}) from ${source}. Quote amount: ${quoteAmount}. Review intake details and call customer to confirm scope.`;
+}
+
+function validateBody(body: IntakeBody) {
+  if (!body.customer_name?.trim()) {
+    return 'Missing customer_name';
+  }
+
+  if (!body.phone?.trim()) {
+    return 'Missing phone';
+  }
+
+  if (!body.service_type?.trim()) {
+    return 'Missing service_type';
+  }
+
+  return null;
 }
 
 async function generateAiSummary(body: IntakeBody) {
@@ -63,28 +82,22 @@ async function generateAiSummary(body: IntakeBody) {
   return response.output_text || buildFallbackSummary(body);
 }
 
-function resolveCity(body: IntakeBody) {
-  if (body.city?.trim()) {
-    return body.city.trim();
-  }
-
-  if (body.service_address?.trim()) {
-    return body.service_address.split(',')[0]?.trim() || 'Unknown';
-  }
-
-  return 'Unknown';
-}
-
 export async function POST(req: Request) {
   try {
     const body: IntakeBody = await req.json();
+    const validationError = validateBody(body);
+
+    if (validationError) {
+      return Response.json({ success: false, message: validationError }, { status: 400 });
+    }
+
     const aiSummary = await generateAiSummary(body);
 
     const lead: StoredLead = {
       id: `lead-${Date.now()}`,
       customer_name: body.customer_name || '',
       phone: body.phone || '',
-      city: resolveCity(body),
+      city: body.city?.trim() || 'Unknown',
       service_type: body.service_type || '',
       urgency: body.urgency || 'normal',
       property_type: body.property_type || '',
@@ -108,12 +121,6 @@ export async function POST(req: Request) {
     console.error(error);
     const message = error instanceof Error ? error.message : 'Something went wrong.';
 
-    return Response.json(
-      {
-        success: false,
-        message,
-      },
-      { status: 500 }
-    );
+    return Response.json({ success: false, message }, { status: 500 });
   }
 }
