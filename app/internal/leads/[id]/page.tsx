@@ -1,3 +1,4 @@
+// app/internal/leads/[id]/page.tsx
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getLeadById, statusLabels } from "@/lib/internalLeads";
@@ -41,12 +42,24 @@ export default async function LeadDetailPage({
               <div className="rounded-2xl bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-semibold">Customer Information</h2>
                 <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-                  <p><span className="font-medium text-slate-500">Phone:</span> {sheetLead.phone}</p>
-                  <p><span className="font-medium text-slate-500">City:</span> {sheetLead.city}</p>
-                  <p><span className="font-medium text-slate-500">Service Type:</span> {sheetLead.service_type}</p>
-                  <p><span className="font-medium text-slate-500">Urgency:</span> {sheetLead.urgency}</p>
-                  <p><span className="font-medium text-slate-500">Source:</span> {sheetLead.source}</p>
-                  <p><span className="font-medium text-slate-500">Property Type:</span> {sheetLead.property_type}</p>
+                  <p>
+                    <span className="font-medium text-slate-500">Phone:</span> {sheetLead.phone}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-500">City:</span> {sheetLead.city}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-500">Service Type:</span> {sheetLead.service_type}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-500">Urgency:</span> {sheetLead.urgency}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-500">Source:</span> {sheetLead.source}
+                  </p>
+                  <p>
+                    <span className="font-medium text-slate-500">Property Type:</span> {sheetLead.property_type}
+                  </p>
                 </div>
               </div>
 
@@ -64,12 +77,16 @@ export default async function LeadDetailPage({
             <div className="space-y-5">
               <div className="rounded-2xl bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-semibold">Suggested Next Step</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-700">Call customer to confirm scope and schedule next available slot.</p>
+                <p className="mt-3 text-sm leading-6 text-slate-700">
+                  Call customer to confirm scope and move lead to follow-up, quote, or schedule.
+                </p>
               </div>
 
               <div className="rounded-2xl bg-white p-5 shadow-sm">
                 <h2 className="text-lg font-semibold">Internal Notes</h2>
-                <p className="mt-3 text-sm leading-6 text-slate-700">Problem duration: {sheetLead.problem_duration || "N/A"}</p>
+                <p className="mt-3 text-sm leading-6 text-slate-700">
+                  Problem duration: {sheetLead.problem_duration || "N/A"} · Quote amount: {sheetLead.quote_amount || "N/A"}
+                </p>
               </div>
 
               <div className="rounded-2xl bg-white p-5 shadow-sm">
@@ -77,6 +94,7 @@ export default async function LeadDetailPage({
                 <div className="mt-3 flex flex-col gap-2">
                   <button className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white">Send SMS Acknowledgement</button>
                   <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">Request Additional Photos</button>
+                  <button className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700">Schedule Follow-up Call</button>
                 </div>
               </div>
             </div>
@@ -86,8 +104,8 @@ export default async function LeadDetailPage({
     );
   }
 
-  const lead = getLeadById(id);
-  if (!lead) {
+  const mockLead = getLeadById(id);
+  if (!mockLead) {
     notFound();
   }
 
@@ -97,11 +115,11 @@ export default async function LeadDetailPage({
         <header className="rounded-2xl bg-white px-6 py-5 shadow-sm">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
-              <p className="text-sm text-slate-500">Lead ID: {lead.id}</p>
-              <h1 className="text-2xl font-semibold">{lead.customer_name}</h1>
+              <p className="text-sm text-slate-500">Lead ID: {mockLead.id}</p>
+              <h1 className="text-2xl font-semibold">{mockLead.customer_name}</h1>
             </div>
             <span className="rounded-full bg-slate-900 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-white">
-              {statusLabels[lead.status]}
+              {statusLabels[mockLead.status]}
             </span>
           </div>
           <Link href="/internal/leads" className="mt-3 inline-block text-sm text-slate-600 hover:underline">
@@ -114,35 +132,47 @@ export default async function LeadDetailPage({
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Customer Information</h2>
               <div className="mt-3 grid gap-2 text-sm text-slate-700 sm:grid-cols-2">
-                <p><span className="font-medium text-slate-500">Phone:</span> {lead.phone}</p>
-                <p><span className="font-medium text-slate-500">City:</span> {lead.city}</p>
-                <p><span className="font-medium text-slate-500">Service Type:</span> {lead.service_type}</p>
-                <p><span className="font-medium text-slate-500">Urgency:</span> {lead.urgency}</p>
-                <p><span className="font-medium text-slate-500">Source:</span> {lead.source}</p>
-                <p><span className="font-medium text-slate-500">Preferred Visit:</span> {lead.preferred_visit_window}</p>
+                <p>
+                  <span className="font-medium text-slate-500">Phone:</span> {mockLead.phone}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-500">City:</span> {mockLead.city}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-500">Service Type:</span> {mockLead.service_type}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-500">Urgency:</span> {mockLead.urgency}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-500">Source:</span> {mockLead.source}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-500">Preferred Visit:</span> {mockLead.preferred_visit_window}
+                </p>
               </div>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Original Intake</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-700">{lead.intake_raw}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{mockLead.intake_raw}</p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">AI Summary</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-700">{lead.ai_summary}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{mockLead.ai_summary}</p>
             </div>
           </div>
 
           <div className="space-y-5">
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Suggested Next Step</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-700">{lead.suggested_next_step}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{mockLead.suggested_next_step}</p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">Internal Notes</h2>
-              <p className="mt-3 text-sm leading-6 text-slate-700">{lead.internal_notes}</p>
+              <p className="mt-3 text-sm leading-6 text-slate-700">{mockLead.internal_notes}</p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
