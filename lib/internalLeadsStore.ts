@@ -17,6 +17,30 @@ export type StoredLead = {
   created_at: string;
 };
 
+type ServiceAccountCredentials = {
+  client_email: string;
+  private_key: string;
+};
+
+const LEADS_SHEET_RANGE = 'Leads!A:N';
+
+function parseServiceAccountJson(rawJson: string): ServiceAccountCredentials {
+  const parsed = JSON.parse(rawJson) as { client_email?: string; private_key?: string };
+
+  if (!parsed.client_email) {
+    throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON_V2: missing client_email');
+  }
+
+  if (!parsed.private_key) {
+    throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON_V2: missing private_key');
+  }
+
+  return {
+    client_email: parsed.client_email,
+    private_key: parsed.private_key.replace(/\\n/g, '\n'),
+  };
+}
+
 async function getSheetsClient() {
   const rawJson = process.env.GOOGLE_SERVICE_ACCOUNT_JSON_V2;
   if (!rawJson) {
@@ -28,7 +52,7 @@ async function getSheetsClient() {
     throw new Error('Missing GOOGLE_SHEETS_SPREADSHEET_ID');
   }
 
-  const credentials = JSON.parse(rawJson) as Record<string, unknown>;
+  const credentials = parseServiceAccountJson(rawJson);
 
   const auth = new google.auth.GoogleAuth({
     credentials,
@@ -63,8 +87,9 @@ export async function appendInternalLeadToGoogleSheet(lead: StoredLead) {
 
   await sheets.spreadsheets.values.append({
     spreadsheetId,
-    range: 'Sheet1!A:N',
+    range: LEADS_SHEET_RANGE,
     valueInputOption: 'RAW',
+    insertDataOption: 'INSERT_ROWS',
     requestBody: {
       values: [[
         lead.id,
@@ -91,7 +116,7 @@ export async function readInternalLeadsFromGoogleSheet(): Promise<StoredLead[]> 
 
   const response = await sheets.spreadsheets.values.get({
     spreadsheetId,
-    range: 'Sheet1!A:N',
+    range: LEADS_SHEET_RANGE,
   });
 
   const rows = response.data.values || [];
