@@ -1,6 +1,7 @@
 import {
   resolveIntakeAnalysisGovernanceConfig,
   type IntakeAnalysisGovernanceConfig,
+  type IntakeAnalysisPolicyName,
   type IntakeAnalysisProviderName,
 } from "./aiIntakeAnalysisGovernanceConfig";
 import { OpenAiIntakeError, runOpenAiIntakeAnalysis } from "./aiIntakeAnalysisOpenAI";
@@ -10,7 +11,7 @@ import {
   buildRuleBasedIntakeAnalysis,
 } from "./aiIntakeAnalysisRules";
 
-export type { IntakeAnalysisProviderName } from "./aiIntakeAnalysisGovernanceConfig";
+export type { IntakeAnalysisPolicyName, IntakeAnalysisProviderName } from "./aiIntakeAnalysisGovernanceConfig";
 
 export type IntakeAnalysisProvider = {
   name: IntakeAnalysisProviderName;
@@ -69,6 +70,11 @@ export type IntakeAnalysisAudit = {
   >;
   config_adjustments: string[];
   config_warnings: string[];
+  requested_policy: string;
+  resolved_policy: IntakeAnalysisPolicyName;
+  policy_version: string;
+  policy_adjustments: string[];
+  policy_defaults_applied: IntakeAnalysisGovernanceConfig;
 };
 
 export type IntakeAnalysisWithAudit = {
@@ -231,12 +237,12 @@ function shouldRetry(category: IntakeAnalysisErrorCategory, providerName: Intake
   return category === "provider_execution_error" || category === "unknown";
 }
 
-function selectProviderName(configuredProviderName?: string): {
+function selectProviderName(configuredProviderName?: string, configuredPolicyName?: string): {
   requestedProvider: string;
   resolvedProvider: IntakeAnalysisProviderName;
   governance: ReturnType<typeof resolveIntakeAnalysisGovernanceConfig>;
 } {
-  const governance = resolveIntakeAnalysisGovernanceConfig(configuredProviderName);
+  const governance = resolveIntakeAnalysisGovernanceConfig(configuredProviderName, configuredPolicyName);
   return {
     requestedProvider: governance.requested_provider,
     resolvedProvider: governance.resolved_provider,
@@ -244,12 +250,12 @@ function selectProviderName(configuredProviderName?: string): {
   };
 }
 
-export function resolveIntakeAnalysisProviderName(configuredProviderName?: string): IntakeAnalysisProviderName {
-  return selectProviderName(configuredProviderName).resolvedProvider;
+export function resolveIntakeAnalysisProviderName(configuredProviderName?: string, configuredPolicyName?: string): IntakeAnalysisProviderName {
+  return selectProviderName(configuredProviderName, configuredPolicyName).resolvedProvider;
 }
 
-export function getIntakeAnalysisProvider(configuredProviderName?: string): IntakeAnalysisProvider {
-  const name = resolveIntakeAnalysisProviderName(configuredProviderName);
+export function getIntakeAnalysisProvider(configuredProviderName?: string, configuredPolicyName?: string): IntakeAnalysisProvider {
+  const name = resolveIntakeAnalysisProviderName(configuredProviderName, configuredPolicyName);
   const provider = providers[name];
 
   if (provider) {
@@ -262,10 +268,11 @@ export function getIntakeAnalysisProvider(configuredProviderName?: string): Inta
 export async function runIntakeAnalysisWithAudit(
   lead: AnalysisLeadInput,
   configuredProviderName?: string,
+  configuredPolicyName?: string,
 ): Promise<IntakeAnalysisWithAudit> {
   const start = nowMs();
   const timestamp = new Date().toISOString();
-  const { requestedProvider, resolvedProvider, governance } = selectProviderName(configuredProviderName);
+  const { requestedProvider, resolvedProvider, governance } = selectProviderName(configuredProviderName, configuredPolicyName);
   const effectiveConfig = governance.effective_config;
   const attempts: IntakeAnalysisAttempt[] = [];
 
@@ -310,6 +317,11 @@ export async function runIntakeAnalysisWithAudit(
     },
     config_adjustments: governance.config_adjustments,
     config_warnings: governance.config_warnings,
+    requested_policy: governance.requested_policy,
+    resolved_policy: governance.resolved_policy,
+    policy_version: governance.policy_version,
+    policy_adjustments: governance.policy_adjustments,
+    policy_defaults_applied: governance.policy_defaults_applied,
   });
 
   if (!providerExists) {
@@ -455,7 +467,8 @@ export async function runIntakeAnalysisWithAudit(
 export async function runIntakeAnalysisWithProvider(
   lead: AnalysisLeadInput,
   configuredProviderName?: string,
+  configuredPolicyName?: string,
 ): Promise<IntakeAnalysisResult> {
-  const { result } = await runIntakeAnalysisWithAudit(lead, configuredProviderName);
+  const { result } = await runIntakeAnalysisWithAudit(lead, configuredProviderName, configuredPolicyName);
   return result;
 }

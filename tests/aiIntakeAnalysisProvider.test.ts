@@ -21,6 +21,7 @@ const sampleLead = {
 
 const snapshotEnv = {
   INTAKE_ANALYSIS_PROVIDER: process.env.INTAKE_ANALYSIS_PROVIDER,
+  INTAKE_ANALYSIS_POLICY: process.env.INTAKE_ANALYSIS_POLICY,
   INTAKE_ANALYSIS_DEBUG: process.env.INTAKE_ANALYSIS_DEBUG,
   INTAKE_ANALYSIS_OPENAI_MAX_RETRIES: process.env.INTAKE_ANALYSIS_OPENAI_MAX_RETRIES,
   INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD: process.env.INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD,
@@ -58,8 +59,9 @@ function validOpenAiPayload() {
 async function run() {
   __resetProviderRuntimeGovernanceForTests();
 
-  // A. no env config => safe defaults.
+  // A. 未配置 policy => default standard 生效。
   setEnv("INTAKE_ANALYSIS_PROVIDER", undefined);
+  setEnv("INTAKE_ANALYSIS_POLICY", undefined);
   setEnv("INTAKE_ANALYSIS_DEBUG", undefined);
   setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", undefined);
   setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", undefined);
@@ -70,17 +72,36 @@ async function run() {
   assert.match(defaultResult.analysis_version, /^phase2-step3-rules$/);
 
   const defaultAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(defaultAudit.audit.resolved_policy, "standard");
+  assert.equal(defaultAudit.audit.policy_version, "v1");
   assert.equal(defaultAudit.audit.effective_governance_config.openai_max_retries, 1);
-  assert.equal(defaultAudit.audit.effective_governance_config.openai_failure_threshold, 2);
-  assert.equal(defaultAudit.audit.effective_governance_config.openai_cool_down_ms, 30000);
 
-  // B. invalid provider env => fallback to default provider + warning.
-  setEnv("INTAKE_ANALYSIS_PROVIDER", "bad_provider");
-  const invalidProviderEnvAudit = await runIntakeAnalysisWithAudit(sampleLead);
-  assert.equal(invalidProviderEnvAudit.audit.resolved_provider, "rules");
-  assert.ok(invalidProviderEnvAudit.audit.config_warnings.length > 0);
+  // B. conservative policy 有实际差异。
+  setEnv("INTAKE_ANALYSIS_POLICY", "conservative");
+  const conservativeAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(conservativeAudit.audit.resolved_policy, "conservative");
+  assert.equal(conservativeAudit.audit.policy_defaults_applied.openai_max_retries, 0);
+  assert.equal(conservativeAudit.audit.policy_defaults_applied.openai_failure_threshold, 1);
 
-  // Keep Step 3 compatibility checks.
+  // C. 非法 policy 回退默认。
+  setEnv("INTAKE_ANALYSIS_POLICY", "bad_policy");
+  const invalidPolicyAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(invalidPolicyAudit.audit.resolved_policy, "standard");
+  assert.ok(invalidPolicyAudit.audit.policy_adjustments.length > 0);
+
+  // D. policy + env 覆盖 + clamp。
+  setEnv("INTAKE_ANALYSIS_POLICY", "conservative");
+  setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", "99");
+  setEnv("INTAKE_ANALYSIS_OPENAI_COOLDOWN_MS", "-3");
+  setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", "0");
+  const policyOverrideAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(policyOverrideAudit.audit.resolved_policy, "conservative");
+  assert.equal(policyOverrideAudit.audit.effective_governance_config.openai_max_retries, 2);
+  assert.equal(policyOverrideAudit.audit.effective_governance_config.openai_failure_threshold, 1);
+  assert.equal(policyOverrideAudit.audit.effective_governance_config.openai_cool_down_ms, 0);
+  assert.ok(policyOverrideAudit.audit.config_adjustments.length > 0);
+
+  // Step 3/4/5 compatibility checks.
   const unresolvedName = resolveIntakeAnalysisProviderName("unknown_name");
   assert.equal(unresolvedName, "rules");
   const mockProvider = getIntakeAnalysisProvider("mock_ai");
@@ -92,52 +113,14 @@ async function run() {
   setEnv("OPENAI_API_KEY", "test-key");
   setEnv("OPENAI_MODEL", "gpt-4o-mini");
 
-  // C. retries over upper bound => clamp and behavior follows clamp.
+  // E. standard策略兼容主路径：retry success。
   __resetProviderRuntimeGovernanceForTests();
-  setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", "99");
-  setEnv("INTAKE_ANALYSIS_OPENAI_RETRY_DELAY_MS", "0");
-  __setOpenAiIntakeRunnerForTests(async () => {
-    throw new Error("timeout");
-  });
-
-  const retriesClampedAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(retriesClampedAudit.audit.effective_governance_config.openai_max_retries, 2);
-  assert.equal(retriesClampedAudit.audit.retry_count, 2);
-  assert.equal(retriesClampedAudit.audit.final_provider, "rules");
-  assert.ok(retriesClampedAudit.audit.config_adjustments.some((x) => x.includes("MAX_RETRIES")));
-
-  // D. cooldown invalid (<0) => clamp to 0.
-  setEnv("INTAKE_ANALYSIS_OPENAI_COOLDOWN_MS", "-5");
-  const cooldownClampAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
-  assert.equal(cooldownClampAudit.audit.effective_governance_config.openai_cool_down_ms, 0);
-  assert.ok(cooldownClampAudit.audit.config_adjustments.some((x) => x.includes("COOLDOWN_MS")));
-
-  // E. failure threshold invalid => clamp and still drives circuit decisions.
-  __resetProviderRuntimeGovernanceForTests();
-  setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", "0");
-  setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", "0"); // clamp -> 1
-  setEnv("INTAKE_ANALYSIS_OPENAI_COOLDOWN_MS", "100");
-  __setOpenAiIntakeRunnerForTests(async () => {
-    throw new Error("hard failure");
-  });
-
-  const thresholdClampFirst = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(thresholdClampFirst.audit.effective_governance_config.openai_failure_threshold, 1);
-  assert.equal(thresholdClampFirst.audit.circuit_breaker_state, "open");
-
-  const thresholdClampSecond = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(thresholdClampSecond.audit.skipped_provider_reason, "circuit_open");
-  assert.equal(thresholdClampSecond.audit.final_provider, "rules");
-
-  // F. explicit provider parameter has precedence over env provider.
-  const explicitProviderAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules");
-  assert.equal(explicitProviderAudit.audit.resolved_provider, "rules");
-
-  // G. Step 6 main behavior remains: retry success path works.
-  __resetProviderRuntimeGovernanceForTests();
+  setEnv("INTAKE_ANALYSIS_POLICY", "standard");
   setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", "1");
   setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", "2");
   setEnv("INTAKE_ANALYSIS_OPENAI_COOLDOWN_MS", "80");
+  setEnv("INTAKE_ANALYSIS_OPENAI_RETRY_DELAY_MS", "0");
+
   let attempt = 0;
   __setOpenAiIntakeRunnerForTests(async () => {
     attempt += 1;
@@ -145,10 +128,33 @@ async function run() {
     return validOpenAiPayload();
   });
 
-  const retrySuccessAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(retrySuccessAudit.audit.final_provider, "openai");
-  assert.equal(retrySuccessAudit.audit.retry_used, true);
-  assert.equal(retrySuccessAudit.audit.retry_count, 1);
+  const standardRetryAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(standardRetryAudit.audit.resolved_policy, "standard");
+  assert.equal(standardRetryAudit.audit.final_provider, "openai");
+  assert.equal(standardRetryAudit.audit.retry_count, 1);
+
+  // F. conservative 更保守（更少重试/更快 fallback）。
+  __resetProviderRuntimeGovernanceForTests();
+  setEnv("INTAKE_ANALYSIS_POLICY", "conservative");
+  setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", undefined); // 使用 conservative 默认 0
+  setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", undefined); // 使用 conservative 默认 1
+
+  __setOpenAiIntakeRunnerForTests(async () => {
+    throw new Error("persistent failure");
+  });
+
+  const conservativeFailureAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(conservativeFailureAudit.audit.resolved_policy, "conservative");
+  assert.equal(conservativeFailureAudit.audit.retry_count, 0);
+  assert.equal(conservativeFailureAudit.audit.circuit_breaker_state, "open");
+
+  const conservativeCircuitSkipAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(conservativeCircuitSkipAudit.audit.skipped_provider_reason, "circuit_open");
+
+  // G. 显式参数优先级（provider 参数优先于环境 provider）。
+  const explicitProviderAudit = await runIntakeAnalysisWithAudit(sampleLead, "rules", "conservative");
+  assert.equal(explicitProviderAudit.audit.resolved_provider, "rules");
+  assert.equal(explicitProviderAudit.audit.resolved_policy, "conservative");
 
   __setOpenAiIntakeRunnerForTests(undefined);
   __resetProviderRuntimeGovernanceForTests();

@@ -21,7 +21,9 @@ export type {
 
 export type {
   IntakeAnalysisGovernanceConfig,
+  IntakeAnalysisGovernancePolicy,
   IntakeAnalysisGovernanceResolution,
+  IntakeAnalysisPolicyName,
 } from "./aiIntakeAnalysisGovernanceConfig";
 
 export function buildIntakeAnalysis(lead: AnalysisLeadInput) {
