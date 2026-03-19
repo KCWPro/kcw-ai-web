@@ -19,6 +19,11 @@ export type {
   IntakeAnalysisRunStatus,
 } from "./aiIntakeAnalysisProvider";
 
+export type {
+  IntakeAnalysisGovernanceConfig,
+  IntakeAnalysisGovernanceResolution,
+} from "./aiIntakeAnalysisGovernanceConfig";
+
 export function buildIntakeAnalysis(lead: AnalysisLeadInput) {
   return runIntakeAnalysisWithProvider(lead);
 }

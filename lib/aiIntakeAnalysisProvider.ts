@@ -1,3 +1,8 @@
+import {
+  resolveIntakeAnalysisGovernanceConfig,
+  type IntakeAnalysisGovernanceConfig,
+  type IntakeAnalysisProviderName,
+} from "./aiIntakeAnalysisGovernanceConfig";
 import { OpenAiIntakeError, runOpenAiIntakeAnalysis } from "./aiIntakeAnalysisOpenAI";
 import {
   type AnalysisLeadInput,
@@ -5,7 +10,7 @@ import {
   buildRuleBasedIntakeAnalysis,
 } from "./aiIntakeAnalysisRules";
 
-export type IntakeAnalysisProviderName = "rules" | "mock_ai" | "openai";
+export type { IntakeAnalysisProviderName } from "./aiIntakeAnalysisGovernanceConfig";
 
 export type IntakeAnalysisProvider = {
   name: IntakeAnalysisProviderName;
@@ -58,6 +63,12 @@ export type IntakeAnalysisAudit = {
   circuit_breaker_state: IntakeAnalysisCircuitState;
   circuit_breaker_triggered: boolean;
   skipped_provider_reason: "none" | "circuit_open";
+  effective_governance_config: Pick<
+    IntakeAnalysisGovernanceConfig,
+    "default_provider" | "debug_enabled" | "openai_max_retries" | "openai_failure_threshold" | "openai_cool_down_ms"
+  >;
+  config_adjustments: string[];
+  config_warnings: string[];
 };
 
 export type IntakeAnalysisWithAudit = {
@@ -69,50 +80,22 @@ type ProviderCircuitState = {
   state: IntakeAnalysisCircuitState;
   consecutive_failures: number;
   opened_at: number | null;
-  cool_down_ms: number;
   last_failure_category: IntakeAnalysisErrorCategory | null;
 };
 
-type GovernanceConfig = {
-  openAiMaxRetries: number;
-  openAiFailureThreshold: number;
-  openAiCooldownMs: number;
-  retryDelayMs: number;
-};
-
-const DEFAULT_GOVERNANCE_CONFIG: GovernanceConfig = {
-  openAiMaxRetries: 1,
-  openAiFailureThreshold: 2,
-  openAiCooldownMs: 30_000,
-  retryDelayMs: 20,
-};
-
-let governanceConfig: GovernanceConfig = { ...DEFAULT_GOVERNANCE_CONFIG };
-
 const providerRuntimeState: Record<IntakeAnalysisProviderName, ProviderCircuitState> = {
-  rules: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
-  mock_ai: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
-  openai: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
+  rules: { state: "closed", consecutive_failures: 0, opened_at: null, last_failure_category: null },
+  mock_ai: { state: "closed", consecutive_failures: 0, opened_at: null, last_failure_category: null },
+  openai: { state: "closed", consecutive_failures: 0, opened_at: null, last_failure_category: null },
 };
 
 export function __resetProviderRuntimeGovernanceForTests() {
-  governanceConfig = { ...DEFAULT_GOVERNANCE_CONFIG };
   providerRuntimeState.openai = {
     state: "closed",
     consecutive_failures: 0,
     opened_at: null,
-    cool_down_ms: governanceConfig.openAiCooldownMs,
     last_failure_category: null,
   };
-}
-
-export function __setProviderRuntimeGovernanceConfigForTests(partial: Partial<GovernanceConfig>) {
-  governanceConfig = {
-    ...governanceConfig,
-    ...partial,
-  };
-
-  providerRuntimeState.openai.cool_down_ms = governanceConfig.openAiCooldownMs;
 }
 
 const rulesProvider: IntakeAnalysisProvider = {
@@ -146,10 +129,6 @@ function nowMs() {
   return Date.now();
 }
 
-function isDebugEnabled() {
-  return (process.env.INTAKE_ANALYSIS_DEBUG || "").trim().toLowerCase() === "true";
-}
-
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -180,11 +159,10 @@ function categoryToFallbackReason(category: IntakeAnalysisErrorCategory): Intake
   return "unknown";
 }
 
-function resolveRequestedProvider(configuredProviderName?: string): string {
-  return (configuredProviderName || process.env.INTAKE_ANALYSIS_PROVIDER || "rules").trim().toLowerCase() || "rules";
-}
-
-function getCircuitState(providerName: IntakeAnalysisProviderName): IntakeAnalysisCircuitState {
+function getCircuitState(
+  providerName: IntakeAnalysisProviderName,
+  config: IntakeAnalysisGovernanceConfig,
+): IntakeAnalysisCircuitState {
   const state = providerRuntimeState[providerName];
 
   if (providerName !== "openai") {
@@ -200,7 +178,7 @@ function getCircuitState(providerName: IntakeAnalysisProviderName): IntakeAnalys
   }
 
   const elapsed = nowMs() - state.opened_at;
-  if (elapsed >= state.cool_down_ms) {
+  if (elapsed >= config.openai_cool_down_ms) {
     state.state = "half_open";
     return "half_open";
   }
@@ -208,7 +186,11 @@ function getCircuitState(providerName: IntakeAnalysisProviderName): IntakeAnalys
   return "open";
 }
 
-function recordCircuitFailure(providerName: IntakeAnalysisProviderName, category: IntakeAnalysisErrorCategory) {
+function recordCircuitFailure(
+  providerName: IntakeAnalysisProviderName,
+  category: IntakeAnalysisErrorCategory,
+  config: IntakeAnalysisGovernanceConfig,
+) {
   if (providerName !== "openai") {
     return;
   }
@@ -222,7 +204,7 @@ function recordCircuitFailure(providerName: IntakeAnalysisProviderName, category
   circuit.consecutive_failures += 1;
   circuit.last_failure_category = category;
 
-  if (circuit.consecutive_failures >= governanceConfig.openAiFailureThreshold) {
+  if (circuit.consecutive_failures >= config.openai_failure_threshold) {
     circuit.state = "open";
     circuit.opened_at = nowMs();
   }
@@ -234,7 +216,6 @@ function recordCircuitSuccess(providerName: IntakeAnalysisProviderName) {
   }
 
   providerRuntimeState.openai = {
-    ...providerRuntimeState.openai,
     state: "closed",
     consecutive_failures: 0,
     opened_at: null,
@@ -250,14 +231,21 @@ function shouldRetry(category: IntakeAnalysisErrorCategory, providerName: Intake
   return category === "provider_execution_error" || category === "unknown";
 }
 
+function selectProviderName(configuredProviderName?: string): {
+  requestedProvider: string;
+  resolvedProvider: IntakeAnalysisProviderName;
+  governance: ReturnType<typeof resolveIntakeAnalysisGovernanceConfig>;
+} {
+  const governance = resolveIntakeAnalysisGovernanceConfig(configuredProviderName);
+  return {
+    requestedProvider: governance.requested_provider,
+    resolvedProvider: governance.resolved_provider,
+    governance,
+  };
+}
+
 export function resolveIntakeAnalysisProviderName(configuredProviderName?: string): IntakeAnalysisProviderName {
-  const normalized = resolveRequestedProvider(configuredProviderName);
-
-  if (normalized === "rules" || normalized === "mock_ai" || normalized === "openai") {
-    return normalized;
-  }
-
-  return "rules";
+  return selectProviderName(configuredProviderName).resolvedProvider;
 }
 
 export function getIntakeAnalysisProvider(configuredProviderName?: string): IntakeAnalysisProvider {
@@ -277,9 +265,11 @@ export async function runIntakeAnalysisWithAudit(
 ): Promise<IntakeAnalysisWithAudit> {
   const start = nowMs();
   const timestamp = new Date().toISOString();
-  const requestedProvider = resolveRequestedProvider(configuredProviderName);
-  const resolvedProvider = resolveIntakeAnalysisProviderName(configuredProviderName);
+  const { requestedProvider, resolvedProvider, governance } = selectProviderName(configuredProviderName);
+  const effectiveConfig = governance.effective_config;
   const attempts: IntakeAnalysisAttempt[] = [];
+
+  const debugEnabled = effectiveConfig.debug_enabled;
   const providerExists = !!providers[resolvedProvider];
 
   const buildAudit = (
@@ -308,9 +298,18 @@ export async function runIntakeAnalysisWithAudit(
     provider_attempts: attempts,
     retry_used: params.retryCount > 0,
     retry_count: params.retryCount,
-    circuit_breaker_state: getCircuitState("openai"),
+    circuit_breaker_state: getCircuitState("openai", effectiveConfig),
     circuit_breaker_triggered: params.circuitTriggered,
     skipped_provider_reason: params.skippedProviderReason,
+    effective_governance_config: {
+      default_provider: effectiveConfig.default_provider,
+      debug_enabled: effectiveConfig.debug_enabled,
+      openai_max_retries: effectiveConfig.openai_max_retries,
+      openai_failure_threshold: effectiveConfig.openai_failure_threshold,
+      openai_cool_down_ms: effectiveConfig.openai_cool_down_ms,
+    },
+    config_adjustments: governance.config_adjustments,
+    config_warnings: governance.config_warnings,
   });
 
   if (!providerExists) {
@@ -335,7 +334,7 @@ export async function runIntakeAnalysisWithAudit(
 
   const provider = providers[resolvedProvider] as IntakeAnalysisProvider;
 
-  if (resolvedProvider === "openai" && getCircuitState("openai") === "open") {
+  if (resolvedProvider === "openai" && getCircuitState("openai", effectiveConfig) === "open") {
     const fallbackStart = nowMs();
     const fallbackResult = await rulesProvider.analyze(lead);
     attempts.push({ provider: "rules", status: "success", duration_ms: nowMs() - fallbackStart, error_category: null });
@@ -351,7 +350,7 @@ export async function runIntakeAnalysisWithAudit(
       skippedProviderReason: "circuit_open",
     });
 
-    if (isDebugEnabled()) {
+    if (debugEnabled) {
       console.warn("[intake-analysis] circuit open, skipping provider", audit);
     }
 
@@ -359,9 +358,8 @@ export async function runIntakeAnalysisWithAudit(
   }
 
   let retryCount = 0;
-  let lastErrorCategory: IntakeAnalysisErrorCategory | null = null;
 
-  const maxRetries = resolvedProvider === "openai" ? governanceConfig.openAiMaxRetries : 0;
+  const maxRetries = resolvedProvider === "openai" ? effectiveConfig.openai_max_retries : 0;
 
   for (let attemptIndex = 0; attemptIndex <= maxRetries; attemptIndex += 1) {
     const attemptStart = nowMs();
@@ -389,14 +387,13 @@ export async function runIntakeAnalysisWithAudit(
         skippedProviderReason: "none",
       });
 
-      if (isDebugEnabled() && (invalidRequestedProvider || retryCount > 0 || getCircuitState("openai") === "half_open")) {
+      if (debugEnabled && (invalidRequestedProvider || retryCount > 0 || getCircuitState("openai", effectiveConfig) === "half_open")) {
         console.warn("[intake-analysis] provider execution summary", audit);
       }
 
       return { result, audit };
     } catch (error: unknown) {
       const category = classifyError(error);
-      lastErrorCategory = category;
       attempts.push({
         provider: provider.name,
         status: "failed",
@@ -408,14 +405,14 @@ export async function runIntakeAnalysisWithAudit(
       if (canRetry) {
         retryCount += 1;
 
-        if (governanceConfig.retryDelayMs > 0) {
-          await sleep(governanceConfig.retryDelayMs);
+        if (effectiveConfig.openai_retry_delay_ms > 0) {
+          await sleep(effectiveConfig.openai_retry_delay_ms);
         }
 
         continue;
       }
 
-      recordCircuitFailure(provider.name, category);
+      recordCircuitFailure(provider.name, category, effectiveConfig);
 
       const fallbackStart = nowMs();
       const fallbackResult = await rulesProvider.analyze(lead);
@@ -428,11 +425,11 @@ export async function runIntakeAnalysisWithAudit(
         fallbackReason: categoryToFallbackReason(category),
         errorCategory: category,
         retryCount,
-        circuitTriggered: getCircuitState("openai") === "open",
+        circuitTriggered: getCircuitState("openai", effectiveConfig) === "open",
         skippedProviderReason: "none",
       });
 
-      if (isDebugEnabled()) {
+      if (debugEnabled) {
         console.warn("[intake-analysis] provider fallback triggered", audit);
       }
 
@@ -445,8 +442,8 @@ export async function runIntakeAnalysisWithAudit(
     finalProvider: "rules",
     status: "fallback_success",
     fallbackUsed: true,
-    fallbackReason: lastErrorCategory ? categoryToFallbackReason(lastErrorCategory) : "unknown",
-    errorCategory: lastErrorCategory,
+    fallbackReason: "unknown",
+    errorCategory: "unknown",
     retryCount,
     circuitTriggered: false,
     skippedProviderReason: "none",
