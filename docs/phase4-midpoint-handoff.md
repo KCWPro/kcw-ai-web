@@ -60,3 +60,46 @@ Stage: Phase 4 / Step 3
   2. 边界约束未被突破；
   3. 回归与新增测试通过；
   4. 当前局限不构成阻塞。
+
+## 8) Step 1 / Step 2 代码与文档一致性自检说明
+
+### 8.1 Step 1 / Step 2 导出字段变更
+- Step 1 新增导出：
+  - `WorkflowContinuityChecklistItem`
+  - `InternalWorkflowContinuityViewModel`（含 `model_version / continuity_state / summary / next_operator_action / checklist / risk_flags`）
+  - `buildInternalWorkflowContinuity(...)`
+- Step 2 在 `InternalWorkflowContinuityViewModel` 新增字段：
+  - `follow_up_alignment.suggestion_availability`
+  - `follow_up_alignment.alignment_status`（`aligned | needs_review`）
+  - `follow_up_alignment.note`
+
+### 8.2 lead detail 页面新增展示区块
+- Step 1 新增：`Workflow Continuity Snapshot`
+- Step 2 增强：`Follow-up & Workflow Suggestions` 从 raw JSON 变更为结构化区块（availability / alignment / recommended action / summaries / prerequisites / risk flags）。
+
+### 8.3 continuity 与 follow-up alignment 页面映射关系
+- continuity model 输出 `follow_up_alignment`。
+- lead detail 在 follow-up 区块显示：`Continuity alignment: {alignment_status} · {note}`。
+- 当 `continuity_state=blocked` 且 follow-up `availability=unavailable` 时应为 `aligned`；
+  若状态组合不一致则落入 `needs_review`。
+
+### 8.4 blocked / partial / unavailable / needs_review 分支体现位置
+- `blocked`：continuity state（analysis 不可用）与对应 summary 文案。
+- `partial`：continuity state=`needs_intake_completion`（analysis completeness 非 sufficient）。
+- `unavailable`：follow-up suggestion availability=`unavailable` 时显示原因与人工下一步。
+- `needs_review`：continuity 与 follow-up availability 不一致时在 alignment 状态提示中体现。
+
+### 8.5 测试覆盖与缺口
+- 已覆盖：
+  - `needs_intake_completion`
+  - `blocked`
+  - `aligned`
+  - `needs_review`（forced mismatch）
+- 未直接覆盖（缺口）：
+  - 页面渲染层（React 组件）在 UI 级别的分支断言尚未加入（当前以 model 层测试为主）。
+  - `ready_for_follow_up` 在 continuity 测试中未显式单独断言（当前通过模型逻辑间接覆盖，建议补充显式 case）。
+
+### 8.6 当前 PR 虽可 merge，但需人工代码审查确认点
+- 文案与运营术语是否符合内部 SOP（尤其 unavailable/needs_review 提示语）。
+- alignment 判定规则是否满足业务期望（是否还需更细粒度的一致性条件）。
+- 结构化 follow-up 区块的信息密度是否适合一线 operator 使用（是否需进一步分组/折叠）。
