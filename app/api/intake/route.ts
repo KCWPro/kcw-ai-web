@@ -1,4 +1,3 @@
-// app/api/intake/route.ts
 import OpenAI from 'openai';
 import { appendInternalLeadToGoogleSheet, type StoredLead } from '@/lib/internalLeadsStore';
 
@@ -66,10 +65,24 @@ function validateBody(body: IntakeBody) {
   return null;
 }
 
+function maskPhone(phone: string | undefined) {
+  if (!phone) {
+    return '';
+  }
+
+  const trimmed = phone.trim();
+  if (trimmed.length <= 4) {
+    return trimmed;
+  }
+
+  return `${'*'.repeat(Math.max(0, trimmed.length - 4))}${trimmed.slice(-4)}`;
+}
+
 async function generateAiSummary(body: IntakeBody) {
   const apiKey = process.env.OPENAI_API_KEY;
 
   if (!apiKey) {
+    console.info('[intake] OPENAI_API_KEY missing, using fallback summary');
     return buildFallbackSummary(body);
   }
 
@@ -83,18 +96,38 @@ async function generateAiSummary(body: IntakeBody) {
 }
 
 export async function POST(req: Request) {
+  const requestId = `intake-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
   try {
     const body: IntakeBody = await req.json();
+    console.info('[intake] request received', {
+      requestId,
+      customer_name: body.customer_name || '',
+      phone_masked: maskPhone(body.phone),
+      city: body.city || '',
+      service_type: body.service_type || '',
+      source: body.source || 'website',
+    });
+
     const validationError = validateBody(body);
 
     if (validationError) {
+      console.warn('[intake] validation failed', { requestId, validationError });
       return Response.json({ success: false, message: validationError }, { status: 400 });
     }
 
+    console.info('[intake] generating AI summary', { requestId });
     const aiSummary = await generateAiSummary(body);
+    console.info('[intake] AI summary generated', {
+      requestId,
+      summary_length: aiSummary.length,
+    });
 
+    const now = new Date().toISOString();
     const lead: StoredLead = {
       id: `lead-${Date.now()}`,
+      created_at: now,
+      status: 'new',
       customer_name: body.customer_name || '',
       phone: body.phone || '',
       city: body.city?.trim() || 'Unknown',
@@ -106,11 +139,20 @@ export async function POST(req: Request) {
       problem_duration: body.problem_duration || '',
       customer_notes: body.customer_notes || '',
       ai_summary: aiSummary,
-      status: 'new',
-      created_at: new Date().toISOString(),
+      internal_notes: '',
+      last_updated_at: now,
     };
 
+    console.info('[intake] appending lead to Google Sheets', {
+      requestId,
+      lead_id: lead.id,
+      source: lead.source,
+    });
     await appendInternalLeadToGoogleSheet(lead);
+    console.info('[intake] lead appended to Google Sheets', {
+      requestId,
+      lead_id: lead.id,
+    });
 
     return Response.json({
       success: true,
@@ -118,8 +160,12 @@ export async function POST(req: Request) {
       lead,
     });
   } catch (error: unknown) {
-    console.error(error);
     const message = error instanceof Error ? error.message : 'Something went wrong.';
+    console.error('[intake] unhandled error', {
+      requestId,
+      message,
+      error,
+    });
 
     return Response.json({ success: false, message }, { status: 500 });
   }
