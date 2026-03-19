@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { buildIntakeAnalysis, type IssueClassification } from "../lib/aiIntakeAnalysis";
+import { buildIntakeAnalysis, buildIntakeAnalysisWithAudit, type IssueClassification } from "../lib/aiIntakeAnalysis";
 
 type Case = {
   name: string;
@@ -94,6 +94,22 @@ const cases: Case[] = [
 ];
 
 async function run() {
+  const defaultResult = await buildIntakeAnalysis(cases[0].lead);
+  assert.deepEqual(Object.keys(defaultResult).sort(), [
+    "analysis_version",
+    "confidence",
+    "info_completeness",
+    "issue_classification",
+    "missing_fields",
+    "next_step",
+    "recommended_action",
+    "suggested_price_range",
+  ]);
+
+  const auditResult = await buildIntakeAnalysisWithAudit(cases[0].lead);
+  assert.equal(auditResult.audit.status === "success" || auditResult.audit.status === "fallback_success", true);
+  assert.ok(auditResult.audit.final_provider.length > 0);
+
   for (const testCase of cases) {
     const result = await buildIntakeAnalysis(testCase.lead);
 

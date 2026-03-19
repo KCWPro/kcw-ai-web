@@ -11,6 +11,10 @@ import {
   buildRuleBasedIntakeAnalysis,
 } from "./aiIntakeAnalysisRules";
 
+/**
+ * Phase 2 internal provider runtime.
+ * Keep business-layer calls on lib/aiIntakeAnalysis.ts stable entries.
+ */
 export type { IntakeAnalysisPolicyName, IntakeAnalysisProviderName } from "./aiIntakeAnalysisGovernanceConfig";
 
 export type IntakeAnalysisProvider = {
@@ -75,6 +79,12 @@ export type IntakeAnalysisAudit = {
   policy_version: string;
   policy_adjustments: string[];
   policy_defaults_applied: IntakeAnalysisGovernanceConfig;
+  final_policy: IntakeAnalysisPolicyName;
+  rollout_blocked: boolean;
+  rollout_reason: "none" | "policy_not_enabled";
+  enabled_policies_snapshot: IntakeAnalysisPolicyName[];
+  rollback_switch_applied: boolean;
+  rollback_target_policy: IntakeAnalysisPolicyName | null;
 };
 
 export type IntakeAnalysisWithAudit = {
@@ -95,6 +105,10 @@ const providerRuntimeState: Record<IntakeAnalysisProviderName, ProviderCircuitSt
   openai: { state: "closed", consecutive_failures: 0, opened_at: null, last_failure_category: null },
 };
 
+/**
+ * tests-only helper: reset in-memory runtime governance state.
+ * Not intended for business/runtime feature usage.
+ */
 export function __resetProviderRuntimeGovernanceForTests() {
   providerRuntimeState.openai = {
     state: "closed",
@@ -322,6 +336,12 @@ export async function runIntakeAnalysisWithAudit(
     policy_version: governance.policy_version,
     policy_adjustments: governance.policy_adjustments,
     policy_defaults_applied: governance.policy_defaults_applied,
+    final_policy: governance.final_policy,
+    rollout_blocked: governance.rollout_blocked,
+    rollout_reason: governance.rollout_reason,
+    enabled_policies_snapshot: governance.enabled_policies_snapshot,
+    rollback_switch_applied: governance.rollback_switch_applied,
+    rollback_target_policy: governance.rollback_target_policy,
   });
 
   if (!providerExists) {
