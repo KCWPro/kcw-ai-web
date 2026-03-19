@@ -4,6 +4,7 @@ import { __setOpenAiIntakeRunnerForTests } from "../lib/aiIntakeAnalysisOpenAI";
 import {
   getIntakeAnalysisProvider,
   resolveIntakeAnalysisProviderName,
+  runIntakeAnalysisWithAudit,
   runIntakeAnalysisWithProvider,
 } from "../lib/aiIntakeAnalysisProvider";
 
@@ -29,8 +30,20 @@ async function run() {
   const rulesResult = await runIntakeAnalysisWithProvider(sampleLead, "rules");
   assert.match(rulesResult.analysis_version, /^phase2-step3-rules$/);
 
+  const rulesAuditRun = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(rulesAuditRun.audit.status, "success");
+  assert.equal(rulesAuditRun.audit.fallback_used, false);
+  assert.equal(rulesAuditRun.audit.final_provider, "rules");
+  assert.ok(rulesAuditRun.audit.duration_ms >= 0);
+
   const unknownProviderFallbackResult = await runIntakeAnalysisWithProvider(sampleLead, "not_a_provider");
   assert.match(unknownProviderFallbackResult.analysis_version, /^phase2-step3-rules$/);
+
+  const unknownProviderAudit = await runIntakeAnalysisWithAudit(sampleLead, "not_a_provider");
+  assert.equal(unknownProviderAudit.audit.final_provider, "rules");
+  assert.equal(unknownProviderAudit.audit.fallback_used, true);
+  assert.equal(unknownProviderAudit.audit.fallback_reason, "invalid_provider");
+  assert.equal(unknownProviderAudit.audit.error_category, "invalid_provider");
 
   const unresolvedName = resolveIntakeAnalysisProviderName("unknown_name");
   assert.equal(unresolvedName, "rules");
@@ -42,13 +55,16 @@ async function run() {
 
   delete process.env.OPENAI_API_KEY;
   process.env.OPENAI_MODEL = "gpt-4o-mini";
-  const openAiMissingKeyFallback = await runIntakeAnalysisWithProvider(sampleLead, "openai");
-  assert.match(openAiMissingKeyFallback.analysis_version, /^phase2-step3-rules$/);
+  const openAiMissingKeyAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(openAiMissingKeyAudit.audit.final_provider, "rules");
+  assert.equal(openAiMissingKeyAudit.audit.fallback_used, true);
+  assert.equal(openAiMissingKeyAudit.audit.fallback_reason, "missing_config");
 
   process.env.OPENAI_API_KEY = "test-key";
   delete process.env.OPENAI_MODEL;
-  const openAiMissingModelFallback = await runIntakeAnalysisWithProvider(sampleLead, "openai");
-  assert.match(openAiMissingModelFallback.analysis_version, /^phase2-step3-rules$/);
+  const openAiMissingModelAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(openAiMissingModelAudit.audit.final_provider, "rules");
+  assert.equal(openAiMissingModelAudit.audit.error_category, "missing_config");
 
   process.env.OPENAI_API_KEY = "test-key";
   process.env.OPENAI_MODEL = "gpt-4o-mini";
@@ -67,19 +83,25 @@ async function run() {
     confidence: 0.82,
   }));
 
-  const openAiSuccess = await runIntakeAnalysisWithProvider(sampleLead, "openai");
-  assert.match(openAiSuccess.analysis_version, /^phase2-step4-openai$/);
-  assert.equal(openAiSuccess.issue_classification, "water_heater");
+  const openAiSuccess = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(openAiSuccess.audit.status, "success");
+  assert.equal(openAiSuccess.audit.fallback_used, false);
+  assert.equal(openAiSuccess.audit.final_provider, "openai");
+  assert.match(openAiSuccess.result.analysis_version, /^phase2-step4-openai$/);
 
   __setOpenAiIntakeRunnerForTests(async () => ({ bad: "shape" }));
-  const openAiInvalidFallback = await runIntakeAnalysisWithProvider(sampleLead, "openai");
-  assert.match(openAiInvalidFallback.analysis_version, /^phase2-step3-rules$/);
+  const openAiInvalidFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(openAiInvalidFallback.audit.final_provider, "rules");
+  assert.equal(openAiInvalidFallback.audit.fallback_reason, "invalid_provider_output");
+  assert.equal(openAiInvalidFallback.audit.error_category, "invalid_provider_output");
 
   __setOpenAiIntakeRunnerForTests(async () => {
     throw new Error("openai test failure");
   });
-  const openAiErrorFallback = await runIntakeAnalysisWithProvider(sampleLead, "openai");
-  assert.match(openAiErrorFallback.analysis_version, /^phase2-step3-rules$/);
+  const openAiErrorFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(openAiErrorFallback.audit.final_provider, "rules");
+  assert.equal(openAiErrorFallback.audit.fallback_reason, "provider_execution_error");
+  assert.equal(openAiErrorFallback.audit.error_category, "provider_execution_error");
 
   __setOpenAiIntakeRunnerForTests(undefined);
   console.log("aiIntakeAnalysis provider tests passed");

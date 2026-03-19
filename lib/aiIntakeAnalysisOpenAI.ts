@@ -7,6 +7,18 @@ import type {
   SuggestedPriceBand,
 } from "./aiIntakeAnalysisRules";
 
+export type OpenAiIntakeErrorCategory = "missing_config" | "provider_execution_error" | "invalid_provider_output";
+
+export class OpenAiIntakeError extends Error {
+  category: OpenAiIntakeErrorCategory;
+
+  constructor(category: OpenAiIntakeErrorCategory, message: string) {
+    super(message);
+    this.name = "OpenAiIntakeError";
+    this.category = category;
+  }
+}
+
 const allowedIssueClassifications = new Set<IssueClassification>([
   "drain_issue",
   "water_leak",
@@ -51,13 +63,13 @@ export function __setOpenAiIntakeRunnerForTests(runner?: OpenAiIntakeRunner) {
 
 function parseObject(input: unknown): Record<string, unknown> {
   if (!input) {
-    throw new Error("OpenAI intake output is empty");
+    throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake output is empty");
   }
 
   if (typeof input === "string") {
     const parsed = JSON.parse(input);
     if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
-      throw new Error("OpenAI intake output is not a JSON object");
+      throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake output is not a JSON object");
     }
     return parsed as Record<string, unknown>;
   }
@@ -66,7 +78,7 @@ function parseObject(input: unknown): Record<string, unknown> {
     return input as Record<string, unknown>;
   }
 
-  throw new Error("OpenAI intake output has unsupported type");
+  throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake output has unsupported type");
 }
 
 function toNonEmptyString(value: unknown, fallback = "") {
@@ -127,7 +139,7 @@ function normalizeOpenAiOutput(rawResponse: OpenAiRawResponse): IntakeAnalysisRe
   const nextStep = toNonEmptyString(parsed.next_step);
 
   if (!recommendedAction || !nextStep) {
-    throw new Error("OpenAI intake output missing required action fields");
+    throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake output missing required action fields");
   }
 
   const priceInput = parseObject(parsed.suggested_price_range);
@@ -136,7 +148,7 @@ function normalizeOpenAiOutput(rawResponse: OpenAiRawResponse): IntakeAnalysisRe
   const max = normalizeNumber(priceInput.max);
 
   if (min !== null && max !== null && min > max) {
-    throw new Error("OpenAI intake output has invalid price range");
+    throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake output has invalid price range");
   }
 
   return {
@@ -177,28 +189,36 @@ function buildIntakePrompt(lead: AnalysisLeadInput): string {
 async function callOpenAi(lead: AnalysisLeadInput, model: string, apiKey: string): Promise<OpenAiRawResponse> {
   const client = new OpenAI({ apiKey, timeout: 8000 });
 
-  const completion = await client.chat.completions.create({
-    model,
-    temperature: 0,
-    response_format: { type: "json_object" },
-    messages: [
-      {
-        role: "system",
-        content: "You analyze plumbing intake leads for internal operations only.",
-      },
-      {
-        role: "user",
-        content: buildIntakePrompt(lead),
-      },
-    ],
-  });
+  try {
+    const completion = await client.chat.completions.create({
+      model,
+      temperature: 0,
+      response_format: { type: "json_object" },
+      messages: [
+        {
+          role: "system",
+          content: "You analyze plumbing intake leads for internal operations only.",
+        },
+        {
+          role: "user",
+          content: buildIntakePrompt(lead),
+        },
+      ],
+    });
 
-  const content = completion.choices?.[0]?.message?.content;
-  if (!content) {
-    throw new Error("OpenAI intake response content is empty");
+    const content = completion.choices?.[0]?.message?.content;
+    if (!content) {
+      throw new OpenAiIntakeError("invalid_provider_output", "OpenAI intake response content is empty");
+    }
+
+    return content;
+  } catch (error: unknown) {
+    if (error instanceof OpenAiIntakeError) {
+      throw error;
+    }
+
+    throw new OpenAiIntakeError("provider_execution_error", error instanceof Error ? error.message : "OpenAI execution failed");
   }
-
-  return content;
 }
 
 export async function runOpenAiIntakeAnalysis(lead: AnalysisLeadInput): Promise<IntakeAnalysisResult> {
@@ -206,15 +226,33 @@ export async function runOpenAiIntakeAnalysis(lead: AnalysisLeadInput): Promise<
   const model = process.env.OPENAI_MODEL?.trim();
 
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY missing");
+    throw new OpenAiIntakeError("missing_config", "OPENAI_API_KEY missing");
   }
 
   if (!model) {
-    throw new Error("OPENAI_MODEL missing");
+    throw new OpenAiIntakeError("missing_config", "OPENAI_MODEL missing");
   }
 
   const runner = openAiRunnerOverride || callOpenAi;
-  const rawResponse = await runner(lead, model, apiKey);
+  let rawResponse: OpenAiRawResponse;
 
-  return normalizeOpenAiOutput(rawResponse);
+  try {
+    rawResponse = await runner(lead, model, apiKey);
+  } catch (error: unknown) {
+    if (error instanceof OpenAiIntakeError) {
+      throw error;
+    }
+
+    throw new OpenAiIntakeError("provider_execution_error", error instanceof Error ? error.message : "OpenAI execution failed");
+  }
+
+  try {
+    return normalizeOpenAiOutput(rawResponse);
+  } catch (error: unknown) {
+    if (error instanceof OpenAiIntakeError) {
+      throw error;
+    }
+
+    throw new OpenAiIntakeError("invalid_provider_output", error instanceof Error ? error.message : "OpenAI output invalid");
+  }
 }
