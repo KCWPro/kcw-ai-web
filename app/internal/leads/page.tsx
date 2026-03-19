@@ -19,11 +19,11 @@ type InternalLeadRow = {
 const statusOptions: Array<{ label: string; value: "all" | LeadStatus }> = [
   { label: "All Status", value: "all" },
   { label: "New", value: "new" },
-  { label: "Urgent", value: "urgent" },
   { label: "Waiting Follow-up", value: "follow_up" },
   { label: "Quoted", value: "quoted" },
   { label: "Scheduled", value: "scheduled" },
   { label: "Completed", value: "completed" },
+  { label: "Archived", value: "archived" },
 ];
 
 export default function InternalLeadsPage() {
@@ -31,19 +31,35 @@ export default function InternalLeadsPage() {
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
   const [leads, setLeads] = useState<InternalLeadRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  async function loadLeads() {
+    try {
+      const res = await fetch("/api/internal/leads", { cache: "no-store" });
+      const data = await res.json();
+
+      if (!res.ok || !data.success) {
+        throw new Error(data?.error || "Failed to load leads");
+      }
+
+      setLeads(data.leads || []);
+      setError("");
+    } catch (loadError: unknown) {
+      const message = loadError instanceof Error ? loadError.message : "Failed to load leads";
+      setError(message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   useEffect(() => {
-    async function loadLeads() {
-      try {
-        const res = await fetch("/api/internal/leads", { cache: "no-store" });
-        const data = await res.json();
-        setLeads(data.leads || []);
-      } finally {
-        setLoading(false);
-      }
-    }
-
     loadLeads();
+
+    const intervalId = setInterval(() => {
+      loadLeads();
+    }, 20000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const filteredLeads = useMemo(() => {
@@ -75,17 +91,26 @@ export default function InternalLeadsPage() {
             placeholder="Search by customer, phone, city, service..."
             className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-slate-900 focus:ring"
           />
-          <select
-            value={status}
-            onChange={(event) => setStatus(event.target.value as "all" | LeadStatus)}
-            className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-slate-900 focus:ring"
-          >
-            {statusOptions.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+          <div className="flex items-center gap-2">
+            <select
+              value={status}
+              onChange={(event) => setStatus(event.target.value as "all" | LeadStatus)}
+              className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-slate-900 focus:ring"
+            >
+              {statusOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <button
+              type="button"
+              onClick={loadLeads}
+              className="rounded-lg border border-slate-300 px-3 py-2 text-sm font-medium text-slate-700"
+            >
+              Refresh
+            </button>
+          </div>
         </section>
 
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
@@ -121,6 +146,7 @@ export default function InternalLeadsPage() {
               </tbody>
             </table>
           </div>
+          {error ? <p className="px-4 py-2 text-center text-sm text-red-600">{error}</p> : null}
           {!loading && filteredLeads.length === 0 ? (
             <p className="px-4 py-8 text-center text-sm text-slate-500">No matching leads found.</p>
           ) : null}

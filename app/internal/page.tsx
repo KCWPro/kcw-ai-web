@@ -10,8 +10,8 @@ const stats = [
     value: internalLeads.filter((lead) => lead.status === "new").length,
   },
   {
-    label: "Urgent",
-    value: internalLeads.filter((lead) => lead.status === "urgent").length,
+    label: "Archived",
+    value: internalLeads.filter((lead) => lead.status === "archived").length,
   },
   {
     label: "Waiting Follow-up",
@@ -76,7 +76,7 @@ export default function InternalDashboardPage() {
             <div className={cardBase}>
               <h2 className="text-lg font-semibold">AI Action Center</h2>
               <ul className="mt-3 space-y-3 text-sm text-slate-600">
-                <li>• 2 urgent leads need immediate call routing.</li>
+                <li>• Check new and follow-up leads for immediate routing.</li>
                 <li>• 1 quote draft can be sent after price review.</li>
                 <li>• 1 follow-up is due within the next hour.</li>
               </ul>

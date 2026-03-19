@@ -1,10 +1,10 @@
 export type LeadStatus =
   | "new"
-  | "urgent"
   | "follow_up"
   | "quoted"
   | "scheduled"
-  | "completed";
+  | "completed"
+  | "archived";
 
 export type KcwLead = {
   id: string;
@@ -32,7 +32,7 @@ export const internalLeads: KcwLead[] = [
     service_type: "Emergency leak repair",
     urgency: "high",
     source: "website",
-    status: "urgent",
+    status: "follow_up",
     created_at: "2026-03-17 08:15",
     preferred_visit_window: "ASAP - today",
     intake_raw:
@@ -148,11 +148,11 @@ export const internalLeads: KcwLead[] = [
 
 export const statusLabels: Record<LeadStatus, string> = {
   new: "New",
-  urgent: "Urgent",
   follow_up: "Waiting Follow-up",
   quoted: "Quoted",
   scheduled: "Scheduled",
   completed: "Completed",
+  archived: "Archived",
 };
 
 export function getLeadById(id: string) {
