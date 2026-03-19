@@ -167,6 +167,52 @@ async function run() {
   const explicitProviderResolved = resolveIntakeAnalysisProviderName("rules", "conservative");
   assert.equal(explicitProviderResolved, "rules");
 
+  // H. Runbook drill A: openai 缺少 key/model => missing_config fallback。
+  __resetProviderRuntimeGovernanceForTests();
+  setEnv("INTAKE_ANALYSIS_PROVIDER", "openai");
+  setEnv("OPENAI_API_KEY", undefined);
+  setEnv("OPENAI_MODEL", undefined);
+  __setOpenAiIntakeRunnerForTests(undefined);
+  const missingConfigFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(missingConfigFallback.audit.final_provider, "rules");
+  assert.equal(missingConfigFallback.audit.fallback_reason, "missing_config");
+  assert.equal(missingConfigFallback.audit.error_category, "missing_config");
+
+  // I. Runbook drill B: openai 运行时异常 => provider_execution_error fallback。
+  __resetProviderRuntimeGovernanceForTests();
+  setEnv("OPENAI_API_KEY", "test-key");
+  setEnv("OPENAI_MODEL", "gpt-4o-mini");
+  __setOpenAiIntakeRunnerForTests(async () => {
+    throw new Error("provider transport failure");
+  });
+  const executionErrorFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(executionErrorFallback.audit.final_provider, "rules");
+  assert.equal(executionErrorFallback.audit.fallback_reason, "provider_execution_error");
+  assert.equal(executionErrorFallback.audit.error_category, "provider_execution_error");
+
+  // J. Runbook drill C: openai 非法输出 => invalid_provider_output fallback。
+  __resetProviderRuntimeGovernanceForTests();
+  __setOpenAiIntakeRunnerForTests(async () => ({ issue_classification: "water_heater" } as never));
+  const invalidOutputFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(invalidOutputFallback.audit.final_provider, "rules");
+  assert.equal(invalidOutputFallback.audit.fallback_reason, "invalid_provider_output");
+  assert.equal(invalidOutputFallback.audit.error_category, "invalid_provider_output");
+
+  // K. Runbook drill D: circuit breaker 打开后会跳过 openai。
+  __resetProviderRuntimeGovernanceForTests();
+  setEnv("INTAKE_ANALYSIS_OPENAI_MAX_RETRIES", "0");
+  setEnv("INTAKE_ANALYSIS_OPENAI_FAILURE_THRESHOLD", "1");
+  setEnv("INTAKE_ANALYSIS_OPENAI_COOLDOWN_MS", "2000");
+  __setOpenAiIntakeRunnerForTests(async () => {
+    throw new Error("persistent runtime failure");
+  });
+  const firstFailureOpensCircuit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(firstFailureOpensCircuit.audit.circuit_breaker_state, "open");
+  const circuitSkipped = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(circuitSkipped.audit.skipped_provider_reason, "circuit_open");
+  assert.equal(circuitSkipped.audit.fallback_reason, "circuit_open");
+  assert.equal(circuitSkipped.audit.final_provider, "rules");
+
   __setOpenAiIntakeRunnerForTests(undefined);
   __resetProviderRuntimeGovernanceForTests();
   console.log("aiIntakeAnalysis provider tests passed");

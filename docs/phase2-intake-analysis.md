@@ -74,3 +74,7 @@ Environment controls (internal ops):
 - Customer auto-communication.
 - Marketing AI.
 - Batch analysis pipelines.
+
+## 10) Operational docs
+- Runbook: `docs/phase2-intake-analysis-runbook.md`
+- Final freeze: `docs/phase2-final-freeze.md`
