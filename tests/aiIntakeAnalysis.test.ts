@@ -99,7 +99,7 @@ for (const testCase of cases) {
   assert.ok(result.issue_classification);
   assert.ok(result.recommended_action.length > 0);
   assert.ok(result.next_step.length > 0);
-  assert.equal(result.analysis_version, "phase2-step2");
+  assert.match(result.analysis_version, /^phase2-step3-/);
 
   if (testCase.expectedClassification) {
     assert.equal(result.issue_classification, testCase.expectedClassification, `${testCase.name} classification mismatch`);

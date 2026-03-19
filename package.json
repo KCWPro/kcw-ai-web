@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test:ai-intake": "rm -rf .tmp-ai-tests && tsc --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck --outDir .tmp-ai-tests lib/aiIntakeAnalysis.ts tests/aiIntakeAnalysis.test.ts && node .tmp-ai-tests/tests/aiIntakeAnalysis.test.js && rm -rf .tmp-ai-tests"
+    "test:ai-intake": "rm -rf .tmp-ai-tests && tsc --module commonjs --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck --outDir .tmp-ai-tests lib/aiIntakeAnalysis.ts lib/aiIntakeAnalysisProvider.ts lib/aiIntakeAnalysisRules.ts tests/aiIntakeAnalysis.test.ts tests/aiIntakeAnalysisProvider.test.ts && node .tmp-ai-tests/tests/aiIntakeAnalysis.test.js && node .tmp-ai-tests/tests/aiIntakeAnalysisProvider.test.js && rm -rf .tmp-ai-tests"
   },
   "dependencies": {
     "googleapis": "^171.4.0",
