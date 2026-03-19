@@ -63,6 +63,7 @@ function run() {
   assert.equal(continuity.continuity_state, "needs_intake_completion");
   assert.match(continuity.summary, /partial/i);
   assert.equal(continuity.checklist.length, 4);
+  assert.equal(continuity.follow_up_alignment.alignment_status, "aligned");
 
   const blocked = buildInternalWorkflowContinuity({
     lead: { id: lead.id, status: "new" },
@@ -91,6 +92,22 @@ function run() {
 
   assert.equal(blocked.continuity_state, "blocked");
   assert.ok(blocked.risk_flags.includes("guidance_unavailable"));
+  assert.equal(blocked.follow_up_alignment.alignment_status, "aligned");
+
+  const forcedMismatch = buildInternalWorkflowContinuity({
+    lead: { id: lead.id, status: lead.status },
+    analysis,
+    guidance,
+    handoff,
+    estimateDraft,
+    followUpSuggestion: {
+      ...followUpSuggestion,
+      availability: "unavailable",
+      unavailable_reason: "manual_mismatch_for_test",
+    },
+  });
+  assert.equal(forcedMismatch.continuity_state, "needs_intake_completion");
+  assert.equal(forcedMismatch.follow_up_alignment.alignment_status, "needs_review");
 
   console.log("internalWorkflowContinuity tests passed");
 }

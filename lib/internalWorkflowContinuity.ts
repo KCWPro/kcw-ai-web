@@ -17,6 +17,11 @@ export type InternalWorkflowContinuityViewModel = {
   continuity_state: "ready_for_follow_up" | "needs_intake_completion" | "blocked";
   summary: string;
   next_operator_action: string;
+  follow_up_alignment: {
+    suggestion_availability: InternalFollowUpWorkflowSuggestion["availability"];
+    alignment_status: "aligned" | "needs_review";
+    note: string;
+  };
   checklist: WorkflowContinuityChecklistItem[];
   risk_flags: string[];
 };
@@ -98,11 +103,27 @@ export function buildInternalWorkflowContinuity(params: {
     guidance?.highlight ||
     "Manually review lead context and define next operator action.";
 
+  const alignmentStatus: InternalWorkflowContinuityViewModel["follow_up_alignment"]["alignment_status"] =
+    (continuityState === "blocked" && followUpSuggestion.availability === "unavailable") ||
+    (continuityState !== "blocked" && followUpSuggestion.availability === "available")
+      ? "aligned"
+      : "needs_review";
+
+  const alignmentNote =
+    alignmentStatus === "aligned"
+      ? "Continuity state and follow-up suggestion availability are consistent."
+      : "Continuity and follow-up availability are inconsistent. Manually verify analysis/follow-up inputs.";
+
   return {
     model_version: "phase4-step1-workflow-continuity-v1",
     continuity_state: continuityState,
     summary: summaryByState[continuityState],
     next_operator_action: nextAction,
+    follow_up_alignment: {
+      suggestion_availability: followUpSuggestion.availability,
+      alignment_status: alignmentStatus,
+      note: alignmentNote,
+    },
     checklist,
     risk_flags: Array.from(new Set(riskFlags)),
   };
