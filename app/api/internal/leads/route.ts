@@ -25,7 +25,8 @@ export async function GET() {
     const leads = await readInternalLeadsFromGoogleSheet();
 
     if (leads.length > 0) {
-      return Response.json({ success: true, leads, source: 'google_sheet' });
+      const sortedLeads = [...leads].sort((a, b) => (b.created_at || "").localeCompare(a.created_at || ""));
+      return Response.json({ success: true, leads: sortedLeads, source: 'google_sheet' });
     }
 
     return Response.json({
