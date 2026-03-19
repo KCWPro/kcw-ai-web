@@ -5,6 +5,7 @@ import { readInternalLeadByIdFromGoogleSheet } from "@/lib/internalLeadsStore";
 import LeadStatusUpdater from "./LeadStatusUpdater";
 import LeadNotesEditor from "./LeadNotesEditor";
 import { buildIntakeAnalysis, type IntakeAnalysisResult } from "@/lib/aiIntakeAnalysis";
+import { buildOperatorGuidance, type OperatorGuidanceLevel } from "@/lib/internalOperatorGuidance";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -79,6 +80,44 @@ function IntakeAnalysisSection({ analysis, isFallback }: { analysis: IntakeAnaly
   );
 }
 
+
+function guidanceLevelStyles(level: OperatorGuidanceLevel) {
+  if (level === "critical") return "border-red-200 bg-red-50 text-red-800";
+  if (level === "warning") return "border-amber-200 bg-amber-50 text-amber-800";
+  return "border-slate-200 bg-slate-50 text-slate-700";
+}
+
+function OperatorGuidancePanel({ analysis, isFallback }: { analysis: IntakeAnalysisResult | null; isFallback: boolean }) {
+  const guidance = buildOperatorGuidance(analysis, isFallback);
+
+  if (!guidance) {
+    return (
+      <div className="rounded-2xl border border-slate-200 bg-slate-50 p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-slate-900">Operator Guidance</h2>
+        <p className="mt-3 text-sm leading-6 text-slate-700">
+          暂无可用 AI analysis，当前不提供建议动作层。请先确认 analysis 可用后再人工判断下一步。
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <h2 className="text-lg font-semibold text-slate-900">{guidance.title}</h2>
+      <p className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">{guidance.disclaimer}</p>
+      <p className="mt-2 text-sm font-medium text-slate-700">{guidance.highlight}</p>
+
+      <div className="mt-3 space-y-2">
+        {guidance.items.map((item) => (
+          <div key={item.id} className={`rounded-lg border px-3 py-2 text-sm ${guidanceLevelStyles(item.level)}`}>
+            <p className="font-semibold">{item.label}</p>
+            <p className="mt-1 leading-6">{item.detail}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -147,6 +186,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             <IntakeAnalysisSection analysis={analysis} isFallback={analysisFallback} />
+
+            <OperatorGuidancePanel analysis={analysis} isFallback={analysisFallback} />
           </div>
 
           <div className="space-y-5">
