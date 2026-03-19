@@ -11,6 +11,7 @@ import {
   type OperatorGuidanceViewModel,
 } from "@/lib/internalOperatorGuidance";
 import { buildInternalActionHandoff } from "@/lib/internalActionHandoff";
+import { buildInternalEstimateDraft } from "@/lib/internalEstimateDraft";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -136,6 +137,23 @@ function HandoffPreviewSection({ handoffJson }: { handoffJson: string }) {
   );
 }
 
+
+
+function EstimateSuggestionSection({ draftJson }: { draftJson: string }) {
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold text-slate-900">Estimate Suggestion Draft</h2>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">Draft only</span>
+      </div>
+      <p className="mt-2 text-xs text-slate-600">
+        仅供内部人工评估，不是正式报价；不会自动发送给客户，不会自动写入 quote_amount，也不会自动推进 status。
+      </p>
+      <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-700">{draftJson}</pre>
+    </div>
+  );
+}
+
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
@@ -159,6 +177,18 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
     analysis,
     guidance,
+  });
+  const estimateDraft = buildInternalEstimateDraft({
+    lead: {
+      id: lead.id,
+      city: lead.city,
+      urgency: lead.urgency,
+      property_type: lead.property_type,
+      service_type: lead.service_type,
+    },
+    analysis,
+    guidance,
+    handoff: handoffPreview,
   });
 
   return (
@@ -215,6 +245,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <OperatorGuidancePanel guidance={guidance} />
 
             <HandoffPreviewSection handoffJson={JSON.stringify(handoffPreview, null, 2)} />
+
+            <EstimateSuggestionSection draftJson={JSON.stringify(estimateDraft, null, 2)} />
           </div>
 
           <div className="space-y-5">
