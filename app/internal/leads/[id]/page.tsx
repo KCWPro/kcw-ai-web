@@ -4,6 +4,7 @@ import { statusLabels } from "@/lib/internalLeads";
 import { readInternalLeadByIdFromGoogleSheet } from "@/lib/internalLeadsStore";
 import LeadStatusUpdater from "./LeadStatusUpdater";
 import LeadNotesEditor from "./LeadNotesEditor";
+import { buildIntakeAnalysis } from "@/lib/aiIntakeAnalysis";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -21,6 +22,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
   if (!lead) {
     notFound();
   }
+
+  const analysis = await buildIntakeAnalysis(lead);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -69,6 +72,13 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <div className="rounded-2xl bg-white p-5 shadow-sm">
               <h2 className="text-lg font-semibold">ai_summary</h2>
               <p className="mt-3 text-sm leading-6 text-slate-700">{lead.ai_summary || "No AI summary available."}</p>
+            </div>
+
+            <div className="rounded-2xl bg-white p-5 shadow-sm">
+              <h2 className="text-lg font-semibold">AI Intake Analysis (Phase 2 - Step 1)</h2>
+              <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
+                {JSON.stringify(analysis, null, 2)}
+              </pre>
             </div>
           </div>
 
