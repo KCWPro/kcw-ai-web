@@ -23,7 +23,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
-  const analysis = buildIntakeAnalysis(lead);
+  const analysis = await buildIntakeAnalysis(lead);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">

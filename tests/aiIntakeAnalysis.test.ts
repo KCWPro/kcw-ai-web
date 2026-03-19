@@ -93,33 +93,40 @@ const cases: Case[] = [
   },
 ];
 
-for (const testCase of cases) {
-  const result = buildIntakeAnalysis(testCase.lead);
+async function run() {
+  for (const testCase of cases) {
+    const result = await buildIntakeAnalysis(testCase.lead);
 
-  assert.ok(result.issue_classification);
-  assert.ok(result.recommended_action.length > 0);
-  assert.ok(result.next_step.length > 0);
-  assert.match(result.analysis_version, /^phase2-step3-/);
+    assert.ok(result.issue_classification);
+    assert.ok(result.recommended_action.length > 0);
+    assert.ok(result.next_step.length > 0);
+    assert.match(result.analysis_version, /^phase2-step(3|4)-/);
 
-  if (testCase.expectedClassification) {
-    assert.equal(result.issue_classification, testCase.expectedClassification, `${testCase.name} classification mismatch`);
+    if (testCase.expectedClassification) {
+      assert.equal(result.issue_classification, testCase.expectedClassification, `${testCase.name} classification mismatch`);
+    }
+
+    if (testCase.expectedCompleteness) {
+      assert.equal(result.info_completeness, testCase.expectedCompleteness, `${testCase.name} completeness mismatch`);
+    }
+
+    for (const requiredMissing of testCase.mustIncludeMissing || []) {
+      assert.ok(result.missing_fields.includes(requiredMissing as never), `${testCase.name} missing field ${requiredMissing}`);
+    }
+
+    if (testCase.lead.urgency === "high") {
+      assert.match(result.recommended_action.toLowerCase(), /priority|call/);
+    }
+
+    if (result.info_completeness === "insufficient") {
+      assert.equal(result.suggested_price_range.band, "insufficient_information");
+    }
   }
 
-  if (testCase.expectedCompleteness) {
-    assert.equal(result.info_completeness, testCase.expectedCompleteness, `${testCase.name} completeness mismatch`);
-  }
-
-  for (const requiredMissing of testCase.mustIncludeMissing || []) {
-    assert.ok(result.missing_fields.includes(requiredMissing as never), `${testCase.name} missing field ${requiredMissing}`);
-  }
-
-  if (testCase.lead.urgency === "high") {
-    assert.match(result.recommended_action.toLowerCase(), /priority|call/);
-  }
-
-  if (result.info_completeness === "insufficient") {
-    assert.equal(result.suggested_price_range.band, "insufficient_information");
-  }
+  console.log(`aiIntakeAnalysis tests passed: ${cases.length} cases`);
 }
 
-console.log(`aiIntakeAnalysis tests passed: ${cases.length} cases`);
+run().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

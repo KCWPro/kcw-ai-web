@@ -1,3 +1,4 @@
+import { runOpenAiIntakeAnalysis } from "./aiIntakeAnalysisOpenAI";
 import {
   type AnalysisLeadInput,
   type IntakeAnalysisResult,
@@ -8,17 +9,17 @@ export type IntakeAnalysisProviderName = "rules" | "mock_ai" | "openai";
 
 export type IntakeAnalysisProvider = {
   name: IntakeAnalysisProviderName;
-  analyze: (lead: AnalysisLeadInput) => IntakeAnalysisResult;
+  analyze: (lead: AnalysisLeadInput) => Promise<IntakeAnalysisResult>;
 };
 
 const rulesProvider: IntakeAnalysisProvider = {
   name: "rules",
-  analyze: (lead) => buildRuleBasedIntakeAnalysis(lead),
+  analyze: async (lead) => buildRuleBasedIntakeAnalysis(lead),
 };
 
 const mockAiProvider: IntakeAnalysisProvider = {
   name: "mock_ai",
-  analyze: (lead) => {
+  analyze: async (lead) => {
     const result = buildRuleBasedIntakeAnalysis(lead);
     return {
       ...result,
@@ -27,9 +28,15 @@ const mockAiProvider: IntakeAnalysisProvider = {
   },
 };
 
+const openAiProvider: IntakeAnalysisProvider = {
+  name: "openai",
+  analyze: async (lead) => runOpenAiIntakeAnalysis(lead),
+};
+
 const providers: Partial<Record<IntakeAnalysisProviderName, IntakeAnalysisProvider>> = {
   rules: rulesProvider,
   mock_ai: mockAiProvider,
+  openai: openAiProvider,
 };
 
 export function resolveIntakeAnalysisProviderName(configuredProviderName?: string): IntakeAnalysisProviderName {
@@ -53,11 +60,14 @@ export function getIntakeAnalysisProvider(configuredProviderName?: string): Inta
   return rulesProvider;
 }
 
-export function runIntakeAnalysisWithProvider(lead: AnalysisLeadInput, configuredProviderName?: string): IntakeAnalysisResult {
+export async function runIntakeAnalysisWithProvider(
+  lead: AnalysisLeadInput,
+  configuredProviderName?: string,
+): Promise<IntakeAnalysisResult> {
   const provider = getIntakeAnalysisProvider(configuredProviderName);
 
   try {
-    return provider.analyze(lead);
+    return await provider.analyze(lead);
   } catch {
     return rulesProvider.analyze(lead);
   }
