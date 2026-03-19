@@ -4,13 +4,78 @@ import { statusLabels } from "@/lib/internalLeads";
 import { readInternalLeadByIdFromGoogleSheet } from "@/lib/internalLeadsStore";
 import LeadStatusUpdater from "./LeadStatusUpdater";
 import LeadNotesEditor from "./LeadNotesEditor";
-import { buildIntakeAnalysis } from "@/lib/aiIntakeAnalysis";
+import { buildIntakeAnalysis, type IntakeAnalysisResult } from "@/lib/aiIntakeAnalysis";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
     <p>
       <span className="font-medium text-slate-500">{label}:</span> {value || "-"}
     </p>
+  );
+}
+
+function AnalysisField({ label, value }: { label: string; value: string }) {
+  return (
+    <p className="text-sm leading-6 text-slate-700">
+      <span className="font-medium text-slate-500">{label}:</span> {value}
+    </p>
+  );
+}
+
+function formatUsd(value: number | null) {
+  if (value === null) {
+    return "-";
+  }
+
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    maximumFractionDigits: 0,
+  }).format(value);
+}
+
+function IntakeAnalysisSection({ analysis, isFallback }: { analysis: IntakeAnalysisResult | null; isFallback: boolean }) {
+  if (!analysis) {
+    return (
+      <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5 shadow-sm">
+        <h2 className="text-lg font-semibold text-amber-900">AI Intake Analysis</h2>
+        <p className="mt-3 text-sm leading-6 text-amber-800">
+          AI analysis is temporarily unavailable. Lead detail data remains available. Please refresh later.
+        </p>
+      </div>
+    );
+  }
+
+  const missingFields = analysis.missing_fields.length > 0 ? analysis.missing_fields.join(", ") : "None";
+
+  return (
+    <div className="rounded-2xl bg-white p-5 shadow-sm">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-lg font-semibold">AI Intake Analysis</h2>
+        <span className="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">Read-only</span>
+      </div>
+
+      {isFallback ? (
+        <p className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-800">
+          Analysis is served with safe degradation mode due to runtime issue.
+        </p>
+      ) : null}
+
+      <div className="mt-3 space-y-1">
+        <AnalysisField label="issue_classification" value={analysis.issue_classification} />
+        <AnalysisField label="info_completeness" value={analysis.info_completeness} />
+        <AnalysisField label="missing_fields" value={missingFields} />
+        <AnalysisField label="recommended_action" value={analysis.recommended_action} />
+        <AnalysisField
+          label="suggested_price_range"
+          value={`${analysis.suggested_price_range.band} (${formatUsd(analysis.suggested_price_range.min)} - ${formatUsd(analysis.suggested_price_range.max)})`}
+        />
+        <AnalysisField label="price_notes" value={analysis.suggested_price_range.notes} />
+        <AnalysisField label="next_step" value={analysis.next_step} />
+        <AnalysisField label="confidence" value={analysis.confidence.toFixed(2)} />
+        <AnalysisField label="analysis_version" value={analysis.analysis_version} />
+      </div>
+    </div>
   );
 }
 
@@ -23,7 +88,14 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     notFound();
   }
 
-  const analysis = await buildIntakeAnalysis(lead);
+  let analysis: IntakeAnalysisResult | null = null;
+  let analysisFallback = false;
+
+  try {
+    analysis = await buildIntakeAnalysis(lead);
+  } catch {
+    analysisFallback = true;
+  }
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -74,12 +146,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               <p className="mt-3 text-sm leading-6 text-slate-700">{lead.ai_summary || "No AI summary available."}</p>
             </div>
 
-            <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">AI Intake Analysis (Phase 2 - Step 1)</h2>
-              <pre className="mt-3 overflow-x-auto rounded-lg bg-slate-50 p-3 text-xs text-slate-700">
-                {JSON.stringify(analysis, null, 2)}
-              </pre>
-            </div>
+            <IntakeAnalysisSection analysis={analysis} isFallback={analysisFallback} />
           </div>
 
           <div className="space-y-5">
