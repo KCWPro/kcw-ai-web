@@ -8,7 +8,7 @@ Stage: Phase 4 / Step 4 (Final Freeze)
 
 - Workflow Continuity 聚合层（read-only）已落地：可集中展示 continuity state、checklist、risk flags、next operator action。
 - Follow-up 展示层已结构化：availability、alignment、recommended action、summaries、prerequisites、risk flags。
-- continuity 与 follow-up 已实现字段对齐（`follow_up_alignment`），支持一致/不一致识别。
+- continuity 与 follow-up 已实现字段对齐（`follow_up_alignment`），支持一致/不一致识别；其中 `needs_intake_completion + available` 明确归为 `needs_review`（避免过度乐观语义）。
 - Phase 4 中段文档、边界声明与一致性自检已完成，形成可审查的阶段记录。
 
 ## 2) Step 1 / Step 2 / Step 3 完成内容

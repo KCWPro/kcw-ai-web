@@ -33,6 +33,12 @@ const analysis: IntakeAnalysisResult = {
   analysis_version: "phase2-step3-rules",
 };
 
+const readyAnalysis: IntakeAnalysisResult = {
+  ...analysis,
+  info_completeness: "sufficient",
+  missing_fields: [],
+};
+
 function run() {
   const guidance = buildOperatorGuidance(analysis, false);
   const handoff = buildInternalActionHandoff({
@@ -63,7 +69,39 @@ function run() {
   assert.equal(continuity.continuity_state, "needs_intake_completion");
   assert.match(continuity.summary, /partial/i);
   assert.equal(continuity.checklist.length, 4);
-  assert.equal(continuity.follow_up_alignment.alignment_status, "aligned");
+  assert.equal(continuity.follow_up_alignment.alignment_status, "needs_review");
+  assert.match(continuity.follow_up_alignment.note, /intake completeness is still partial/i);
+
+  const readyGuidance = buildOperatorGuidance(readyAnalysis, false);
+  const readyHandoff = buildInternalActionHandoff({
+    lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
+    analysis: readyAnalysis,
+    guidance: readyGuidance,
+    nowIso: "2026-03-19T00:00:00.000Z",
+  });
+  const readyEstimateDraft = buildInternalEstimateDraft({
+    lead,
+    analysis: readyAnalysis,
+    guidance: readyGuidance,
+    handoff: readyHandoff,
+  });
+  const readyFollowUpSuggestion = buildInternalFollowUpWorkflowSuggestion({
+    lead: { id: lead.id, urgency: lead.urgency, city: lead.city, service_type: lead.service_type },
+    analysis: readyAnalysis,
+    guidance: readyGuidance,
+    handoff: readyHandoff,
+    estimateDraft: readyEstimateDraft,
+  });
+  const readyContinuity = buildInternalWorkflowContinuity({
+    lead: { id: lead.id, status: lead.status },
+    analysis: readyAnalysis,
+    guidance: readyGuidance,
+    handoff: readyHandoff,
+    estimateDraft: readyEstimateDraft,
+    followUpSuggestion: readyFollowUpSuggestion,
+  });
+  assert.equal(readyContinuity.continuity_state, "ready_for_follow_up");
+  assert.equal(readyContinuity.follow_up_alignment.alignment_status, "aligned");
 
   const blocked = buildInternalWorkflowContinuity({
     lead: { id: lead.id, status: "new" },
@@ -94,20 +132,20 @@ function run() {
   assert.ok(blocked.risk_flags.includes("guidance_unavailable"));
   assert.equal(blocked.follow_up_alignment.alignment_status, "aligned");
 
-  const forcedMismatch = buildInternalWorkflowContinuity({
+  const readyButUnavailable = buildInternalWorkflowContinuity({
     lead: { id: lead.id, status: lead.status },
-    analysis,
-    guidance,
-    handoff,
-    estimateDraft,
+    analysis: readyAnalysis,
+    guidance: readyGuidance,
+    handoff: readyHandoff,
+    estimateDraft: readyEstimateDraft,
     followUpSuggestion: {
-      ...followUpSuggestion,
+      ...readyFollowUpSuggestion,
       availability: "unavailable",
       unavailable_reason: "manual_mismatch_for_test",
     },
   });
-  assert.equal(forcedMismatch.continuity_state, "needs_intake_completion");
-  assert.equal(forcedMismatch.follow_up_alignment.alignment_status, "needs_review");
+  assert.equal(readyButUnavailable.continuity_state, "ready_for_follow_up");
+  assert.equal(readyButUnavailable.follow_up_alignment.alignment_status, "needs_review");
 
   console.log("internalWorkflowContinuity tests passed");
 }

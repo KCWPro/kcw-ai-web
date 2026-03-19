@@ -228,7 +228,8 @@ function FollowUpWorkflowSuggestionSection({
         仅为内部下一步建议，不会自动联系客户、不会自动推进状态、不会自动创建任务。
       </p>
       <p className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-        Continuity alignment: {continuity.follow_up_alignment.alignment_status} · {continuity.follow_up_alignment.note}
+        Continuity alignment: {continuity.follow_up_alignment.alignment_status} · {continuity.follow_up_alignment.note} This is
+        suggestion-only and does not auto-advance workflow.
       </p>
 
       {suggestion.availability === "unavailable" ? (

@@ -4,7 +4,7 @@
 在不新增任何自动执行能力的前提下，将 Step 1 continuity 信息更清晰地挂接到 internal follow-up 入口，提升 operator 可读性与下一步动作理解。
 
 ## In Scope
-- continuity 与 follow-up suggestion 字段对齐（alignment status）
+- continuity 与 follow-up suggestion 字段对齐（alignment status，按 operator 判断语义）
 - lead detail 页 follow-up 区块从 raw JSON 改为结构化展示
 - blocked/unavailable/partial 状态文案增强
 - continuity 与 follow-up 交叉场景测试补充
@@ -28,3 +28,9 @@
 - 写入行为变化：none
 - 自动执行能力：none
 - Phase 2 analysis contract：unchanged
+
+## Alignment Semantics Update (Hotfix)
+- `alignment_status` 不是“非 blocked 即 aligned”的技术等价关系。
+- `needs_intake_completion + available` 现在明确标记为 `needs_review`，用于提示：
+  - follow-up suggestion 可生成，但 intake completeness 仍需人工补齐/确认；
+  - 不应将该状态理解为可直接推进。

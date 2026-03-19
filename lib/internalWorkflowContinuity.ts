@@ -103,16 +103,33 @@ export function buildInternalWorkflowContinuity(params: {
     guidance?.highlight ||
     "Manually review lead context and define next operator action.";
 
-  const alignmentStatus: InternalWorkflowContinuityViewModel["follow_up_alignment"]["alignment_status"] =
-    (continuityState === "blocked" && followUpSuggestion.availability === "unavailable") ||
-    (continuityState !== "blocked" && followUpSuggestion.availability === "available")
-      ? "aligned"
-      : "needs_review";
+  let alignmentStatus: InternalWorkflowContinuityViewModel["follow_up_alignment"]["alignment_status"] = "needs_review";
+  let alignmentNote =
+    "Continuity and follow-up availability are inconsistent. Manually verify analysis/follow-up inputs.";
 
-  const alignmentNote =
-    alignmentStatus === "aligned"
-      ? "Continuity state and follow-up suggestion availability are consistent."
-      : "Continuity and follow-up availability are inconsistent. Manually verify analysis/follow-up inputs.";
+  if (continuityState === "blocked") {
+    if (followUpSuggestion.availability === "unavailable") {
+      alignmentStatus = "aligned";
+      alignmentNote = "Analysis is blocked and follow-up is unavailable as expected.";
+    } else {
+      alignmentNote = "Follow-up appears available while continuity is blocked. Recheck analysis availability before proceeding.";
+    }
+  } else if (continuityState === "ready_for_follow_up") {
+    if (followUpSuggestion.availability === "available") {
+      alignmentStatus = "aligned";
+      alignmentNote = "Continuity is ready and follow-up suggestion is available for operator review.";
+    } else {
+      alignmentNote = "Continuity appears ready but follow-up is unavailable. Manually verify downstream suggestion inputs.";
+    }
+  } else if (continuityState === "needs_intake_completion") {
+    if (followUpSuggestion.availability === "available") {
+      alignmentNote =
+        "Follow-up suggestion can be generated, but intake completeness is still partial. Complete/confirm intake fields before proceeding.";
+    } else {
+      alignmentNote =
+        "Intake completeness is still partial and follow-up is unavailable. Complete intake context before proceeding.";
+    }
+  }
 
   return {
     model_version: "phase4-step1-workflow-continuity-v1",
