@@ -29,7 +29,10 @@ export type IntakeAnalysisFallbackReason =
   | "provider_not_implemented"
   | "provider_execution_error"
   | "invalid_provider_output"
+  | "circuit_open"
   | "unknown";
+
+export type IntakeAnalysisCircuitState = "closed" | "open" | "half_open";
 
 export type IntakeAnalysisAttempt = {
   provider: IntakeAnalysisProviderName;
@@ -50,12 +53,67 @@ export type IntakeAnalysisAudit = {
   analysis_version: string;
   timestamp: string;
   provider_attempts: IntakeAnalysisAttempt[];
+  retry_used: boolean;
+  retry_count: number;
+  circuit_breaker_state: IntakeAnalysisCircuitState;
+  circuit_breaker_triggered: boolean;
+  skipped_provider_reason: "none" | "circuit_open";
 };
 
 export type IntakeAnalysisWithAudit = {
   result: IntakeAnalysisResult;
   audit: IntakeAnalysisAudit;
 };
+
+type ProviderCircuitState = {
+  state: IntakeAnalysisCircuitState;
+  consecutive_failures: number;
+  opened_at: number | null;
+  cool_down_ms: number;
+  last_failure_category: IntakeAnalysisErrorCategory | null;
+};
+
+type GovernanceConfig = {
+  openAiMaxRetries: number;
+  openAiFailureThreshold: number;
+  openAiCooldownMs: number;
+  retryDelayMs: number;
+};
+
+const DEFAULT_GOVERNANCE_CONFIG: GovernanceConfig = {
+  openAiMaxRetries: 1,
+  openAiFailureThreshold: 2,
+  openAiCooldownMs: 30_000,
+  retryDelayMs: 20,
+};
+
+let governanceConfig: GovernanceConfig = { ...DEFAULT_GOVERNANCE_CONFIG };
+
+const providerRuntimeState: Record<IntakeAnalysisProviderName, ProviderCircuitState> = {
+  rules: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
+  mock_ai: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
+  openai: { state: "closed", consecutive_failures: 0, opened_at: null, cool_down_ms: governanceConfig.openAiCooldownMs, last_failure_category: null },
+};
+
+export function __resetProviderRuntimeGovernanceForTests() {
+  governanceConfig = { ...DEFAULT_GOVERNANCE_CONFIG };
+  providerRuntimeState.openai = {
+    state: "closed",
+    consecutive_failures: 0,
+    opened_at: null,
+    cool_down_ms: governanceConfig.openAiCooldownMs,
+    last_failure_category: null,
+  };
+}
+
+export function __setProviderRuntimeGovernanceConfigForTests(partial: Partial<GovernanceConfig>) {
+  governanceConfig = {
+    ...governanceConfig,
+    ...partial,
+  };
+
+  providerRuntimeState.openai.cool_down_ms = governanceConfig.openAiCooldownMs;
+}
 
 const rulesProvider: IntakeAnalysisProvider = {
   name: "rules",
@@ -92,6 +150,10 @@ function isDebugEnabled() {
   return (process.env.INTAKE_ANALYSIS_DEBUG || "").trim().toLowerCase() === "true";
 }
 
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 function classifyError(error: unknown): IntakeAnalysisErrorCategory {
   if (error instanceof OpenAiIntakeError) {
     if (error.category === "missing_config") return "missing_config";
@@ -120,6 +182,72 @@ function categoryToFallbackReason(category: IntakeAnalysisErrorCategory): Intake
 
 function resolveRequestedProvider(configuredProviderName?: string): string {
   return (configuredProviderName || process.env.INTAKE_ANALYSIS_PROVIDER || "rules").trim().toLowerCase() || "rules";
+}
+
+function getCircuitState(providerName: IntakeAnalysisProviderName): IntakeAnalysisCircuitState {
+  const state = providerRuntimeState[providerName];
+
+  if (providerName !== "openai") {
+    return "closed";
+  }
+
+  if (state.state !== "open") {
+    return state.state;
+  }
+
+  if (!state.opened_at) {
+    return state.state;
+  }
+
+  const elapsed = nowMs() - state.opened_at;
+  if (elapsed >= state.cool_down_ms) {
+    state.state = "half_open";
+    return "half_open";
+  }
+
+  return "open";
+}
+
+function recordCircuitFailure(providerName: IntakeAnalysisProviderName, category: IntakeAnalysisErrorCategory) {
+  if (providerName !== "openai") {
+    return;
+  }
+
+  const circuit = providerRuntimeState.openai;
+
+  if (category === "missing_config" || category === "invalid_provider") {
+    return;
+  }
+
+  circuit.consecutive_failures += 1;
+  circuit.last_failure_category = category;
+
+  if (circuit.consecutive_failures >= governanceConfig.openAiFailureThreshold) {
+    circuit.state = "open";
+    circuit.opened_at = nowMs();
+  }
+}
+
+function recordCircuitSuccess(providerName: IntakeAnalysisProviderName) {
+  if (providerName !== "openai") {
+    return;
+  }
+
+  providerRuntimeState.openai = {
+    ...providerRuntimeState.openai,
+    state: "closed",
+    consecutive_failures: 0,
+    opened_at: null,
+    last_failure_category: null,
+  };
+}
+
+function shouldRetry(category: IntakeAnalysisErrorCategory, providerName: IntakeAnalysisProviderName) {
+  if (providerName !== "openai") {
+    return false;
+  }
+
+  return category === "provider_execution_error" || category === "unknown";
 }
 
 export function resolveIntakeAnalysisProviderName(configuredProviderName?: string): IntakeAnalysisProviderName {
@@ -154,139 +282,177 @@ export async function runIntakeAnalysisWithAudit(
   const attempts: IntakeAnalysisAttempt[] = [];
   const providerExists = !!providers[resolvedProvider];
 
+  const buildAudit = (
+    result: IntakeAnalysisResult,
+    params: {
+      finalProvider: IntakeAnalysisProviderName;
+      status: IntakeAnalysisRunStatus;
+      fallbackUsed: boolean;
+      fallbackReason: IntakeAnalysisFallbackReason;
+      errorCategory: IntakeAnalysisErrorCategory | null;
+      retryCount: number;
+      circuitTriggered: boolean;
+      skippedProviderReason: "none" | "circuit_open";
+    },
+  ): IntakeAnalysisAudit => ({
+    requested_provider: requestedProvider,
+    resolved_provider: resolvedProvider,
+    final_provider: params.finalProvider,
+    status: params.status,
+    fallback_used: params.fallbackUsed,
+    fallback_reason: params.fallbackReason,
+    duration_ms: nowMs() - start,
+    error_category: params.errorCategory,
+    analysis_version: result.analysis_version,
+    timestamp,
+    provider_attempts: attempts,
+    retry_used: params.retryCount > 0,
+    retry_count: params.retryCount,
+    circuit_breaker_state: getCircuitState("openai"),
+    circuit_breaker_triggered: params.circuitTriggered,
+    skipped_provider_reason: params.skippedProviderReason,
+  });
+
   if (!providerExists) {
     const fallbackStart = nowMs();
     const fallbackResult = await rulesProvider.analyze(lead);
-    const fallbackDuration = nowMs() - fallbackStart;
-
-    attempts.push({
-      provider: resolvedProvider,
-      status: "failed",
-      duration_ms: 0,
-      error_category: "provider_not_implemented",
-    });
-    attempts.push({
-      provider: "rules",
-      status: "success",
-      duration_ms: fallbackDuration,
-      error_category: null,
-    });
+    attempts.push({ provider: "rules", status: "success", duration_ms: nowMs() - fallbackStart, error_category: null });
 
     return {
       result: fallbackResult,
-      audit: {
-        requested_provider: requestedProvider,
-        resolved_provider: resolvedProvider,
-        final_provider: "rules",
+      audit: buildAudit(fallbackResult, {
+        finalProvider: "rules",
         status: "fallback_success",
-        fallback_used: true,
-        fallback_reason: "provider_not_implemented",
-        duration_ms: nowMs() - start,
-        error_category: "provider_not_implemented",
-        analysis_version: fallbackResult.analysis_version,
-        timestamp,
-        provider_attempts: attempts,
-      },
+        fallbackUsed: true,
+        fallbackReason: "provider_not_implemented",
+        errorCategory: "provider_not_implemented",
+        retryCount: 0,
+        circuitTriggered: false,
+        skippedProviderReason: "none",
+      }),
     };
   }
 
   const provider = providers[resolvedProvider] as IntakeAnalysisProvider;
 
-  try {
-    const providerStart = nowMs();
-    const result = await provider.analyze(lead);
-    attempts.push({
-      provider: provider.name,
-      status: "success",
-      duration_ms: nowMs() - providerStart,
-      error_category: null,
+  if (resolvedProvider === "openai" && getCircuitState("openai") === "open") {
+    const fallbackStart = nowMs();
+    const fallbackResult = await rulesProvider.analyze(lead);
+    attempts.push({ provider: "rules", status: "success", duration_ms: nowMs() - fallbackStart, error_category: null });
+
+    const audit = buildAudit(fallbackResult, {
+      finalProvider: "rules",
+      status: "fallback_success",
+      fallbackUsed: true,
+      fallbackReason: "circuit_open",
+      errorCategory: "provider_execution_error",
+      retryCount: 0,
+      circuitTriggered: true,
+      skippedProviderReason: "circuit_open",
     });
 
-    const invalidRequestedProvider = requestedProvider !== resolvedProvider;
-
-    const audit: IntakeAnalysisAudit = {
-      requested_provider: requestedProvider,
-      resolved_provider: resolvedProvider,
-      final_provider: provider.name,
-      status: invalidRequestedProvider ? "fallback_success" : "success",
-      fallback_used: invalidRequestedProvider,
-      fallback_reason: invalidRequestedProvider ? "invalid_provider" : "none",
-      duration_ms: nowMs() - start,
-      error_category: invalidRequestedProvider ? "invalid_provider" : null,
-      analysis_version: result.analysis_version,
-      timestamp,
-      provider_attempts: attempts,
-    };
-
-    if (isDebugEnabled() && invalidRequestedProvider) {
-      console.warn("[intake-analysis] provider resolved with fallback", audit);
+    if (isDebugEnabled()) {
+      console.warn("[intake-analysis] circuit open, skipping provider", audit);
     }
 
-    return { result, audit };
-  } catch (error: unknown) {
-    const category = classifyError(error);
+    return { result: fallbackResult, audit };
+  }
 
-    attempts.push({
-      provider: provider.name,
-      status: "failed",
-      duration_ms: 0,
-      error_category: category,
-    });
+  let retryCount = 0;
+  let lastErrorCategory: IntakeAnalysisErrorCategory | null = null;
+
+  const maxRetries = resolvedProvider === "openai" ? governanceConfig.openAiMaxRetries : 0;
+
+  for (let attemptIndex = 0; attemptIndex <= maxRetries; attemptIndex += 1) {
+    const attemptStart = nowMs();
 
     try {
-      const fallbackStart = nowMs();
-      const fallbackResult = await rulesProvider.analyze(lead);
+      const result = await provider.analyze(lead);
       attempts.push({
-        provider: "rules",
+        provider: provider.name,
         status: "success",
-        duration_ms: nowMs() - fallbackStart,
+        duration_ms: nowMs() - attemptStart,
         error_category: null,
       });
 
-      const audit: IntakeAnalysisAudit = {
-        requested_provider: requestedProvider,
-        resolved_provider: resolvedProvider,
-        final_provider: "rules",
-        status: "fallback_success",
-        fallback_used: true,
-        fallback_reason: categoryToFallbackReason(category),
-        duration_ms: nowMs() - start,
+      recordCircuitSuccess(provider.name);
+
+      const invalidRequestedProvider = requestedProvider !== resolvedProvider;
+      const audit = buildAudit(result, {
+        finalProvider: provider.name,
+        status: invalidRequestedProvider ? "fallback_success" : "success",
+        fallbackUsed: invalidRequestedProvider,
+        fallbackReason: invalidRequestedProvider ? "invalid_provider" : "none",
+        errorCategory: invalidRequestedProvider ? "invalid_provider" : null,
+        retryCount,
+        circuitTriggered: false,
+        skippedProviderReason: "none",
+      });
+
+      if (isDebugEnabled() && (invalidRequestedProvider || retryCount > 0 || getCircuitState("openai") === "half_open")) {
+        console.warn("[intake-analysis] provider execution summary", audit);
+      }
+
+      return { result, audit };
+    } catch (error: unknown) {
+      const category = classifyError(error);
+      lastErrorCategory = category;
+      attempts.push({
+        provider: provider.name,
+        status: "failed",
+        duration_ms: nowMs() - attemptStart,
         error_category: category,
-        analysis_version: fallbackResult.analysis_version,
-        timestamp,
-        provider_attempts: attempts,
-      };
+      });
+
+      const canRetry = shouldRetry(category, provider.name) && attemptIndex < maxRetries;
+      if (canRetry) {
+        retryCount += 1;
+
+        if (governanceConfig.retryDelayMs > 0) {
+          await sleep(governanceConfig.retryDelayMs);
+        }
+
+        continue;
+      }
+
+      recordCircuitFailure(provider.name, category);
+
+      const fallbackStart = nowMs();
+      const fallbackResult = await rulesProvider.analyze(lead);
+      attempts.push({ provider: "rules", status: "success", duration_ms: nowMs() - fallbackStart, error_category: null });
+
+      const audit = buildAudit(fallbackResult, {
+        finalProvider: "rules",
+        status: "fallback_success",
+        fallbackUsed: true,
+        fallbackReason: categoryToFallbackReason(category),
+        errorCategory: category,
+        retryCount,
+        circuitTriggered: getCircuitState("openai") === "open",
+        skippedProviderReason: "none",
+      });
 
       if (isDebugEnabled()) {
         console.warn("[intake-analysis] provider fallback triggered", audit);
       }
 
-      return {
-        result: fallbackResult,
-        audit,
-      };
-    } catch {
-      const audit: IntakeAnalysisAudit = {
-        requested_provider: requestedProvider,
-        resolved_provider: resolvedProvider,
-        final_provider: resolvedProvider,
-        status: "failed",
-        fallback_used: true,
-        fallback_reason: categoryToFallbackReason(category),
-        duration_ms: nowMs() - start,
-        error_category: category,
-        analysis_version: "phase2-step5-failed",
-        timestamp,
-        provider_attempts: attempts,
-      };
-
-      if (isDebugEnabled()) {
-        console.error("[intake-analysis] provider failed without fallback", audit);
-      }
-
-      throw new Error("Intake analysis failed without safe fallback");
+      return { result: fallbackResult, audit };
     }
   }
+
+  const fallbackResult = await rulesProvider.analyze(lead);
+  const audit = buildAudit(fallbackResult, {
+    finalProvider: "rules",
+    status: "fallback_success",
+    fallbackUsed: true,
+    fallbackReason: lastErrorCategory ? categoryToFallbackReason(lastErrorCategory) : "unknown",
+    errorCategory: lastErrorCategory,
+    retryCount,
+    circuitTriggered: false,
+    skippedProviderReason: "none",
+  });
+
+  return { result: fallbackResult, audit };
 }
 
 export async function runIntakeAnalysisWithProvider(

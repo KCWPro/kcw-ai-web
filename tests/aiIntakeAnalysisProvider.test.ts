@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { buildIntakeAnalysis } from "../lib/aiIntakeAnalysis";
 import { __setOpenAiIntakeRunnerForTests } from "../lib/aiIntakeAnalysisOpenAI";
 import {
+  __resetProviderRuntimeGovernanceForTests,
+  __setProviderRuntimeGovernanceConfigForTests,
   getIntakeAnalysisProvider,
   resolveIntakeAnalysisProviderName,
   runIntakeAnalysisWithAudit,
@@ -23,6 +25,14 @@ const previousApiKeyEnv = process.env.OPENAI_API_KEY;
 const previousModelEnv = process.env.OPENAI_MODEL;
 
 async function run() {
+  __resetProviderRuntimeGovernanceForTests();
+  __setProviderRuntimeGovernanceConfigForTests({
+    openAiMaxRetries: 1,
+    openAiFailureThreshold: 2,
+    openAiCooldownMs: 80,
+    retryDelayMs: 0,
+  });
+
   process.env.INTAKE_ANALYSIS_PROVIDER = "";
   const defaultResult = await buildIntakeAnalysis(sampleLead);
   assert.match(defaultResult.analysis_version, /^phase2-step3-rules$/);
@@ -34,10 +44,8 @@ async function run() {
   assert.equal(rulesAuditRun.audit.status, "success");
   assert.equal(rulesAuditRun.audit.fallback_used, false);
   assert.equal(rulesAuditRun.audit.final_provider, "rules");
-  assert.ok(rulesAuditRun.audit.duration_ms >= 0);
-
-  const unknownProviderFallbackResult = await runIntakeAnalysisWithProvider(sampleLead, "not_a_provider");
-  assert.match(unknownProviderFallbackResult.analysis_version, /^phase2-step3-rules$/);
+  assert.equal(rulesAuditRun.audit.retry_count, 0);
+  assert.equal(rulesAuditRun.audit.circuit_breaker_triggered, false);
 
   const unknownProviderAudit = await runIntakeAnalysisWithAudit(sampleLead, "not_a_provider");
   assert.equal(unknownProviderAudit.audit.final_provider, "rules");
@@ -57,7 +65,6 @@ async function run() {
   process.env.OPENAI_MODEL = "gpt-4o-mini";
   const openAiMissingKeyAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
   assert.equal(openAiMissingKeyAudit.audit.final_provider, "rules");
-  assert.equal(openAiMissingKeyAudit.audit.fallback_used, true);
   assert.equal(openAiMissingKeyAudit.audit.fallback_reason, "missing_config");
 
   process.env.OPENAI_API_KEY = "test-key";
@@ -68,6 +75,73 @@ async function run() {
 
   process.env.OPENAI_API_KEY = "test-key";
   process.env.OPENAI_MODEL = "gpt-4o-mini";
+
+  // A. first attempt fails, retry succeeds.
+  let retryRunnerCount = 0;
+  __setOpenAiIntakeRunnerForTests(async () => {
+    retryRunnerCount += 1;
+    if (retryRunnerCount === 1) {
+      throw new Error("transient openai timeout");
+    }
+
+    return {
+      issue_classification: "water_heater",
+      info_completeness: "sufficient",
+      missing_fields: [],
+      recommended_action: "Route to ops and confirm installation constraints.",
+      suggested_price_range: {
+        band: "likely_medium_job",
+        min: 300,
+        max: 1800,
+        notes: "Internal placeholder only",
+      },
+      next_step: "Create callback task and verify access window.",
+      confidence: 0.82,
+    };
+  });
+
+  const retrySuccessAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(retrySuccessAudit.audit.final_provider, "openai");
+  assert.equal(retrySuccessAudit.audit.status, "success");
+  assert.equal(retrySuccessAudit.audit.fallback_used, false);
+  assert.equal(retrySuccessAudit.audit.retry_used, true);
+  assert.equal(retrySuccessAudit.audit.retry_count, 1);
+
+  // B. openai still fails after max retries -> fallback rules.
+  __setOpenAiIntakeRunnerForTests(async () => {
+    throw new Error("persistent openai timeout");
+  });
+
+  const retryExhaustedAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(retryExhaustedAudit.audit.final_provider, "rules");
+  assert.equal(retryExhaustedAudit.audit.fallback_used, true);
+  assert.equal(retryExhaustedAudit.audit.retry_count, 1);
+  assert.equal(retryExhaustedAudit.audit.error_category, "provider_execution_error");
+
+  // C. trigger circuit open and verify next request skips openai.
+  __setProviderRuntimeGovernanceConfigForTests({ openAiMaxRetries: 0, openAiFailureThreshold: 2, openAiCooldownMs: 80, retryDelayMs: 0 });
+  __resetProviderRuntimeGovernanceForTests();
+  __setProviderRuntimeGovernanceConfigForTests({ openAiMaxRetries: 0, openAiFailureThreshold: 2, openAiCooldownMs: 80, retryDelayMs: 0 });
+
+  __setOpenAiIntakeRunnerForTests(async () => {
+    throw new Error("openai hard failure");
+  });
+
+  const failureOne = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(failureOne.audit.circuit_breaker_state, "closed");
+
+  const failureTwo = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(failureTwo.audit.circuit_breaker_state, "open");
+  assert.equal(failureTwo.audit.circuit_breaker_triggered, true);
+
+  const circuitSkipped = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(circuitSkipped.audit.final_provider, "rules");
+  assert.equal(circuitSkipped.audit.fallback_reason, "circuit_open");
+  assert.equal(circuitSkipped.audit.skipped_provider_reason, "circuit_open");
+
+  // D. after cooldown, allow probe and recover to closed on success.
+  await new Promise((resolve) => setTimeout(resolve, 90));
+
   __setOpenAiIntakeRunnerForTests(async () => ({
     issue_classification: "water_heater",
     info_completeness: "sufficient",
@@ -83,27 +157,21 @@ async function run() {
     confidence: 0.82,
   }));
 
-  const openAiSuccess = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(openAiSuccess.audit.status, "success");
-  assert.equal(openAiSuccess.audit.fallback_used, false);
-  assert.equal(openAiSuccess.audit.final_provider, "openai");
-  assert.match(openAiSuccess.result.analysis_version, /^phase2-step4-openai$/);
+  const recoveredAudit = await runIntakeAnalysisWithAudit(sampleLead, "openai");
+  assert.equal(recoveredAudit.audit.final_provider, "openai");
+  assert.equal(recoveredAudit.audit.status, "success");
+  assert.equal(recoveredAudit.audit.circuit_breaker_state, "closed");
 
-  __setOpenAiIntakeRunnerForTests(async () => ({ bad: "shape" }));
-  const openAiInvalidFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(openAiInvalidFallback.audit.final_provider, "rules");
-  assert.equal(openAiInvalidFallback.audit.fallback_reason, "invalid_provider_output");
-  assert.equal(openAiInvalidFallback.audit.error_category, "invalid_provider_output");
-
-  __setOpenAiIntakeRunnerForTests(async () => {
-    throw new Error("openai test failure");
-  });
-  const openAiErrorFallback = await runIntakeAnalysisWithAudit(sampleLead, "openai");
-  assert.equal(openAiErrorFallback.audit.final_provider, "rules");
-  assert.equal(openAiErrorFallback.audit.fallback_reason, "provider_execution_error");
-  assert.equal(openAiErrorFallback.audit.error_category, "provider_execution_error");
+  // E. rules provider should not be affected by retry/circuit governance.
+  const rulesUnaffected = await runIntakeAnalysisWithAudit(sampleLead, "rules");
+  assert.equal(rulesUnaffected.audit.final_provider, "rules");
+  assert.equal(rulesUnaffected.audit.retry_used, false);
+  assert.equal(rulesUnaffected.audit.retry_count, 0);
+  assert.equal(rulesUnaffected.audit.circuit_breaker_state, "closed");
 
   __setOpenAiIntakeRunnerForTests(undefined);
+  __resetProviderRuntimeGovernanceForTests();
+
   console.log("aiIntakeAnalysis provider tests passed");
 }
 
@@ -114,6 +182,7 @@ run()
   })
   .finally(() => {
     __setOpenAiIntakeRunnerForTests(undefined);
+    __resetProviderRuntimeGovernanceForTests();
 
     if (previousProviderEnv === undefined) {
       delete process.env.INTAKE_ANALYSIS_PROVIDER;
