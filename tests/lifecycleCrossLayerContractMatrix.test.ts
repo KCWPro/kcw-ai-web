@@ -102,6 +102,8 @@ function run() {
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
+  assert.match(serialized, /integrity hardening != capability expansion/);
+  assert.match(serialized, /regression anchor != future execution contract/);
 
   console.log("lifecycleCrossLayerContractMatrix tests passed");
 }

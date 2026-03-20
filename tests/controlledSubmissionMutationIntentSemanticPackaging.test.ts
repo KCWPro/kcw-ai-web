@@ -27,6 +27,8 @@ function run() {
   assert.match(sample, /intent recorded != submission completed/i);
   assert.match(sample, /readiness\/allowed\/eligible != executed/i);
   assert.match(sample, /audit trace != persisted audit system/i);
+  assert.match(sample, /integrity hardening != capability expansion/i);
+  assert.match(sample, /regression anchor != future execution contract/i);
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -36,7 +38,10 @@ function run() {
   assert.ok(freezePrep.boundary_equations.includes("blocked by boundary != approval finalized"));
   assert.ok(freezePrep.boundary_equations.includes("surfacing != controller"));
   assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));
+  assert.ok(freezePrep.boundary_equations.includes("integrity hardening != capability expansion"));
+  assert.ok(freezePrep.boundary_equations.includes("regression anchor != future execution contract"));
   assert.ok(freezePrep.forbidden_actions.includes("no completion/execution runtime states"));
+  assert.ok(freezePrep.forbidden_actions.includes("no implementation prewire"));
   assert.ok(freezePrep.forbidden_actions.includes("no UI write authority increase"));
   assert.ok(freezePrep.non_goals.includes("workflow completion"));
   assert.ok(freezePrep.non_goals.includes("external execution"));

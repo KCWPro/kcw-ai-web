@@ -27,6 +27,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "audit trace != persisted audit system",
     "surfacing != controller",
     "single-object semantic package != multi-object workflow engine",
+    "integrity hardening != capability expansion",
+    "regression anchor != future execution contract",
   ] as const,
   forbidden_actions: [
     "no approve/execute/finalize/complete entry",
@@ -39,6 +41,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "no generalized workflow engine",
     "no workflow completed state",
     "no UI write authority increase",
+    "no implementation prewire",
   ] as const,
   non_goals: [
     "submission completion",
