@@ -23,6 +23,10 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "intent recorded != submission completed",
     "replayed idempotently != workflow completed",
     "blocked by boundary != approval finalized",
+    "readiness/allowed/eligible != executed",
+    "audit trace != persisted audit system",
+    "surfacing != controller",
+    "single-object semantic package != multi-object workflow engine",
   ] as const,
   forbidden_actions: [
     "no approve/execute/finalize/complete entry",

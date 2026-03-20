@@ -25,6 +25,8 @@ function run() {
   });
   assert.doesNotMatch(sample, packaging.forbidden_success_pattern);
   assert.match(sample, /intent recorded != submission completed/i);
+  assert.match(sample, /readiness\/allowed\/eligible != executed/i);
+  assert.match(sample, /audit trace != persisted audit system/i);
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -32,6 +34,8 @@ function run() {
   assert.equal(freezePrep.scope, "candidate_a_single_object_non_execution_non_completion");
   assert.ok(freezePrep.boundary_equations.includes("lifecycle visibility != completion"));
   assert.ok(freezePrep.boundary_equations.includes("blocked by boundary != approval finalized"));
+  assert.ok(freezePrep.boundary_equations.includes("surfacing != controller"));
+  assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));
   assert.ok(freezePrep.forbidden_actions.includes("no completion/execution runtime states"));
   assert.ok(freezePrep.forbidden_actions.includes("no UI write authority increase"));
   assert.ok(freezePrep.non_goals.includes("workflow completion"));
