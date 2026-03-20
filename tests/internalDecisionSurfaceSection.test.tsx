@@ -5,6 +5,8 @@ import {
   buildControlledSubmissionContract,
   type ControlledSubmissionReadinessInput,
 } from "../lib/controlledSubmissionContract";
+import { buildApprovalCheckpointContract } from "../lib/approvalCheckpointContract";
+import { buildAuditTrailSkeleton } from "../lib/auditTrailSkeleton";
 import { buildInternalActionHandoff } from "../lib/internalActionHandoff";
 import { buildInternalEstimateDraft } from "../lib/internalEstimateDraft";
 import { buildInternalFollowUpWorkflowSuggestion } from "../lib/internalFollowUpWorkflowSuggestion";
@@ -104,15 +106,35 @@ function renderScenario(
     has_blocking_risk: decisionSurface.decision_status === "blocked",
   };
 
-  const controlledSubmissionContract = buildControlledSubmissionContract({
+  const contractInput: ControlledSubmissionReadinessInput = {
     ...defaultContractInput,
     ...contractInputOverride,
+  };
+
+  const controlledSubmissionContract = buildControlledSubmissionContract(contractInput);
+  const approvalCheckpointContract = buildApprovalCheckpointContract({
+    decision_status: controlledSubmissionContract.status === "blocked" ? "blocked" : decisionSurface.decision_status,
+    selected_path_category: contractInput.selected_path_category,
+    manual_confirmation_received: Boolean(contractInputOverride?.manual_confirmation_received),
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    has_blocking_risk: Boolean(contractInputOverride?.has_blocking_risk) || decisionSurface.decision_status === "blocked",
+  });
+  const auditTrailSkeleton = buildAuditTrailSkeleton({
+    selected_path_category: contractInput.selected_path_category,
+    decision_status: decisionSurface.decision_status,
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    manual_confirmation_received: Boolean(contractInputOverride?.manual_confirmation_received),
+    approval_checkpoint_contract: approvalCheckpointContract,
   });
 
   return renderToStaticMarkup(
     <DecisionSurfaceSection
       decisionSurface={decisionSurface}
       controlledSubmissionContract={controlledSubmissionContract}
+      approvalCheckpointContract={approvalCheckpointContract}
+      auditTrailSkeleton={auditTrailSkeleton}
     />,
   );
 }
@@ -171,6 +193,18 @@ function run() {
   assert.match(readyReadinessHtml, /Manual confirmation is still required/);
   assert.match(readyReadinessHtml, /No automatic execution is enabled/);
   assert.match(readyReadinessHtml, /No submission has been performed/);
+  assert.match(readyReadinessHtml, /Human-confirmed path is not submitted. Submission-ready is not submitted/);
+  assert.match(readyReadinessHtml, /Approval Checkpoints \(Read-only Skeleton\)/);
+  assert.match(readyReadinessHtml, /Audit Trail Skeleton \(Derived \/ Read-only\)/);
+  assert.match(readyReadinessHtml, /checkpoint_ready_for_review|checkpoint_unavailable|checkpoint_review_required/);
+  assert.match(readyReadinessHtml, /Derived semantic events only/);
+  assert.match(readyReadinessHtml, /No external logging, no workflow control, and no side effect is performed/);
+  assert.match(readyReadinessHtml, /Checkpoint is not approval completion/);
+  assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*approve/i);
+  assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*submit/i);
+  assert.doesNotMatch(readyReadinessHtml, /logged externally/i);
+  assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
+  assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }
