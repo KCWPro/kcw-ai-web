@@ -239,6 +239,7 @@ function run() {
   assert.match(readyReadinessHtml, /Mutation Intent Lifecycle Visibility \(Read-only\)/);
   assert.match(readyReadinessHtml, /replayed_idempotently/);
   assert.match(readyReadinessHtml, /idempotent_replay_non_completion/);
+  assert.match(readyReadinessHtml, /Replay matched existing intent key and input fingerprint; no new execution occurred/);
   assert.match(readyReadinessHtml, /This section is not a workflow controller/);
   assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);

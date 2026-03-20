@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES,
   getControlledSubmissionMutationIntentByLeadId,
   listControlledSubmissionMutationIntentAuditLog,
@@ -52,6 +53,10 @@ function run() {
   assert.equal(accepted.boundary_assertion.approval_completed, false);
   assert.equal(accepted.lifecycle_visibility.current_stage, "accepted_for_intent_recording");
   assert.equal(accepted.lifecycle_visibility.operator_outcome, "intent_recorded_non_completion");
+  assert.equal(
+    accepted.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.accepted_for_intent_recording,
+  );
   assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_visibility_is_not_completion, true);
   assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_stage_is_not_external_execution, true);
   assert.equal(accepted.boundary_assertion.workflow_finished, false);
@@ -75,6 +80,10 @@ function run() {
   assert.doesNotMatch(replay.write_state, /completed|executed|approved/i);
   assert.equal(replay.lifecycle_visibility.current_stage, "replayed_idempotently");
   assert.equal(replay.lifecycle_visibility.operator_outcome, "idempotent_replay_non_completion");
+  assert.equal(
+    replay.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
+  );
   assert.equal(replay.object_changed, false);
   assert.equal(replay.intent_record?.intent_key, stored?.intent_key);
   assert.deepEqual(replay.boundary_assertion, accepted.boundary_assertion);
@@ -90,6 +99,10 @@ function run() {
   assert.doesNotMatch(invalidLead.write_state, /completed|executed|approved/i);
   assert.equal(invalidLead.lifecycle_visibility.current_stage, "blocked_by_boundary");
   assert.equal(invalidLead.lifecycle_visibility.operator_outcome, "rejected_non_completion");
+  assert.equal(
+    invalidLead.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.blocked_by_boundary,
+  );
   assert.equal(invalidLead.rejection_reason, "lead_not_found");
   assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.intent_key, stored?.intent_key);
 

@@ -1,5 +1,9 @@
 import assert from "node:assert/strict";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
+} from "../lib/controlledSubmissionMutationIntent";
 
 function run() {
   const visible = buildControlledSubmissionMutationIntentLifecycleReadModel({
@@ -38,7 +42,10 @@ function run() {
   assert.equal(visible.source, "audit_log_derived");
   assert.equal(visible.semantic_boundary.lifecycle_visibility_is_not_completion, true);
   assert.equal(visible.semantic_boundary.lifecycle_stage_is_not_external_execution, true);
-  assert.match(visible.transition_note, /No new execution happened/i);
+  assert.equal(
+    visible.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
+  );
 
   const notAvailable = buildControlledSubmissionMutationIntentLifecycleReadModel({
     lead_id: "lead-missing",
@@ -50,7 +57,7 @@ function run() {
   assert.equal(notAvailable.operator_outcome, "not_available");
   assert.equal(notAvailable.source, "no_intent_audit_for_lead");
   assert.equal(notAvailable.semantic_boundary.status_expression_is_not_workflow_fully_completed, true);
-  assert.match(notAvailable.read_only_notice, /Read-only surfacing only/i);
+  assert.equal(notAvailable.read_only_notice, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE);
 
   const serialized = JSON.stringify({ visible, notAvailable });
   assert.doesNotMatch(serialized, /completed successfully|executed successfully|approval finalized/i);
