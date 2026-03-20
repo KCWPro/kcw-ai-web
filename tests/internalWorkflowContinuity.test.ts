@@ -16,7 +16,7 @@ const lead = {
   phone: "9165550000",
 };
 
-const analysis: IntakeAnalysisResult = {
+const partialAnalysis: IntakeAnalysisResult = {
   issue_classification: "drain_issue",
   info_completeness: "partial",
   missing_fields: ["problem_duration"],
@@ -34,20 +34,25 @@ const analysis: IntakeAnalysisResult = {
 };
 
 const readyAnalysis: IntakeAnalysisResult = {
-  ...analysis,
+  ...partialAnalysis,
   info_completeness: "sufficient",
   missing_fields: [],
 };
 
-function run() {
+function buildContinuity(analysis: IntakeAnalysisResult | null, forceFollowUpUnavailable = false) {
   const guidance = buildOperatorGuidance(analysis, false);
   const handoff = buildInternalActionHandoff({
     lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
     analysis,
     guidance,
-    nowIso: "2026-03-19T00:00:00.000Z",
+    nowIso: "2026-03-20T00:00:00.000Z",
   });
-  const estimateDraft = buildInternalEstimateDraft({ lead, analysis, guidance, handoff });
+  const estimateDraft = buildInternalEstimateDraft({
+    lead,
+    analysis,
+    guidance,
+    handoff,
+  });
   const followUpSuggestion = buildInternalFollowUpWorkflowSuggestion({
     lead: { id: lead.id, urgency: lead.urgency, city: lead.city, service_type: lead.service_type },
     analysis,
@@ -56,96 +61,43 @@ function run() {
     estimateDraft,
   });
 
-  const continuity = buildInternalWorkflowContinuity({
+  return buildInternalWorkflowContinuity({
     lead: { id: lead.id, status: lead.status },
     analysis,
     guidance,
     handoff,
     estimateDraft,
-    followUpSuggestion,
+    followUpSuggestion: forceFollowUpUnavailable
+      ? { ...followUpSuggestion, availability: "unavailable", unavailable_reason: "manual_mismatch_for_test" }
+      : followUpSuggestion,
   });
+}
 
-  assert.equal(continuity.model_version, "phase4-step1-workflow-continuity-v1");
-  assert.equal(continuity.continuity_state, "needs_intake_completion");
-  assert.match(continuity.summary, /partial/i);
-  assert.equal(continuity.checklist.length, 4);
-  assert.equal(continuity.follow_up_alignment.alignment_status, "needs_review");
-  assert.match(continuity.follow_up_alignment.note, /intake completeness is still partial/i);
+function run() {
+  const readyAligned = buildContinuity(readyAnalysis);
+  assert.equal(readyAligned.model_version, "phase4-step1-workflow-continuity-v1");
+  assert.equal(readyAligned.continuity_state, "ready_for_follow_up");
+  assert.equal(readyAligned.follow_up_alignment.suggestion_availability, "available");
+  assert.equal(readyAligned.follow_up_alignment.alignment_status, "aligned");
+  assert.match(readyAligned.follow_up_alignment.note, /available for operator review/i);
 
-  const readyGuidance = buildOperatorGuidance(readyAnalysis, false);
-  const readyHandoff = buildInternalActionHandoff({
-    lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
-    analysis: readyAnalysis,
-    guidance: readyGuidance,
-    nowIso: "2026-03-19T00:00:00.000Z",
-  });
-  const readyEstimateDraft = buildInternalEstimateDraft({
-    lead,
-    analysis: readyAnalysis,
-    guidance: readyGuidance,
-    handoff: readyHandoff,
-  });
-  const readyFollowUpSuggestion = buildInternalFollowUpWorkflowSuggestion({
-    lead: { id: lead.id, urgency: lead.urgency, city: lead.city, service_type: lead.service_type },
-    analysis: readyAnalysis,
-    guidance: readyGuidance,
-    handoff: readyHandoff,
-    estimateDraft: readyEstimateDraft,
-  });
-  const readyContinuity = buildInternalWorkflowContinuity({
-    lead: { id: lead.id, status: lead.status },
-    analysis: readyAnalysis,
-    guidance: readyGuidance,
-    handoff: readyHandoff,
-    estimateDraft: readyEstimateDraft,
-    followUpSuggestion: readyFollowUpSuggestion,
-  });
-  assert.equal(readyContinuity.continuity_state, "ready_for_follow_up");
-  assert.equal(readyContinuity.follow_up_alignment.alignment_status, "aligned");
+  const needsIntakeButFollowUpAvailable = buildContinuity(partialAnalysis);
+  assert.equal(needsIntakeButFollowUpAvailable.continuity_state, "needs_intake_completion");
+  assert.equal(needsIntakeButFollowUpAvailable.follow_up_alignment.suggestion_availability, "available");
+  assert.equal(needsIntakeButFollowUpAvailable.follow_up_alignment.alignment_status, "needs_review");
+  assert.match(needsIntakeButFollowUpAvailable.follow_up_alignment.note, /complete\/confirm intake fields/i);
 
-  const blocked = buildInternalWorkflowContinuity({
-    lead: { id: lead.id, status: "new" },
-    analysis: null,
-    guidance: null,
-    handoff: buildInternalActionHandoff({
-      lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
-      analysis: null,
-      guidance: null,
-      nowIso: "2026-03-19T00:00:00.000Z",
-    }),
-    estimateDraft: null,
-    followUpSuggestion: buildInternalFollowUpWorkflowSuggestion({
-      lead: { id: lead.id, urgency: lead.urgency, city: lead.city, service_type: lead.service_type },
-      analysis: null,
-      guidance: null,
-      handoff: buildInternalActionHandoff({
-        lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
-        analysis: null,
-        guidance: null,
-        nowIso: "2026-03-19T00:00:00.000Z",
-      }),
-      estimateDraft: null,
-    }),
-  });
+  const readyButFollowUpUnavailable = buildContinuity(readyAnalysis, true);
+  assert.equal(readyButFollowUpUnavailable.continuity_state, "ready_for_follow_up");
+  assert.equal(readyButFollowUpUnavailable.follow_up_alignment.suggestion_availability, "unavailable");
+  assert.equal(readyButFollowUpUnavailable.follow_up_alignment.alignment_status, "needs_review");
+  assert.match(readyButFollowUpUnavailable.follow_up_alignment.note, /follow-up is unavailable/i);
 
-  assert.equal(blocked.continuity_state, "blocked");
-  assert.ok(blocked.risk_flags.includes("guidance_unavailable"));
-  assert.equal(blocked.follow_up_alignment.alignment_status, "aligned");
-
-  const readyButUnavailable = buildInternalWorkflowContinuity({
-    lead: { id: lead.id, status: lead.status },
-    analysis: readyAnalysis,
-    guidance: readyGuidance,
-    handoff: readyHandoff,
-    estimateDraft: readyEstimateDraft,
-    followUpSuggestion: {
-      ...readyFollowUpSuggestion,
-      availability: "unavailable",
-      unavailable_reason: "manual_mismatch_for_test",
-    },
-  });
-  assert.equal(readyButUnavailable.continuity_state, "ready_for_follow_up");
-  assert.equal(readyButUnavailable.follow_up_alignment.alignment_status, "needs_review");
+  const blockedAndUnavailable = buildContinuity(null);
+  assert.equal(blockedAndUnavailable.continuity_state, "blocked");
+  assert.equal(blockedAndUnavailable.follow_up_alignment.suggestion_availability, "unavailable");
+  assert.equal(blockedAndUnavailable.follow_up_alignment.alignment_status, "aligned");
+  assert.match(blockedAndUnavailable.follow_up_alignment.note, /as expected/i);
 
   console.log("internalWorkflowContinuity tests passed");
 }

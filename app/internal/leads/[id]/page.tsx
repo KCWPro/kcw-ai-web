@@ -17,6 +17,8 @@ import {
   type InternalFollowUpWorkflowSuggestion,
 } from "@/lib/internalFollowUpWorkflowSuggestion";
 import { buildInternalWorkflowContinuity } from "@/lib/internalWorkflowContinuity";
+import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDecisionSurface";
+import DecisionSurfaceSection from "./DecisionSurfaceSection";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -340,6 +342,15 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     followUpSuggestion: followUpWorkflowSuggestion,
   });
 
+  const workflowDecisionSurface = buildInternalWorkflowDecisionSurface({
+    analysis,
+    guidance,
+    handoff: handoffPreview,
+    estimateDraft,
+    followUpSuggestion: followUpWorkflowSuggestion,
+    continuity: workflowContinuity,
+  });
+
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -391,15 +402,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
             <IntakeAnalysisSection analysis={analysis} isFallback={analysisFallback} />
 
+            <DecisionSurfaceSection decisionSurface={workflowDecisionSurface} />
+
             <OperatorGuidancePanel guidance={guidance} />
-
-            <HandoffPreviewSection handoffJson={JSON.stringify(handoffPreview, null, 2)} />
-
-            <EstimateSuggestionSection draftJson={JSON.stringify(estimateDraft, null, 2)} />
 
             <WorkflowContinuitySection summary={workflowContinuity} />
 
             <FollowUpWorkflowSuggestionSection suggestion={followUpWorkflowSuggestion} continuity={workflowContinuity} />
+
+            <EstimateSuggestionSection draftJson={JSON.stringify(estimateDraft, null, 2)} />
+
+            <HandoffPreviewSection handoffJson={JSON.stringify(handoffPreview, null, 2)} />
           </div>
 
           <div className="space-y-5">
