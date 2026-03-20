@@ -29,6 +29,7 @@ function run() {
   assert.match(sample, /readiness\/allowed\/eligible != executed/i);
   assert.match(sample, /read-only compatible != controller-capable/i);
   assert.match(sample, /audit trace != persisted audit system/i);
+  assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
 
