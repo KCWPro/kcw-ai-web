@@ -115,6 +115,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   "audit trace != persisted audit system",
   "surfacing != controller",
   "single-object semantic package != multi-object workflow engine",
+  "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
 ] as const;

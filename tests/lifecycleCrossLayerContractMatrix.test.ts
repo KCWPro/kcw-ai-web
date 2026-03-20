@@ -104,6 +104,7 @@ function run() {
   assert.match(serialized, /read-only compatible != controller-capable/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
+  assert.match(serialized, /continuity revalidation != capability expansion/);
   assert.match(serialized, /integrity hardening != capability expansion/);
   assert.match(serialized, /regression anchor != future execution contract/);
 

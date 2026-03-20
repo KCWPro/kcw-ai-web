@@ -42,6 +42,7 @@ function run() {
   assert.ok(freezePrep.boundary_equations.includes("read-only compatible != controller-capable"));
   assert.ok(freezePrep.boundary_equations.includes("surfacing != controller"));
   assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));
+  assert.ok(freezePrep.boundary_equations.includes("continuity revalidation != capability expansion"));
   assert.ok(freezePrep.boundary_equations.includes("integrity hardening != capability expansion"));
   assert.ok(freezePrep.boundary_equations.includes("regression anchor != future execution contract"));
   assert.ok(freezePrep.forbidden_actions.includes("no completion/execution runtime states"));
