@@ -102,12 +102,16 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
   internal_mutation_state_is_not_durable_audit_history: true,
 } as const;
 
+export const READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE =
+  "read-only compatible != controller-capable" as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
   "checkpoint availability != approval completion",
   "replayed idempotently != workflow completed",
   "blocked by boundary != approval finalized",
   "readiness/allowed/eligible != executed",
+  READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
   "audit trace != persisted audit system",
   "surfacing != controller",
   "single-object semantic package != multi-object workflow engine",
@@ -120,6 +124,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
+  "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
   "Surfaced operator outcome is not a completed/finalized/executed result.",
   "Lifecycle visibility is descriptive only and never grants controller authority.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",

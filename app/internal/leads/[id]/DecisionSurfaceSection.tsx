@@ -359,6 +359,7 @@ function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSu
       <p className="mt-2 text-xs text-slate-700">
         Surfaced lifecycle visibility only. This section is not a workflow controller and does not advance state by itself.
       </p>
+      <p className="mt-1 text-xs text-slate-700">Read-only compatibility never implies controller-capable authority.</p>
       <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
         {readModel.boundary_notice_lines.map((line) => (
           <p key={line}>{line}</p>
