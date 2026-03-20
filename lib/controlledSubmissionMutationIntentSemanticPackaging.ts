@@ -1,0 +1,17 @@
+import {
+  buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+} from "./controlledSubmissionMutationIntent";
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_SEMANTIC_PACKAGING = Object.freeze({
+  boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
+  boundary_notice_lines: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+  forbidden_success_phrases: CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
+  forbidden_success_pattern: buildControlledSubmissionMutationIntentForbiddenSuccessPattern(),
+});
+
+export function getControlledSubmissionMutationIntentSemanticPackaging() {
+  return CONTROLLED_SUBMISSION_MUTATION_INTENT_SEMANTIC_PACKAGING;
+}

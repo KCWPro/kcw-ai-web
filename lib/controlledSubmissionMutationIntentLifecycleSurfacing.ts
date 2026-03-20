@@ -4,12 +4,11 @@ import type {
   ControlledSubmissionMutationIntentLifecycleVisibility,
 } from "./controlledSubmissionMutationIntent";
 import {
-  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
-  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
 } from "./controlledSubmissionMutationIntent";
+import { getControlledSubmissionMutationIntentSemanticPackaging } from "./controlledSubmissionMutationIntentSemanticPackaging";
 
 export type ControlledSubmissionMutationIntentLifecycleReadModel = {
   visibility_state: "visible" | "not_available";
@@ -17,7 +16,7 @@ export type ControlledSubmissionMutationIntentLifecycleReadModel = {
   operator_outcome: ControlledSubmissionMutationIntentLifecycleVisibility["operator_outcome"] | "not_available";
   transition_note: string;
   semantic_boundary_clauses: ControlledSubmissionMutationIntentLifecycleVisibility["semantic_boundary_clauses"];
-  boundary_notice_lines: typeof CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES;
+  boundary_notice_lines: ReturnType<typeof getControlledSubmissionMutationIntentSemanticPackaging>["boundary_notice_lines"];
   semantic_boundary: ControlledSubmissionMutationIntentLifecycleVisibility["semantic_boundary"];
   read_only_notice: string;
   source: "audit_log_derived" | "no_intent_audit_for_lead";
@@ -31,6 +30,7 @@ export function buildControlledSubmissionMutationIntentLifecycleReadModel(input:
   lead_id: string;
   audit_log: ReadonlyArray<ControlledSubmissionMutationIntentAuditEntry>;
 }): ControlledSubmissionMutationIntentLifecycleReadModel {
+  const semanticPackaging = getControlledSubmissionMutationIntentSemanticPackaging();
   const latest = [...input.audit_log].reverse().find((entry) => entry.lead_id === input.lead_id);
 
   if (!latest) {
@@ -39,8 +39,8 @@ export function buildControlledSubmissionMutationIntentLifecycleReadModel(input:
       current_stage: "not_available",
       operator_outcome: "not_available",
       transition_note: "No lifecycle audit entry is available for this lead yet.",
-      semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
-      boundary_notice_lines: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+      semantic_boundary_clauses: semanticPackaging.boundary_clauses,
+      boundary_notice_lines: semanticPackaging.boundary_notice_lines,
       semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
       read_only_notice: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
       source: "no_intent_audit_for_lead",
@@ -52,8 +52,8 @@ export function buildControlledSubmissionMutationIntentLifecycleReadModel(input:
     current_stage: latest.lifecycle_stage,
     operator_outcome: latest.operator_outcome,
     transition_note: transitionNoteByStage(latest.lifecycle_stage),
-    semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
-    boundary_notice_lines: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+    semantic_boundary_clauses: semanticPackaging.boundary_clauses,
+    boundary_notice_lines: semanticPackaging.boundary_notice_lines,
     semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
     read_only_notice: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
     source: "audit_log_derived",
