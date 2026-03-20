@@ -63,3 +63,8 @@ Current system remains suggestion/read-only/operator-review oriented:
 - Midpoint status: **stable for continuation**
 - Not a final freeze yet.
 - Recommended next step: Phase 5 Step 5 should focus on phase-level freeze/final handoff packaging, not feature expansion.
+
+
+## Reference
+
+- Final Freeze document: `docs/phase5-final-freeze.md`
