@@ -360,8 +360,9 @@ function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSu
         Surfaced lifecycle visibility only. This section is not a workflow controller and does not advance state by itself.
       </p>
       <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-        <p>{readModel.read_only_notice}</p>
-        <p>Surfaced operator outcome is not a completed/finalized/executed result.</p>
+        {readModel.boundary_notice_lines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
       </div>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
@@ -393,6 +394,12 @@ function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSu
           internal_mutation_state_is_not_durable_audit_history=
           {String(readModel.semantic_boundary.internal_mutation_state_is_not_durable_audit_history)}
         </p>
+        <p className="mt-2 font-semibold text-slate-900">anti_misread_clauses</p>
+        <ul className="mt-1 list-disc space-y-1 pl-4">
+          {readModel.semantic_boundary_clauses.map((clause) => (
+            <li key={clause}>{clause}</li>
+          ))}
+        </ul>
         <p className="mt-2 text-slate-600">source: {readModel.source}</p>
       </div>
     </div>

@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
   listControlledSubmissionMutationIntentAuditLog,
@@ -7,6 +8,7 @@ import {
   resetControlledSubmissionMutationIntentStore,
 } from "../lib/controlledSubmissionMutationIntent";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import { getControlledSubmissionMutationIntentSemanticPackaging } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
 function readyInput() {
   return {
@@ -26,6 +28,7 @@ function key(leadId: string) {
 }
 
 function run() {
+  const packaging = getControlledSubmissionMutationIntentSemanticPackaging();
   resetControlledSubmissionMutationIntentStore();
 
   const accepted = recordControlledSubmissionMutationIntent({
@@ -81,14 +84,21 @@ function run() {
   assert.equal(readModelVisible.operator_outcome, replayed.lifecycle_visibility.operator_outcome);
   assert.equal(readModelVisible.transition_note, replayed.lifecycle_visibility.transition_note);
   assert.equal(readModelVisible.read_only_notice, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE);
+  assert.deepEqual(readModelVisible.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(readModelVisible.boundary_notice_lines, packaging.boundary_notice_lines);
 
   assert.equal(readModelMissing.visibility_state, "not_available");
   assert.equal(readModelMissing.current_stage, "not_available");
   assert.equal(readModelMissing.operator_outcome, "not_available");
   assert.match(readModelMissing.transition_note, /No lifecycle audit entry is available for this lead yet/);
+  assert.deepEqual(readModelMissing.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(readModelMissing.boundary_notice_lines, packaging.boundary_notice_lines);
 
   const serialized = JSON.stringify({ accepted, replayed, rejected, readModelVisible, readModelMissing });
-  assert.doesNotMatch(serialized, /completed successfully|executed successfully|approval finalized|workflow completed/i);
+  assert.doesNotMatch(serialized, packaging.forbidden_success_pattern);
+  assert.match(serialized, /intent recorded != submission completed/);
+  assert.match(serialized, /replayed idempotently != workflow completed/);
+  assert.match(serialized, /blocked by boundary != approval finalized/);
 
   console.log("lifecycleCrossLayerContractMatrix tests passed");
 }

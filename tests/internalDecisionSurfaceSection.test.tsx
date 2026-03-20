@@ -15,6 +15,7 @@ import { buildOperatorGuidance } from "../lib/internalOperatorGuidance";
 import { buildInternalWorkflowContinuity } from "../lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "../lib/internalWorkflowDecisionSurface";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import { buildControlledSubmissionMutationIntentForbiddenSuccessPattern } from "../lib/controlledSubmissionMutationIntent";
 import DecisionSurfaceSection from "../app/internal/leads/[id]/DecisionSurfaceSection";
 
 const lead = {
@@ -241,6 +242,10 @@ function run() {
   assert.match(readyReadinessHtml, /idempotent_replay_non_completion/);
   assert.match(readyReadinessHtml, /Replay matched existing intent key and input fingerprint; no new execution occurred/);
   assert.match(readyReadinessHtml, /This section is not a workflow controller/);
+  assert.match(readyReadinessHtml, /anti_misread_clauses/);
+  assert.match(readyReadinessHtml, /intent recorded != submission completed/);
+  assert.match(readyReadinessHtml, /replayed idempotently != workflow completed/);
+  assert.match(readyReadinessHtml, /blocked by boundary != approval finalized/);
   assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);
   assert.match(readyReadinessHtml, /Precondition matrix/);
@@ -255,6 +260,7 @@ function run() {
   assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
   assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);
   assert.doesNotMatch(readyReadinessHtml, /write now|commit now|persist now|execute now|submit now/i);
+  assert.doesNotMatch(readyReadinessHtml, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }

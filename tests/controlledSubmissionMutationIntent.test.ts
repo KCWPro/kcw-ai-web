@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {
+  buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES,
   getControlledSubmissionMutationIntentByLeadId,
@@ -59,6 +61,7 @@ function run() {
   );
   assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_visibility_is_not_completion, true);
   assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_stage_is_not_external_execution, true);
+  assert.deepEqual(accepted.lifecycle_visibility.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
   assert.equal(accepted.boundary_assertion.workflow_finished, false);
   assert.equal(accepted.boundary_assertion.no_external_execution_occurred, true);
   assert.equal(accepted.intent_record?.boundary_assertion.external_execution_occurred, false);
@@ -85,6 +88,7 @@ function run() {
     CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
   );
   assert.equal(replay.object_changed, false);
+  assert.deepEqual(replay.lifecycle_visibility.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
   assert.equal(replay.intent_record?.intent_key, stored?.intent_key);
   assert.deepEqual(replay.boundary_assertion, accepted.boundary_assertion);
 
@@ -104,6 +108,7 @@ function run() {
     CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.blocked_by_boundary,
   );
   assert.equal(invalidLead.rejection_reason, "lead_not_found");
+  assert.deepEqual(invalidLead.lifecycle_visibility.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
   assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.intent_key, stored?.intent_key);
 
   const gateRejected = recordControlledSubmissionMutationIntent({
@@ -258,8 +263,11 @@ function run() {
   });
 
   const serialized = JSON.stringify({ accepted, replay, stored, auditLog });
-  assert.doesNotMatch(serialized, /submission completed|approval completed|workflow finished|external execution succeeded/i);
-  assert.doesNotMatch(serialized, /approval finalized|workflow completed|submission executed|completed successfully/i);
+  assert.doesNotMatch(serialized, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());
+  assert.doesNotMatch(serialized, /external execution succeeded/i);
+  assert.match(serialized, /intent recorded != submission completed/i);
+  assert.match(serialized, /replayed idempotently != workflow completed/i);
+  assert.match(serialized, /blocked by boundary != approval finalized/i);
   assert.match(serialized, /minimal_intent_audit_only/i);
 
   console.log("controlledSubmissionMutationIntent tests passed");
