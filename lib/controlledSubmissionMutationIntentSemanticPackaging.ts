@@ -3,6 +3,7 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+  READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
 } from "./controlledSubmissionMutationIntent";
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_SEMANTIC_PACKAGING = Object.freeze({
@@ -25,7 +26,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "replayed idempotently != workflow completed",
     "blocked by boundary != approval finalized",
     "readiness/allowed/eligible != executed",
-    "read-only compatible != controller-capable",
+    READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "audit trace != persisted audit system",
     "surfacing != controller",
     "single-object semantic package != multi-object workflow engine",

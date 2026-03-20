@@ -243,6 +243,7 @@ function run() {
   assert.match(readyReadinessHtml, /Replay matched existing intent key and input fingerprint; no new execution occurred/);
   assert.match(readyReadinessHtml, /This section is not a workflow controller/);
   assert.match(readyReadinessHtml, /Read-only compatibility never implies controller-capable authority/);
+  assert.match(readyReadinessHtml, /Allowed\/eligible state is read-model semantics only; it does not grant execution authority/);
   assert.match(readyReadinessHtml, /anti_misread_clauses/);
   assert.match(readyReadinessHtml, /intent recorded != submission completed/);
   assert.match(readyReadinessHtml, /replayed idempotently != workflow completed/);

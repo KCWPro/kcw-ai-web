@@ -102,13 +102,16 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
   internal_mutation_state_is_not_durable_audit_history: true,
 } as const;
 
+export const READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE =
+  "read-only compatible != controller-capable" as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
   "checkpoint availability != approval completion",
   "replayed idempotently != workflow completed",
   "blocked by boundary != approval finalized",
   "readiness/allowed/eligible != executed",
-  "read-only compatible != controller-capable",
+  READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
   "audit trace != persisted audit system",
   "surfacing != controller",
   "single-object semantic package != multi-object workflow engine",
