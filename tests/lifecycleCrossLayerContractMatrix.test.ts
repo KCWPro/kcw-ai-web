@@ -103,6 +103,8 @@ function run() {
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);
   assert.match(serialized, /read-only compatible != controller-capable/);
   assert.match(serialized, /audit trace != persisted audit system/);
+  assert.match(serialized, /scope-prep != implementation prewire/);
+  assert.match(serialized, /boundary revalidation != skeleton runtime rollout/);
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
   assert.match(serialized, /continuity revalidation != capability expansion/);

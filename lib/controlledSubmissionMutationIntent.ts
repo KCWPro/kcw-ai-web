@@ -115,6 +115,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   "audit trace != persisted audit system",
   "surfacing != controller",
   "single-object semantic package != multi-object workflow engine",
+  "scope-prep != implementation prewire",
+  "boundary revalidation != skeleton runtime rollout",
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -128,6 +130,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
   "Surfaced operator outcome is not a completed/finalized/executed result.",
   "Lifecycle visibility is descriptive only and never grants controller authority.",
+  "Scope-prep hardening is documentation/contract-only and never implementation prewire.",
+  "Boundary revalidation hardening never opens skeleton runtime rollout.",
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
