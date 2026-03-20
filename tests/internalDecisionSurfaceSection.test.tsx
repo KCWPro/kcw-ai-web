@@ -7,6 +7,7 @@ import {
 } from "../lib/controlledSubmissionContract";
 import { buildApprovalCheckpointContract } from "../lib/approvalCheckpointContract";
 import { buildAuditTrailSkeleton } from "../lib/auditTrailSkeleton";
+import { buildBoundedWritePathContract } from "../lib/boundedWritePathContract";
 import { buildInternalActionHandoff } from "../lib/internalActionHandoff";
 import { buildInternalEstimateDraft } from "../lib/internalEstimateDraft";
 import { buildInternalFollowUpWorkflowSuggestion } from "../lib/internalFollowUpWorkflowSuggestion";
@@ -128,6 +129,16 @@ function renderScenario(
     manual_confirmation_received: Boolean(contractInputOverride?.manual_confirmation_received),
     approval_checkpoint_contract: approvalCheckpointContract,
   });
+  const boundedWritePathContract = buildBoundedWritePathContract({
+    decision_status: decisionSurface.decision_status,
+    selected_path_category: contractInput.selected_path_category,
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    approval_checkpoint_overall_state: approvalCheckpointContract.summary.overall_state,
+    audit_trail_latest_state_hint: auditTrailSkeleton.latest_state_hint,
+    has_blocking_risk: Boolean(contractInputOverride?.has_blocking_risk) || decisionSurface.decision_status === "blocked",
+    dry_run_requested: true,
+  });
 
   return renderToStaticMarkup(
     <DecisionSurfaceSection
@@ -135,6 +146,7 @@ function renderScenario(
       controlledSubmissionContract={controlledSubmissionContract}
       approvalCheckpointContract={approvalCheckpointContract}
       auditTrailSkeleton={auditTrailSkeleton}
+      boundedWritePathContract={boundedWritePathContract}
     />,
   );
 }
@@ -200,11 +212,22 @@ function run() {
   assert.match(readyReadinessHtml, /Derived semantic events only/);
   assert.match(readyReadinessHtml, /No external logging, no workflow control, and no side effect is performed/);
   assert.match(readyReadinessHtml, /Checkpoint is not approval completion/);
+  assert.match(readyReadinessHtml, /Bounded Write-Path Contract \(Design-only \/ Read-only\)/);
+  assert.match(readyReadinessHtml, /Dry-run semantic interpretation only/);
+  assert.match(readyReadinessHtml, /No persistence is performed/);
+  assert.match(readyReadinessHtml, /No external write is performed/);
+  assert.match(readyReadinessHtml, /No mutation is committed/);
+  assert.match(readyReadinessHtml, /Not a system-of-record update/);
+  assert.match(readyReadinessHtml, /Precondition matrix/);
+  assert.match(readyReadinessHtml, /Failure taxonomy summary/);
+  assert.match(readyReadinessHtml, /Safety boundary/);
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*approve/i);
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*submit/i);
+  assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*execute/i);
   assert.doesNotMatch(readyReadinessHtml, /logged externally/i);
   assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
   assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);
+  assert.doesNotMatch(readyReadinessHtml, /write now|commit now|persist now|execute now|submit now/i);
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }

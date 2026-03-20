@@ -2,6 +2,7 @@ import type { ControlledSubmissionContract } from "../../../../lib/controlledSub
 import type { InternalWorkflowDecisionSurfaceViewModel } from "../../../../lib/internalWorkflowDecisionSurface";
 import type { ApprovalCheckpointContract } from "../../../../lib/approvalCheckpointContract";
 import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
+import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathContract";
 
 function decisionStatusStyles(status: InternalWorkflowDecisionSurfaceViewModel["decision_status"]) {
   if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
@@ -20,6 +21,13 @@ function controlledSubmissionStatusStyles(status: ControlledSubmissionContract["
   if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
   if (status === "not_eligible") return "border-slate-300 bg-slate-100 text-slate-700";
   if (status === "needs_manual_confirmation") return "border-amber-200 bg-amber-50 text-amber-800";
+  return "border-emerald-200 bg-emerald-50 text-emerald-800";
+}
+
+function boundedWriteStatusStyles(status: BoundedWritePathContract["status"]) {
+  if (status === "boundary_blocked") return "border-red-200 bg-red-50 text-red-800";
+  if (status === "not_eligible") return "border-slate-300 bg-slate-100 text-slate-700";
+  if (status === "review_required") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-emerald-200 bg-emerald-50 text-emerald-800";
 }
 
@@ -233,16 +241,123 @@ function AuditTrailSkeletonSection({ trail }: { trail: AuditTrailSkeleton }) {
   );
 }
 
+function BoundedWritePathSection({ contract }: { contract: BoundedWritePathContract }) {
+  const satisfiedCount = contract.precondition_matrix.filter((item) => item.satisfied).length;
+
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Bounded Write-Path Contract (Design-only / Read-only)</h3>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${boundedWriteStatusStyles(contract.status)}`}>
+          {contract.status}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-700">
+        Dry-run semantic interpretation only. No persistence is performed, and no execution control is available.
+      </p>
+      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <p>Design-only contract. No external write is performed. No mutation is committed.</p>
+        <p>Not a system-of-record update. No write / submit / execute control in this section.</p>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Contract mode</p>
+          <p className="mt-1">{contract.mode}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Preconditions satisfied</p>
+          <p className="mt-1">
+            {satisfiedCount}/{contract.precondition_matrix.length}
+          </p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Safety boundary</p>
+          <p className="mt-1">
+            persistence_performed={String(contract.safety_boundary.persistence_performed)} · mutation_committed=
+            {String(contract.safety_boundary.mutation_committed)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Reasons</p>
+          {contract.reasons.length === 0 ? (
+            <p className="mt-1 text-slate-500">No reasons.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.reasons.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Missing requirements</p>
+          {contract.missing_requirements.length === 0 ? (
+            <p className="mt-1 text-slate-500">No missing requirements.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.missing_requirements.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Blockers</p>
+          {contract.blockers.length === 0 ? (
+            <p className="mt-1 text-slate-500">No blockers.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.blockers.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Precondition matrix</p>
+          <ul className="mt-1 space-y-1">
+            {contract.precondition_matrix.map((item) => (
+              <li key={item.key}>
+                {item.key}: required={String(item.required)} · satisfied={String(item.satisfied)}
+              </li>
+            ))}
+          </ul>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Failure taxonomy summary</p>
+          <p className="mt-1">not_eligible_reasons: {contract.failure_taxonomy_summary.not_eligible_reasons.join(", ") || "none"}</p>
+          <p className="mt-1">
+            review_required_reasons: {contract.failure_taxonomy_summary.review_required_reasons.join(", ") || "none"}
+          </p>
+          <p className="mt-1">
+            boundary_blocked_reasons: {contract.failure_taxonomy_summary.boundary_blocked_reasons.join(", ") || "none"}
+          </p>
+          <p className="mt-1">Notice: {contract.failure_taxonomy_summary.design_only_notice}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DecisionSurfaceSection({
   decisionSurface,
   controlledSubmissionContract,
   approvalCheckpointContract,
   auditTrailSkeleton,
+  boundedWritePathContract,
 }: {
   decisionSurface: InternalWorkflowDecisionSurfaceViewModel;
   controlledSubmissionContract?: ControlledSubmissionContract;
   approvalCheckpointContract?: ApprovalCheckpointContract;
   auditTrailSkeleton?: AuditTrailSkeleton;
+  boundedWritePathContract?: BoundedWritePathContract;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -272,6 +387,7 @@ export default function DecisionSurfaceSection({
       {controlledSubmissionContract ? <ControlledSubmissionReadinessSection contract={controlledSubmissionContract} /> : null}
       {approvalCheckpointContract ? <ApprovalCheckpointSection contract={approvalCheckpointContract} /> : null}
       {auditTrailSkeleton ? <AuditTrailSkeletonSection trail={auditTrailSkeleton} /> : null}
+      {boundedWritePathContract ? <BoundedWritePathSection contract={boundedWritePathContract} /> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
