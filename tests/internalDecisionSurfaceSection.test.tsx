@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { IntakeAnalysisResult } from "../lib/aiIntakeAnalysis";
+import {
+  buildControlledSubmissionContract,
+  type ControlledSubmissionReadinessInput,
+} from "../lib/controlledSubmissionContract";
 import { buildInternalActionHandoff } from "../lib/internalActionHandoff";
 import { buildInternalEstimateDraft } from "../lib/internalEstimateDraft";
 import { buildInternalFollowUpWorkflowSuggestion } from "../lib/internalFollowUpWorkflowSuggestion";
@@ -42,7 +46,11 @@ const readyAnalysis: IntakeAnalysisResult = {
   missing_fields: [],
 };
 
-function renderScenario(analysis: IntakeAnalysisResult | null, forceFollowUpUnavailable = false) {
+function renderScenario(
+  analysis: IntakeAnalysisResult | null,
+  forceFollowUpUnavailable = false,
+  contractInputOverride?: Partial<ControlledSubmissionReadinessInput>,
+) {
   const guidance = buildOperatorGuidance(analysis, false);
   const handoff = buildInternalActionHandoff({
     lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
@@ -85,7 +93,28 @@ function renderScenario(analysis: IntakeAnalysisResult | null, forceFollowUpUnav
     continuity,
   });
 
-  return renderToStaticMarkup(<DecisionSurfaceSection decisionSurface={decisionSurface} />);
+  const defaultContractInput: ControlledSubmissionReadinessInput = {
+    decision_status: decisionSurface.decision_status,
+    selected_path_category: "human_confirmed_path",
+    selected_path_id: "path_follow_up_review",
+    manual_confirmation_received: false,
+    intake_quality_gate_passed: continuity.continuity_state === "ready_for_follow_up",
+    follow_up_alignment_status: continuity.follow_up_alignment.alignment_status,
+    path_availability: continuity.follow_up_alignment.alignment_status === "aligned" ? "available" : "unavailable",
+    has_blocking_risk: decisionSurface.decision_status === "blocked",
+  };
+
+  const controlledSubmissionContract = buildControlledSubmissionContract({
+    ...defaultContractInput,
+    ...contractInputOverride,
+  });
+
+  return renderToStaticMarkup(
+    <DecisionSurfaceSection
+      decisionSurface={decisionSurface}
+      controlledSubmissionContract={controlledSubmissionContract}
+    />,
+  );
 }
 
 function run() {
@@ -93,32 +122,55 @@ function run() {
   assert.match(blockedHtml, /Internal Workflow Decision Surface/);
   assert.match(blockedHtml, /blocked/);
   assert.match(blockedHtml, /Not-yet-implemented automation/);
-  assert.doesNotMatch(blockedHtml, /ready_for_manual_progress/);
+  assert.match(blockedHtml, /Controlled Submission Readiness \(Read-only\)/);
+  assert.match(blockedHtml, /Gate state/);
+  assert.match(blockedHtml, /Gate reasons/);
+  assert.match(blockedHtml, /Blockers/);
 
   const needsReviewHtml = renderScenario(partialAnalysis);
   assert.match(needsReviewHtml, /needs_review/);
   assert.match(needsReviewHtml, /Human-confirmed paths/);
-  assert.doesNotMatch(needsReviewHtml, /ready_for_manual_progress/);
+  assert.match(needsReviewHtml, /blocked/);
 
-  const readyHtml = renderScenario(readyAnalysis);
-  assert.match(readyHtml, /ready_for_manual_progress/);
-  assert.match(readyHtml, /Manual handling paths that still require operator confirmation/i);
+  const readyReadinessHtml = renderScenario(readyAnalysis, false, {
+    manual_confirmation_received: true,
+    intake_quality_gate_passed: true,
+    follow_up_alignment_status: "aligned",
+    path_availability: "available",
+    selected_path_category: "human_confirmed_path",
+    decision_status: "ready_for_manual_progress",
+  });
+  assert.match(readyReadinessHtml, /submission_ready/);
+  assert.match(readyReadinessHtml, /No submission has been performed/);
+  assert.match(readyReadinessHtml, /Readiness does not equal execution/);
+  assert.doesNotMatch(readyReadinessHtml, /submitted automatically/i);
+  assert.doesNotMatch(readyReadinessHtml, /auto-execute/i);
 
-  const mismatchHtml = renderScenario(readyAnalysis, true);
-  assert.match(mismatchHtml, /needs_review/);
+  const notEligibleHtml = renderScenario(readyAnalysis, false, {
+    selected_path_category: "suggestion_only",
+    selected_path_id: "continuity_summary",
+    manual_confirmation_received: true,
+  });
+  assert.match(notEligibleHtml, /not_eligible/);
+  assert.match(notEligibleHtml, /Select a human_confirmed_path instead of suggestion_only/);
 
-  assert.match(readyHtml, /Suggestion-only items/);
-  assert.match(readyHtml, /Human-confirmed paths/);
-  assert.match(readyHtml, /Not-yet-implemented automation/);
-  assert.match(readyHtml, /Read-only guidance/);
-  assert.match(readyHtml, /Does not auto-advance workflow/);
-  assert.match(readyHtml, /Does not contact customer automatically/);
-  assert.match(readyHtml, /Does not create tasks automatically/);
-  assert.match(readyHtml, /Does not write business records automatically/);
+  const needsManualHtml = renderScenario(readyAnalysis, false, {
+    manual_confirmation_received: false,
+    intake_quality_gate_passed: false,
+    follow_up_alignment_status: "aligned",
+    path_availability: "available",
+  });
+  assert.match(needsManualHtml, /needs_manual_confirmation/);
+  assert.match(needsManualHtml, /Missing requirements/);
+  assert.match(needsManualHtml, /Manual confirmation is required before controlled submission readiness/);
 
-  assert.doesNotMatch(readyHtml, /auto execute/i);
-  assert.doesNotMatch(readyHtml, /automatically triggered/i);
-  assert.doesNotMatch(readyHtml, /submitted automatically/i);
+  assert.match(readyReadinessHtml, /Suggestion-only items/);
+  assert.match(readyReadinessHtml, /Human-confirmed paths/);
+  assert.match(readyReadinessHtml, /Read-only guidance/);
+  assert.match(readyReadinessHtml, /Does not auto-advance workflow/);
+  assert.match(readyReadinessHtml, /Manual confirmation is still required/);
+  assert.match(readyReadinessHtml, /No automatic execution is enabled/);
+  assert.match(readyReadinessHtml, /No submission has been performed/);
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }
