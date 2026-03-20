@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES,
   getControlledSubmissionMutationIntentByLeadId,
   listControlledSubmissionMutationIntentAuditLog,
   recordControlledSubmissionMutationIntent,
@@ -43,10 +44,14 @@ function run() {
   assert.equal(accepted.intent_record?.lead_id, "lead-1001");
   assert.equal(accepted.intent_record?.contract_snapshot.gate_state, "allowed");
   assert.equal(accepted.intent_record?.contract_snapshot.controlled_submission_status, "submission_ready");
+  assert.ok(accepted.intent_record?.intent_id);
+  assert.ok(accepted.intent_record?.recorded_at);
+  assert.ok(accepted.intent_record?.core_input_fingerprint);
   assert.equal(accepted.boundary_assertion.submission_completed, false);
   assert.equal(accepted.boundary_assertion.approval_completed, false);
   assert.equal(accepted.boundary_assertion.workflow_finished, false);
   assert.equal(accepted.boundary_assertion.no_external_execution_occurred, true);
+  assert.equal(accepted.intent_record?.boundary_assertion.external_execution_occurred, false);
 
   const stored = getControlledSubmissionMutationIntentByLeadId("lead-1001");
   assert.ok(stored);
@@ -63,6 +68,7 @@ function run() {
   assert.equal(replay.write_state, "accepted_idempotent_replay");
   assert.equal(replay.object_changed, false);
   assert.equal(replay.intent_record?.intent_key, stored?.intent_key);
+  assert.deepEqual(replay.boundary_assertion, accepted.boundary_assertion);
 
   const invalidLead = recordControlledSubmissionMutationIntent({
     lead_id: "lead-missing",
@@ -73,6 +79,7 @@ function run() {
   });
   assert.equal(invalidLead.write_state, "rejected");
   assert.equal(invalidLead.rejection_reason, "lead_not_found");
+  assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.intent_key, stored?.intent_key);
 
   const gateRejected = recordControlledSubmissionMutationIntent({
     lead_id: "lead-1002",
@@ -134,6 +141,10 @@ function run() {
   });
   assert.equal(nonAllowedFieldAttempt.write_state, "rejected");
   assert.equal(nonAllowedFieldAttempt.rejection_reason, "single_object_conflict_existing_intent_key_mismatch");
+  assert.equal(
+    getControlledSubmissionMutationIntentByLeadId("lead-1003")?.intent_key,
+    firstForLead1003.intent_record?.intent_key,
+  );
 
   const pseudoReplayRejected = recordControlledSubmissionMutationIntent({
     lead_id: "lead-1001",
@@ -196,6 +207,15 @@ function run() {
   assert.ok(auditLog.every((entry) => entry.boundary_note === "minimal_intent_audit_only"));
   assert.ok(auditLog.every((entry) => !("actor_id" in entry)));
   assert.ok(auditLog.every((entry) => !("source" in entry)));
+  assert.ok(
+    auditLog.every(
+      (entry) => !("submission_completed" in entry) && !("approval_completed" in entry) && !("executed" in entry),
+    ),
+  );
+
+  const observedStates = new Set(auditLog.map((entry) => entry.write_state));
+  const allowedStates = new Set(CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES);
+  assert.ok([...observedStates].every((state) => allowedStates.has(state)));
 
   const serialized = JSON.stringify({ accepted, replay, stored, auditLog });
   assert.doesNotMatch(serialized, /submission completed|approval completed|workflow finished|external execution succeeded/i);

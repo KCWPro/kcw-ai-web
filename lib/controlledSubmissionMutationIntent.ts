@@ -85,6 +85,20 @@ export type ControlledSubmissionMutationIntentWriteResult = {
   };
 };
 
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES = [
+  "accepted_recorded",
+  "accepted_idempotent_replay",
+  "rejected",
+] as const;
+
+const FIXED_RESULT_BOUNDARY_ASSERTION = {
+  submission_completed: false,
+  approval_completed: false,
+  workflow_finished: false,
+  no_external_execution_occurred: true,
+  full_audit_persistence_system: false,
+} as const;
+
 const intentStore = new Map<string, ControlledSubmissionMutationIntentRecord>();
 const intentAuditLog: ControlledSubmissionMutationIntentAuditEntry[] = [];
 
@@ -128,18 +142,66 @@ function buildRejectedResult(reason: ControlledSubmissionMutationIntentRejectRea
     rejection_reason: reason,
     object_changed: false,
     intent_record: null,
-    boundary_assertion: {
-      submission_completed: false,
-      approval_completed: false,
-      workflow_finished: false,
-      no_external_execution_occurred: true,
-      full_audit_persistence_system: false,
-    },
+    boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }
 
 function appendAuditEntry(entry: ControlledSubmissionMutationIntentAuditEntry) {
   intentAuditLog.push(entry);
+}
+
+function buildMinimalAuditEntry(
+  leadId: string,
+  intentKey: string,
+  nowIso: string,
+  result: Pick<ControlledSubmissionMutationIntentWriteResult, "write_state" | "rejection_reason" | "object_changed">,
+): ControlledSubmissionMutationIntentAuditEntry {
+  return {
+    attempt_id: makeAttemptId(nowIso, leadId),
+    intent_key: intentKey,
+    lead_id: leadId,
+    write_state: result.write_state,
+    rejection_reason: result.rejection_reason,
+    object_changed: result.object_changed,
+    occurred_at: nowIso,
+    boundary_note: "minimal_intent_audit_only",
+  };
+}
+
+function buildAcceptedReplayResult(record: ControlledSubmissionMutationIntentRecord): ControlledSubmissionMutationIntentWriteResult {
+  return {
+    write_state: "accepted_idempotent_replay",
+    rejection_reason: null,
+    object_changed: false,
+    intent_record: record,
+    boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
+  };
+}
+
+function buildAcceptedRecordedResult(record: ControlledSubmissionMutationIntentRecord): ControlledSubmissionMutationIntentWriteResult {
+  return {
+    write_state: "accepted_recorded",
+    rejection_reason: null,
+    object_changed: true,
+    intent_record: record,
+    boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
+  };
+}
+
+function assertIntentRecordInvariant(record: ControlledSubmissionMutationIntentRecord) {
+  if (!record.intent_id || !record.intent_key || !record.lead_id || !record.selected_path_id || !record.recorded_at) {
+    throw new Error("Invariant violation: required intent record fields are missing.");
+  }
+  if (record.intent_status !== "intent_recorded") {
+    throw new Error("Invariant violation: intent_status must stay intent_recorded.");
+  }
+  if (
+    record.boundary_assertion.submission_completed !== false ||
+    record.boundary_assertion.approval_completed !== false ||
+    record.boundary_assertion.external_execution_occurred !== false
+  ) {
+    throw new Error("Invariant violation: execution/completion boundary drift detected.");
+  }
 }
 
 export function recordControlledSubmissionMutationIntent(
@@ -149,125 +211,53 @@ export function recordControlledSubmissionMutationIntent(
 
   if (!input.lead_id || !getLeadById(input.lead_id)) {
     const rejection = buildRejectedResult("lead_not_found");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id || "unknown"),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id || "unknown", "n/a", nowIso, rejection));
     return rejection;
   }
 
   if (!input.actor_id || !input.actor_id.trim()) {
     const rejection = buildRejectedResult("invalid_actor_id");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
   if (!isSupportedSource(input.source)) {
     const rejection = buildRejectedResult("invalid_source");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
   const selectedPathId = input.readiness_input.selected_path_id;
   if (!selectedPathId || !selectedPathId.trim()) {
     const rejection = buildRejectedResult("selected_path_id_missing");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
   if (!isValidIntentKeyFormat(input.intent_key)) {
     const rejection = buildRejectedResult("invalid_intent_key_format");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: input.intent_key,
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, input.intent_key, nowIso, rejection));
     return rejection;
   }
 
   const expectedIntentKey = buildExpectedIntentKey(input.lead_id, selectedPathId);
   if (input.intent_key !== expectedIntentKey) {
     const rejection = buildRejectedResult("intent_key_mismatch_with_input");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: input.intent_key,
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, input.intent_key, nowIso, rejection));
     return rejection;
   }
 
   const readinessHardening = buildBoundedWriteImplementationReadinessContract();
   if (readinessHardening.non_execution_boundary.implementation_permitted !== false) {
     const rejection = buildRejectedResult("readiness_boundary_invalid");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
   const controlledSubmission = buildControlledSubmissionContract(input.readiness_input);
   if (controlledSubmission.status !== "submission_ready" || controlledSubmission.gate_state !== "allowed") {
     const rejection = buildRejectedResult("controlled_submission_gate_or_readiness_not_satisfied");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
@@ -282,16 +272,7 @@ export function recordControlledSubmissionMutationIntent(
 
   if (checkpoint.summary.overall_state !== "checkpoint_ready_for_review") {
     const rejection = buildRejectedResult("checkpoint_not_ready_for_review");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
@@ -306,16 +287,7 @@ export function recordControlledSubmissionMutationIntent(
 
   if (trail.latest_state_hint !== "read_only_alignment") {
     const rejection = buildRejectedResult("audit_trail_not_in_read_only_alignment");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
@@ -332,16 +304,7 @@ export function recordControlledSubmissionMutationIntent(
 
   if (boundedWritePath.status !== "dry_run_only") {
     const rejection = buildRejectedResult("bounded_write_path_not_dry_run_ready");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, "n/a", nowIso, rejection));
     return rejection;
   }
 
@@ -352,57 +315,18 @@ export function recordControlledSubmissionMutationIntent(
   if (existing) {
     if (existing.intent_key !== intentKey) {
       const rejection = buildRejectedResult("single_object_conflict_existing_intent_key_mismatch");
-      appendAuditEntry({
-        attempt_id: makeAttemptId(nowIso, input.lead_id),
-        intent_key: intentKey,
-        lead_id: input.lead_id,
-        write_state: rejection.write_state,
-        rejection_reason: rejection.rejection_reason,
-        object_changed: rejection.object_changed,
-        occurred_at: nowIso,
-        boundary_note: "minimal_intent_audit_only",
-      });
+      appendAuditEntry(buildMinimalAuditEntry(input.lead_id, intentKey, nowIso, rejection));
       return rejection;
     }
     if (existing.core_input_fingerprint !== fingerprint) {
       const rejection = buildRejectedResult("idempotent_replay_core_input_mismatch");
-      appendAuditEntry({
-        attempt_id: makeAttemptId(nowIso, input.lead_id),
-        intent_key: intentKey,
-        lead_id: input.lead_id,
-        write_state: rejection.write_state,
-        rejection_reason: rejection.rejection_reason,
-        object_changed: rejection.object_changed,
-        occurred_at: nowIso,
-        boundary_note: "minimal_intent_audit_only",
-      });
+      appendAuditEntry(buildMinimalAuditEntry(input.lead_id, intentKey, nowIso, rejection));
       return rejection;
     }
 
-    const replayResult: ControlledSubmissionMutationIntentWriteResult = {
-      write_state: "accepted_idempotent_replay",
-      rejection_reason: null,
-      object_changed: false,
-      intent_record: existing,
-      boundary_assertion: {
-        submission_completed: false,
-        approval_completed: false,
-        workflow_finished: false,
-        no_external_execution_occurred: true,
-        full_audit_persistence_system: false,
-      },
-    };
-
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: existing.intent_key,
-      lead_id: input.lead_id,
-      write_state: replayResult.write_state,
-      rejection_reason: replayResult.rejection_reason,
-      object_changed: replayResult.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
+    assertIntentRecordInvariant(existing);
+    const replayResult = buildAcceptedReplayResult(existing);
+    appendAuditEntry(buildMinimalAuditEntry(input.lead_id, existing.intent_key, nowIso, replayResult));
 
     return replayResult;
   }
@@ -434,32 +358,10 @@ export function recordControlledSubmissionMutationIntent(
     },
   };
 
+  assertIntentRecordInvariant(intentRecord);
   intentStore.set(input.lead_id, intentRecord);
-
-  const accepted: ControlledSubmissionMutationIntentWriteResult = {
-    write_state: "accepted_recorded",
-    rejection_reason: null,
-    object_changed: true,
-    intent_record: intentRecord,
-    boundary_assertion: {
-      submission_completed: false,
-      approval_completed: false,
-      workflow_finished: false,
-      no_external_execution_occurred: true,
-      full_audit_persistence_system: false,
-    },
-  };
-
-  appendAuditEntry({
-    attempt_id: makeAttemptId(nowIso, input.lead_id),
-    intent_key: intentRecord.intent_key,
-    lead_id: input.lead_id,
-    write_state: accepted.write_state,
-    rejection_reason: accepted.rejection_reason,
-    object_changed: accepted.object_changed,
-    occurred_at: nowIso,
-    boundary_note: "minimal_intent_audit_only",
-  });
+  const accepted = buildAcceptedRecordedResult(intentRecord);
+  appendAuditEntry(buildMinimalAuditEntry(input.lead_id, intentRecord.intent_key, nowIso, accepted));
 
   return accepted;
 }
