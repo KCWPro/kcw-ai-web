@@ -254,6 +254,9 @@ function run() {
   assert.match(readyReadinessHtml, /read-only compatible != controller-capable/);
   assert.match(readyReadinessHtml, /scope-prep != implementation prewire/);
   assert.match(readyReadinessHtml, /boundary revalidation != skeleton runtime rollout/);
+  assert.match(readyReadinessHtml, /skeleton-readiness adjudication prep != skeleton runtime rollout/);
+  assert.match(readyReadinessHtml, /skeleton-readiness adjudication prep != skeleton runtime activation/);
+  assert.match(readyReadinessHtml, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
   assert.match(readyReadinessHtml, /continuity revalidation != capability expansion/);
   assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);
