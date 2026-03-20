@@ -252,6 +252,8 @@ function run() {
   assert.match(readyReadinessHtml, /replayed idempotently != workflow completed/);
   assert.match(readyReadinessHtml, /blocked by boundary != approval finalized/);
   assert.match(readyReadinessHtml, /read-only compatible != controller-capable/);
+  assert.match(readyReadinessHtml, /scope-prep != implementation prewire/);
+  assert.match(readyReadinessHtml, /boundary revalidation != skeleton runtime rollout/);
   assert.match(readyReadinessHtml, /continuity revalidation != capability expansion/);
   assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);
