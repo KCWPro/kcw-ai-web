@@ -360,8 +360,9 @@ function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSu
         Surfaced lifecycle visibility only. This section is not a workflow controller and does not advance state by itself.
       </p>
       <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
-        <p>{readModel.read_only_notice}</p>
-        <p>Surfaced operator outcome is not a completed/finalized/executed result.</p>
+        {readModel.boundary_notice_lines.map((line) => (
+          <p key={line}>{line}</p>
+        ))}
       </div>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">

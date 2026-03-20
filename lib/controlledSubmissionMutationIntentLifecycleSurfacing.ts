@@ -4,6 +4,7 @@ import type {
   ControlledSubmissionMutationIntentLifecycleVisibility,
 } from "./controlledSubmissionMutationIntent";
 import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
@@ -16,6 +17,7 @@ export type ControlledSubmissionMutationIntentLifecycleReadModel = {
   operator_outcome: ControlledSubmissionMutationIntentLifecycleVisibility["operator_outcome"] | "not_available";
   transition_note: string;
   semantic_boundary_clauses: ControlledSubmissionMutationIntentLifecycleVisibility["semantic_boundary_clauses"];
+  boundary_notice_lines: typeof CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES;
   semantic_boundary: ControlledSubmissionMutationIntentLifecycleVisibility["semantic_boundary"];
   read_only_notice: string;
   source: "audit_log_derived" | "no_intent_audit_for_lead";
@@ -38,6 +40,7 @@ export function buildControlledSubmissionMutationIntentLifecycleReadModel(input:
       operator_outcome: "not_available",
       transition_note: "No lifecycle audit entry is available for this lead yet.",
       semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
+      boundary_notice_lines: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
       semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
       read_only_notice: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
       source: "no_intent_audit_for_lead",
@@ -50,6 +53,7 @@ export function buildControlledSubmissionMutationIntentLifecycleReadModel(input:
     operator_outcome: latest.operator_outcome,
     transition_note: transitionNoteByStage(latest.lifecycle_stage),
     semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
+    boundary_notice_lines: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
     semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
     read_only_notice: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
     source: "audit_log_derived",

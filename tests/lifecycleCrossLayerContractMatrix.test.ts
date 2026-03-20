@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import {
   buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
@@ -84,12 +85,14 @@ function run() {
   assert.equal(readModelVisible.transition_note, replayed.lifecycle_visibility.transition_note);
   assert.equal(readModelVisible.read_only_notice, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE);
   assert.deepEqual(readModelVisible.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(readModelVisible.boundary_notice_lines, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES);
 
   assert.equal(readModelMissing.visibility_state, "not_available");
   assert.equal(readModelMissing.current_stage, "not_available");
   assert.equal(readModelMissing.operator_outcome, "not_available");
   assert.match(readModelMissing.transition_note, /No lifecycle audit entry is available for this lead yet/);
   assert.deepEqual(readModelMissing.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(readModelMissing.boundary_notice_lines, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES);
 
   const serialized = JSON.stringify({ accepted, replayed, rejected, readModelVisible, readModelMissing });
   assert.doesNotMatch(serialized, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());

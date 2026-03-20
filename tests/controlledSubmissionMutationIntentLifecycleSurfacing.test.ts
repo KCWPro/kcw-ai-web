@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
   buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
@@ -45,6 +46,7 @@ function run() {
   assert.equal(visible.semantic_boundary.lifecycle_visibility_is_not_completion, true);
   assert.equal(visible.semantic_boundary.lifecycle_stage_is_not_external_execution, true);
   assert.deepEqual(visible.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(visible.boundary_notice_lines, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES);
   assert.equal(
     visible.transition_note,
     CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
@@ -61,6 +63,7 @@ function run() {
   assert.equal(notAvailable.source, "no_intent_audit_for_lead");
   assert.equal(notAvailable.semantic_boundary.status_expression_is_not_workflow_fully_completed, true);
   assert.deepEqual(notAvailable.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
+  assert.deepEqual(notAvailable.boundary_notice_lines, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES);
   assert.equal(notAvailable.read_only_notice, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE);
 
   const serialized = JSON.stringify({ visible, notAvailable });
