@@ -25,6 +25,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "replayed idempotently != workflow completed",
     "blocked by boundary != approval finalized",
     "readiness/allowed/eligible != executed",
+    "read-only compatible != controller-capable",
     "audit trace != persisted audit system",
     "surfacing != controller",
     "single-object semantic package != multi-object workflow engine",
