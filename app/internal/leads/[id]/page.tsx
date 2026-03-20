@@ -21,6 +21,7 @@ import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDeci
 import { buildControlledSubmissionContract } from "@/lib/controlledSubmissionContract";
 import { buildApprovalCheckpointContract } from "@/lib/approvalCheckpointContract";
 import { buildAuditTrailSkeleton } from "@/lib/auditTrailSkeleton";
+import { buildBoundedWritePathContract } from "@/lib/boundedWritePathContract";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
 
 function Field({ label, value }: { label: string; value?: string }) {
@@ -387,6 +388,17 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     approval_checkpoint_contract: approvalCheckpointContract,
   });
 
+  const boundedWritePathContract = buildBoundedWritePathContract({
+    decision_status: workflowDecisionSurface.decision_status,
+    selected_path_category: primaryHumanPath?.category || "suggestion_only",
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    approval_checkpoint_overall_state: approvalCheckpointContract.summary.overall_state,
+    audit_trail_latest_state_hint: auditTrailSkeleton.latest_state_hint,
+    has_blocking_risk: workflowDecisionSurface.decision_status === "blocked",
+    dry_run_requested: true,
+  });
+
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -443,6 +455,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               controlledSubmissionContract={controlledSubmissionContract}
               approvalCheckpointContract={approvalCheckpointContract}
               auditTrailSkeleton={auditTrailSkeleton}
+              boundedWritePathContract={boundedWritePathContract}
             />
 
             <OperatorGuidancePanel guidance={guidance} />
