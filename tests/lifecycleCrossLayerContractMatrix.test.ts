@@ -97,11 +97,14 @@ function run() {
   const serialized = JSON.stringify({ accepted, replayed, rejected, readModelVisible, readModelMissing });
   assert.doesNotMatch(serialized, packaging.forbidden_success_pattern);
   assert.match(serialized, /intent recorded != submission completed/);
+  assert.match(serialized, /checkpoint availability != approval completion/);
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
+  assert.match(serialized, /integrity hardening != capability expansion/);
+  assert.match(serialized, /regression anchor != future execution contract/);
 
   console.log("lifecycleCrossLayerContractMatrix tests passed");
 }

@@ -104,12 +104,15 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
+  "checkpoint availability != approval completion",
   "replayed idempotently != workflow completed",
   "blocked by boundary != approval finalized",
   "readiness/allowed/eligible != executed",
   "audit trace != persisted audit system",
   "surfacing != controller",
   "single-object semantic package != multi-object workflow engine",
+  "integrity hardening != capability expansion",
+  "regression anchor != future execution contract",
 ] as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
@@ -119,6 +122,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Surfaced operator outcome is not a completed/finalized/executed result.",
   "Lifecycle visibility is descriptive only and never grants controller authority.",
+  "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES = [
