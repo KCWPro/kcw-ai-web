@@ -97,7 +97,7 @@ function renderScenario(
     decision_status: decisionSurface.decision_status,
     selected_path_category: "human_confirmed_path",
     selected_path_id: "path_follow_up_review",
-    human_confirmation_received: false,
+    manual_confirmation_received: false,
     intake_quality_gate_passed: continuity.continuity_state === "ready_for_follow_up",
     follow_up_alignment_status: continuity.follow_up_alignment.alignment_status,
     path_availability: continuity.follow_up_alignment.alignment_status === "aligned" ? "available" : "unavailable",
@@ -123,15 +123,17 @@ function run() {
   assert.match(blockedHtml, /blocked/);
   assert.match(blockedHtml, /Not-yet-implemented automation/);
   assert.match(blockedHtml, /Controlled Submission Readiness \(Read-only\)/);
+  assert.match(blockedHtml, /Gate state/);
+  assert.match(blockedHtml, /Gate reasons/);
   assert.match(blockedHtml, /Blockers/);
 
   const needsReviewHtml = renderScenario(partialAnalysis);
   assert.match(needsReviewHtml, /needs_review/);
   assert.match(needsReviewHtml, /Human-confirmed paths/);
-  assert.match(needsReviewHtml, /needs_manual_confirmation/);
+  assert.match(needsReviewHtml, /blocked/);
 
   const readyReadinessHtml = renderScenario(readyAnalysis, false, {
-    human_confirmation_received: true,
+    manual_confirmation_received: true,
     intake_quality_gate_passed: true,
     follow_up_alignment_status: "aligned",
     path_availability: "available",
@@ -147,16 +149,16 @@ function run() {
   const notEligibleHtml = renderScenario(readyAnalysis, false, {
     selected_path_category: "suggestion_only",
     selected_path_id: "continuity_summary",
-    human_confirmation_received: true,
+    manual_confirmation_received: true,
   });
   assert.match(notEligibleHtml, /not_eligible/);
   assert.match(notEligibleHtml, /Select a human_confirmed_path instead of suggestion_only/);
 
   const needsManualHtml = renderScenario(readyAnalysis, false, {
-    human_confirmation_received: false,
+    manual_confirmation_received: false,
     intake_quality_gate_passed: false,
-    follow_up_alignment_status: "needs_review",
-    path_availability: "unavailable",
+    follow_up_alignment_status: "aligned",
+    path_availability: "available",
   });
   assert.match(needsManualHtml, /needs_manual_confirmation/);
   assert.match(needsManualHtml, /Missing requirements/);

@@ -1,4 +1,5 @@
 import type { DecisionSurfaceCategory, InternalWorkflowDecisionSurfaceViewModel } from "./internalWorkflowDecisionSurface";
+import { evaluateControlledSubmissionGate } from "./controlledSubmissionGate";
 
 export type ControlledSubmissionDerivedStatus =
   | "not_eligible"
@@ -10,7 +11,7 @@ export type ControlledSubmissionReadinessInput = {
   decision_status: InternalWorkflowDecisionSurfaceViewModel["decision_status"];
   selected_path_category: DecisionSurfaceCategory;
   selected_path_id: string | null;
-  human_confirmation_received: boolean;
+  manual_confirmation_received: boolean;
   intake_quality_gate_passed: boolean;
   follow_up_alignment_status: "aligned" | "needs_review";
   path_availability: "available" | "unavailable";
@@ -34,6 +35,8 @@ export type ControlledSubmissionContract = {
   missing_requirements: string[];
   selected_path_id: string | null;
   manual_confirmation_required: boolean;
+  gate_state: "allowed" | "blocked" | "review_needed" | "confirmation_missing" | "not_eligible";
+  gate_reasons: string[];
   automation_boundary: ControlledSubmissionAutomationBoundary;
 };
 
@@ -57,7 +60,7 @@ export function buildControlledSubmissionContract(input: ControlledSubmissionRea
     missingRequirements.push("Decision surface still needs manual review before controlled submission readiness.");
   }
 
-  if (!input.human_confirmation_received) {
+  if (!input.manual_confirmation_received) {
     missingRequirements.push("Manual confirmation is required before controlled submission readiness.");
   }
 
@@ -73,21 +76,27 @@ export function buildControlledSubmissionContract(input: ControlledSubmissionRea
     missingRequirements.push("Selected human_confirmed_path must be available before controlled submission readiness.");
   }
 
+  const gateResult = evaluateControlledSubmissionGate({
+    decision_status: input.decision_status,
+    selected_path_category: input.selected_path_category,
+    selected_path_id: input.selected_path_id,
+    manual_confirmation_received: input.manual_confirmation_received,
+    readiness_prerequisites_satisfied:
+      input.intake_quality_gate_passed && input.follow_up_alignment_status === "aligned" && input.path_availability === "available",
+    has_blocking_risk: input.has_blocking_risk,
+    has_review_required_guardrail: input.follow_up_alignment_status === "needs_review" || input.decision_status === "needs_review",
+    path_available: input.path_availability === "available",
+  });
+
   let status: ControlledSubmissionDerivedStatus = "needs_manual_confirmation";
 
-  if (blockers.length > 0) {
+  if (gateResult.state === "blocked") {
     status = "blocked";
-  } else if (input.selected_path_category !== "human_confirmed_path") {
+  } else if (gateResult.state === "not_eligible") {
     status = "not_eligible";
-  } else if (
-    input.decision_status === "ready_for_manual_progress" &&
-    input.human_confirmation_received &&
-    input.intake_quality_gate_passed &&
-    input.follow_up_alignment_status === "aligned" &&
-    input.path_availability === "available"
-  ) {
+  } else if (gateResult.state === "allowed") {
     status = "submission_ready";
-    reasons.push("Controlled submission prerequisites are satisfied after human confirmation.");
+    reasons.push("Controlled submission prerequisites are satisfied after explicit manual confirmation.");
   }
 
   if (status !== "submission_ready" && reasons.length === 0) {
@@ -101,7 +110,9 @@ export function buildControlledSubmissionContract(input: ControlledSubmissionRea
     blockers,
     missing_requirements: missingRequirements,
     selected_path_id: input.selected_path_id,
-    manual_confirmation_required: !input.human_confirmation_received,
+    manual_confirmation_required: !input.manual_confirmation_received,
+    gate_state: gateResult.state,
+    gate_reasons: gateResult.reasons,
     automation_boundary: {
       automation_not_implemented: true,
       auto_execution_enabled: false,

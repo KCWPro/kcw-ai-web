@@ -360,7 +360,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     decision_status: workflowDecisionSurface.decision_status,
     selected_path_category: primaryHumanPath?.category || "suggestion_only",
     selected_path_id: primaryHumanPath?.id || null,
-    human_confirmation_received: false,
+    manual_confirmation_received: false,
     intake_quality_gate_passed: workflowContinuity.continuity_state === "ready_for_follow_up",
     follow_up_alignment_status: workflowContinuity.follow_up_alignment.alignment_status,
     path_availability: primaryHumanPath?.status === "ready" ? "available" : "unavailable",

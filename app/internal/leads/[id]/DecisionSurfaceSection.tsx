@@ -72,7 +72,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>Human-confirmed path is not submitted. Submission-ready is not submitted.</p>
       </div>
 
-      <div className="mt-3 grid gap-3 md:grid-cols-3">
+      <div className="mt-3 grid gap-3 md:grid-cols-4">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
           <p className="font-semibold text-slate-900">Selected path</p>
           <p className="mt-1">{contract.selected_path_id || "none"}</p>
@@ -80,6 +80,10 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
           <p className="font-semibold text-slate-900">Manual confirmation required</p>
           <p className="mt-1">{contract.manual_confirmation_required ? "yes" : "no"}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Gate state</p>
+          <p className="mt-1">{contract.gate_state}</p>
         </div>
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
           <p className="font-semibold text-slate-900">Automation boundary</p>
@@ -126,6 +130,12 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
               ))}
             </ul>
           )}
+          <p className="mt-2 font-semibold text-slate-900">Gate reasons</p>
+          <ul className="mt-1 list-disc space-y-1 pl-4">
+            {contract.gate_reasons.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
       </div>
     </div>
