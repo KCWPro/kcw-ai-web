@@ -63,10 +63,35 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
   ] as const,
 });
 
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUMMARY = Object.freeze({
+  scope: "candidate_b_single_object_adjudication_level_non_runtime",
+  boundary_equations: [
+    "adjudication-level skeleton carrying != runtime carrying",
+    "adjudication-level skeleton carrying != skeleton runtime rollout",
+    "adjudication-level skeleton carrying != skeleton runtime activation",
+    "candidate-b scope lock != runtime capability unlock",
+    READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
+    "single-object semantic package != multi-object workflow engine",
+    "regression anchor != future execution contract",
+  ] as const,
+  forbidden_actions: [
+    "no runtime carrying",
+    "no skeleton runtime rollout",
+    "no skeleton runtime activation",
+    "no execution/completion runtime states",
+    "no implementation prewire",
+    "no controller-capable surface expansion",
+  ] as const,
+});
+
 export function getControlledSubmissionMutationIntentSemanticPackaging() {
   return CONTROLLED_SUBMISSION_MUTATION_INTENT_SEMANTIC_PACKAGING;
 }
 
 export function getControlledSubmissionMutationIntentFreezePrepHandoffSummary() {
   return CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY;
+}
+
+export function getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary() {
+  return CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUMMARY;
 }

@@ -7,7 +7,9 @@ import {
 import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_SEMANTIC_PACKAGING,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
+  getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -34,8 +36,14 @@ function run() {
   assert.match(sample, /boundary revalidation != skeleton runtime activation/i);
   assert.match(sample, /skeleton-readiness adjudication prep != skeleton runtime rollout/i);
   assert.match(sample, /skeleton-readiness adjudication prep != skeleton runtime activation/i);
+  assert.match(sample, /adjudication-level skeleton carrying != runtime carrying/i);
+  assert.match(sample, /adjudication-level skeleton carrying != skeleton runtime rollout/i);
+  assert.match(sample, /adjudication-level skeleton carrying != skeleton runtime activation/i);
+  assert.match(sample, /candidate-b scope lock != runtime capability unlock/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
+  assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
+  assert.match(sample, /Candidate-B scope lock is boundary-only and never unlocks runtime capabilities\./i);
   assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
@@ -65,6 +73,20 @@ function run() {
   assert.ok(freezePrep.forbidden_actions.includes("no UI write authority increase"));
   assert.ok(freezePrep.non_goals.includes("workflow completion"));
   assert.ok(freezePrep.non_goals.includes("external execution"));
+
+  const phase19Lock = getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary();
+  assert.equal(phase19Lock, CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUMMARY);
+  assert.ok(Object.isFrozen(phase19Lock));
+  assert.equal(phase19Lock.scope, "candidate_b_single_object_adjudication_level_non_runtime");
+  assert.ok(phase19Lock.boundary_equations.includes("adjudication-level skeleton carrying != runtime carrying"));
+  assert.ok(phase19Lock.boundary_equations.includes("adjudication-level skeleton carrying != skeleton runtime rollout"));
+  assert.ok(phase19Lock.boundary_equations.includes("adjudication-level skeleton carrying != skeleton runtime activation"));
+  assert.ok(phase19Lock.boundary_equations.includes("candidate-b scope lock != runtime capability unlock"));
+  assert.ok(phase19Lock.forbidden_actions.includes("no runtime carrying"));
+  assert.ok(phase19Lock.forbidden_actions.includes("no skeleton runtime rollout"));
+  assert.ok(phase19Lock.forbidden_actions.includes("no skeleton runtime activation"));
+  assert.ok(phase19Lock.forbidden_actions.includes("no execution/completion runtime states"));
+  assert.ok(phase19Lock.forbidden_actions.includes("no implementation prewire"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }
