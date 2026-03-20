@@ -97,6 +97,7 @@ function run() {
   const serialized = JSON.stringify({ accepted, replayed, rejected, readModelVisible, readModelMissing });
   assert.doesNotMatch(serialized, packaging.forbidden_success_pattern);
   assert.match(serialized, /intent recorded != submission completed/);
+  assert.match(serialized, /checkpoint availability != approval completion/);
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);

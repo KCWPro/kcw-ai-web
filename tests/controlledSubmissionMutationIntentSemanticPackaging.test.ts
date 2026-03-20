@@ -25,6 +25,7 @@ function run() {
   });
   assert.doesNotMatch(sample, packaging.forbidden_success_pattern);
   assert.match(sample, /intent recorded != submission completed/i);
+  assert.match(sample, /checkpoint availability != approval completion/i);
   assert.match(sample, /readiness\/allowed\/eligible != executed/i);
   assert.match(sample, /audit trace != persisted audit system/i);
   assert.match(sample, /integrity hardening != capability expansion/i);
@@ -35,6 +36,7 @@ function run() {
   assert.ok(Object.isFrozen(freezePrep));
   assert.equal(freezePrep.scope, "candidate_a_single_object_non_execution_non_completion");
   assert.ok(freezePrep.boundary_equations.includes("lifecycle visibility != completion"));
+  assert.ok(freezePrep.boundary_equations.includes("checkpoint availability != approval completion"));
   assert.ok(freezePrep.boundary_equations.includes("blocked by boundary != approval finalized"));
   assert.ok(freezePrep.boundary_equations.includes("surfacing != controller"));
   assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));

@@ -104,6 +104,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
+  "checkpoint availability != approval completion",
   "replayed idempotently != workflow completed",
   "blocked by boundary != approval finalized",
   "readiness/allowed/eligible != executed",

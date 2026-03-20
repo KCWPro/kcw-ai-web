@@ -21,6 +21,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "regression hardening != generalized workflow engine",
     "handoff readiness != workflow executed",
     "intent recorded != submission completed",
+    "checkpoint availability != approval completion",
     "replayed idempotently != workflow completed",
     "blocked by boundary != approval finalized",
     "readiness/allowed/eligible != executed",
