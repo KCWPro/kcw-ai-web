@@ -26,11 +26,15 @@ function run() {
   assert.equal(trail.boundary_flags.non_persistent, true);
   assert.equal(trail.boundary_flags.persistence_performed, false);
   assert.equal(trail.boundary_flags.system_of_record, false);
+  assert.equal(trail.boundary_flags.compliance_audit_platform, false);
+  assert.equal(trail.boundary_flags.submitted, false);
+  assert.equal(trail.boundary_flags.executed, false);
 
   const markers = trail.events.map((item) => item.derived_marker);
   assert.deepEqual(markers, ["derived_seq_1", "derived_seq_2", "derived_seq_3", "derived_seq_4", "derived_seq_5", "derived_seq_6"]);
   assert.ok(trail.events.every((item) => item.boundary_note.length > 0));
   assert.ok(trail.summary.note.includes("No persistence"));
+  assert.ok(trail.events.some((item) => item.category === "boundary_asserted"));
 
   const blockedCheckpoint = buildApprovalCheckpointContract({
     decision_status: "blocked",
@@ -77,6 +81,7 @@ function run() {
   assert.equal(suggestionTrail.boundary_flags.submitted, false);
   assert.equal(suggestionTrail.boundary_flags.external_write_performed, false);
   assert.doesNotMatch(JSON.stringify(suggestionTrail), /completed_workflow|execution_log_sink/i);
+  assert.doesNotMatch(JSON.stringify(suggestionTrail), /official audit record|persisted production audit system/i);
 
   const pathEvent = suggestionTrail.events.find((item) => item.category === "path_selected");
   assert.equal(pathEvent?.state, "boundary_only");

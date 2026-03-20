@@ -193,6 +193,7 @@ function run() {
   assert.match(readyReadinessHtml, /Manual confirmation is still required/);
   assert.match(readyReadinessHtml, /No automatic execution is enabled/);
   assert.match(readyReadinessHtml, /No submission has been performed/);
+  assert.match(readyReadinessHtml, /Human-confirmed path is not submitted. Submission-ready is not submitted/);
   assert.match(readyReadinessHtml, /Approval Checkpoints \(Read-only Skeleton\)/);
   assert.match(readyReadinessHtml, /Audit Trail Skeleton \(Derived \/ Read-only\)/);
   assert.match(readyReadinessHtml, /checkpoint_ready_for_review|checkpoint_unavailable|checkpoint_review_required/);
@@ -203,6 +204,7 @@ function run() {
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*submit/i);
   assert.doesNotMatch(readyReadinessHtml, /logged externally/i);
   assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
+  assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }

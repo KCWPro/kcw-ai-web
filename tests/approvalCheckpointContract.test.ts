@@ -14,6 +14,9 @@ function run() {
   assert.equal(unavailable.summary.overall_state, "checkpoint_unavailable");
   assert.equal(unavailable.checkpoints[0].state, "unavailable");
   assert.equal(unavailable.checkpoints[1].state, "not_applicable");
+  assert.equal(unavailable.compatibility_assertions.readiness_is_not_execution, true);
+  assert.equal(unavailable.compatibility_assertions.checkpoint_is_not_approval_completion, true);
+  assert.equal(unavailable.execution_boundary.persistence_performed, false);
 
   const availableReview = buildApprovalCheckpointContract({
     decision_status: "ready_for_manual_progress",
@@ -28,6 +31,7 @@ function run() {
   assert.equal(availableReview.checkpoints[0].state, "available_for_review");
   assert.equal(availableReview.execution_boundary.executed, false);
   assert.equal(availableReview.execution_boundary.submission_triggered, false);
+  assert.doesNotMatch(JSON.stringify(availableReview), /approval_granted|completed_workflow/i);
 
   const readinessNotCompletion = buildApprovalCheckpointContract({
     decision_status: "ready_for_manual_progress",
@@ -72,6 +76,8 @@ function run() {
   assert.equal(reviewRequired.execution_boundary.persistence_performed, false);
   assert.equal(reviewRequired.execution_boundary.external_side_effects, "none");
   assert.equal(reviewRequired.execution_boundary.automation_not_implemented, true);
+  assert.equal(reviewRequired.execution_boundary.approval_completion_state, "not_completed");
+  assert.doesNotMatch(JSON.stringify(reviewRequired), /executed_workflow|submission_executed|dispatch/i);
 
   console.log("approvalCheckpointContract tests passed");
 }
