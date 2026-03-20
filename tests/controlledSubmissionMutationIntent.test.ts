@@ -44,6 +44,7 @@ function run() {
   assert.equal(accepted.intent_record?.lead_id, "lead-1001");
   assert.equal(accepted.intent_record?.contract_snapshot.gate_state, "allowed");
   assert.equal(accepted.intent_record?.contract_snapshot.controlled_submission_status, "submission_ready");
+  assert.equal(accepted.intent_record?.contract_snapshot.checkpoint_overall_state, "checkpoint_ready_for_review");
   assert.ok(accepted.intent_record?.intent_id);
   assert.ok(accepted.intent_record?.recorded_at);
   assert.ok(accepted.intent_record?.core_input_fingerprint);
@@ -52,6 +53,7 @@ function run() {
   assert.equal(accepted.boundary_assertion.workflow_finished, false);
   assert.equal(accepted.boundary_assertion.no_external_execution_occurred, true);
   assert.equal(accepted.intent_record?.boundary_assertion.external_execution_occurred, false);
+  assert.doesNotMatch(accepted.write_state, /completed|executed|approved/i);
 
   const stored = getControlledSubmissionMutationIntentByLeadId("lead-1001");
   assert.ok(stored);
@@ -66,6 +68,7 @@ function run() {
   });
 
   assert.equal(replay.write_state, "accepted_idempotent_replay");
+  assert.doesNotMatch(replay.write_state, /completed|executed|approved/i);
   assert.equal(replay.object_changed, false);
   assert.equal(replay.intent_record?.intent_key, stored?.intent_key);
   assert.deepEqual(replay.boundary_assertion, accepted.boundary_assertion);
@@ -78,6 +81,7 @@ function run() {
     readiness_input: readyInput(),
   });
   assert.equal(invalidLead.write_state, "rejected");
+  assert.doesNotMatch(invalidLead.write_state, /completed|executed|approved/i);
   assert.equal(invalidLead.rejection_reason, "lead_not_found");
   assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.intent_key, stored?.intent_key);
 
@@ -216,6 +220,17 @@ function run() {
   const observedStates = new Set(auditLog.map((entry) => entry.write_state));
   const allowedStates = new Set(CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES);
   assert.ok([...observedStates].every((state) => allowedStates.has(state)));
+
+  // misuse-proofing: returned record is read-only view and cannot mutate store.
+  assert.throws(() => {
+    (accepted.intent_record as { actor_id: string } | null)!.actor_id = "tampered_actor";
+  });
+  assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.actor_id, "operator_a");
+
+  // misuse-proofing: audit entries are read-only views.
+  assert.throws(() => {
+    (auditLog[0] as { boundary_note: string }).boundary_note = "tampered";
+  });
 
   const serialized = JSON.stringify({ accepted, replay, stored, auditLog });
   assert.doesNotMatch(serialized, /submission completed|approval completed|workflow finished|external execution succeeded/i);

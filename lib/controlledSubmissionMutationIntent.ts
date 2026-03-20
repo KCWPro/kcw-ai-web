@@ -75,7 +75,7 @@ export type ControlledSubmissionMutationIntentWriteResult = {
   write_state: "accepted_recorded" | "accepted_idempotent_replay" | "rejected";
   rejection_reason: ControlledSubmissionMutationIntentRejectReason | null;
   object_changed: boolean;
-  intent_record: ControlledSubmissionMutationIntentRecord | null;
+  intent_record: Readonly<ControlledSubmissionMutationIntentRecord> | null;
   boundary_assertion: {
     submission_completed: false;
     approval_completed: false;
@@ -98,6 +98,9 @@ const FIXED_RESULT_BOUNDARY_ASSERTION = {
   no_external_execution_occurred: true,
   full_audit_persistence_system: false,
 } as const;
+
+export type ControlledSubmissionMutationIntentWriteState =
+  (typeof CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES)[number];
 
 const intentStore = new Map<string, ControlledSubmissionMutationIntentRecord>();
 const intentAuditLog: ControlledSubmissionMutationIntentAuditEntry[] = [];
@@ -150,6 +153,37 @@ function appendAuditEntry(entry: ControlledSubmissionMutationIntentAuditEntry) {
   intentAuditLog.push(entry);
 }
 
+function deepClone<T>(value: T): T {
+  if (typeof structuredClone === "function") {
+    return structuredClone(value);
+  }
+  return JSON.parse(JSON.stringify(value)) as T;
+}
+
+function deepFreeze<T>(value: T): Readonly<T> {
+  if (value === null || typeof value !== "object") {
+    return value as Readonly<T>;
+  }
+  const target = value as Record<string, unknown>;
+  Object.getOwnPropertyNames(target).forEach((name) => {
+    const child = target[name];
+    if (child && typeof child === "object") {
+      deepFreeze(child as object);
+    }
+  });
+  return Object.freeze(value);
+}
+
+function toReadonlyRecord(record: ControlledSubmissionMutationIntentRecord): Readonly<ControlledSubmissionMutationIntentRecord> {
+  return deepFreeze(deepClone(record));
+}
+
+function toReadonlyAuditEntry(
+  entry: ControlledSubmissionMutationIntentAuditEntry,
+): Readonly<ControlledSubmissionMutationIntentAuditEntry> {
+  return deepFreeze(deepClone(entry));
+}
+
 function buildMinimalAuditEntry(
   leadId: string,
   intentKey: string,
@@ -173,7 +207,7 @@ function buildAcceptedReplayResult(record: ControlledSubmissionMutationIntentRec
     write_state: "accepted_idempotent_replay",
     rejection_reason: null,
     object_changed: false,
-    intent_record: record,
+    intent_record: toReadonlyRecord(record),
     boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }
@@ -183,7 +217,7 @@ function buildAcceptedRecordedResult(record: ControlledSubmissionMutationIntentR
     write_state: "accepted_recorded",
     rejection_reason: null,
     object_changed: true,
-    intent_record: record,
+    intent_record: toReadonlyRecord(record),
     boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }
@@ -367,11 +401,12 @@ export function recordControlledSubmissionMutationIntent(
 }
 
 export function getControlledSubmissionMutationIntentByLeadId(leadId: string) {
-  return intentStore.get(leadId) || null;
+  const record = intentStore.get(leadId);
+  return record ? toReadonlyRecord(record) : null;
 }
 
 export function listControlledSubmissionMutationIntentAuditLog() {
-  return [...intentAuditLog];
+  return intentAuditLog.map((entry) => toReadonlyAuditEntry(entry));
 }
 
 export function resetControlledSubmissionMutationIntentStore() {
