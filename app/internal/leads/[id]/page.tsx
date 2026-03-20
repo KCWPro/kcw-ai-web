@@ -19,6 +19,8 @@ import {
 import { buildInternalWorkflowContinuity } from "@/lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDecisionSurface";
 import { buildControlledSubmissionContract } from "@/lib/controlledSubmissionContract";
+import { buildApprovalCheckpointContract } from "@/lib/approvalCheckpointContract";
+import { buildAuditTrailSkeleton } from "@/lib/auditTrailSkeleton";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
 
 function Field({ label, value }: { label: string; value?: string }) {
@@ -367,6 +369,24 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     has_blocking_risk: workflowDecisionSurface.decision_status === "blocked",
   });
 
+  const approvalCheckpointContract = buildApprovalCheckpointContract({
+    decision_status: workflowDecisionSurface.decision_status,
+    selected_path_category: primaryHumanPath?.category || "suggestion_only",
+    manual_confirmation_received: false,
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    has_blocking_risk: workflowDecisionSurface.decision_status === "blocked",
+  });
+
+  const auditTrailSkeleton = buildAuditTrailSkeleton({
+    selected_path_category: primaryHumanPath?.category || "suggestion_only",
+    decision_status: workflowDecisionSurface.decision_status,
+    controlled_submission_status: controlledSubmissionContract.status,
+    controlled_submission_gate_state: controlledSubmissionContract.gate_state,
+    manual_confirmation_received: false,
+    approval_checkpoint_contract: approvalCheckpointContract,
+  });
+
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -418,7 +438,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
             <IntakeAnalysisSection analysis={analysis} isFallback={analysisFallback} />
 
-            <DecisionSurfaceSection decisionSurface={workflowDecisionSurface} controlledSubmissionContract={controlledSubmissionContract} />
+            <DecisionSurfaceSection
+              decisionSurface={workflowDecisionSurface}
+              controlledSubmissionContract={controlledSubmissionContract}
+              approvalCheckpointContract={approvalCheckpointContract}
+              auditTrailSkeleton={auditTrailSkeleton}
+            />
 
             <OperatorGuidancePanel guidance={guidance} />
 

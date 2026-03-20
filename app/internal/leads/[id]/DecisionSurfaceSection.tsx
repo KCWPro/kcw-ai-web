@@ -1,5 +1,7 @@
 import type { ControlledSubmissionContract } from "../../../../lib/controlledSubmissionContract";
 import type { InternalWorkflowDecisionSurfaceViewModel } from "../../../../lib/internalWorkflowDecisionSurface";
+import type { ApprovalCheckpointContract } from "../../../../lib/approvalCheckpointContract";
+import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
 
 function decisionStatusStyles(status: InternalWorkflowDecisionSurfaceViewModel["decision_status"]) {
   if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
@@ -142,12 +144,105 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
   );
 }
 
+function checkpointStateStyles(state: ApprovalCheckpointContract["checkpoints"][number]["state"]) {
+  if (state === "review_required") return "border-red-200 bg-red-50 text-red-800";
+  if (state === "unavailable" || state === "not_applicable") return "border-slate-300 bg-slate-100 text-slate-700";
+  if (state === "available_for_review") return "border-amber-200 bg-amber-50 text-amber-800";
+  return "border-emerald-200 bg-emerald-50 text-emerald-800";
+}
+
+function ApprovalCheckpointSection({ contract }: { contract: ApprovalCheckpointContract }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Approval Checkpoints (Read-only Skeleton)</h3>
+        <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+          {contract.summary.overall_state}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-700">
+        Review semantics only. Checkpoint availability does not mean approval granted, and no approval action is available.
+      </p>
+      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <p>Read-only checkpoint semantics. No approve / submit / execute action in this section.</p>
+        <p>Checkpoint is not approval completion. Manual confirmation is not submission.</p>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        {contract.checkpoints.map((item) => (
+          <div key={item.key} className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-semibold text-slate-900">{item.label}</p>
+              <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${checkpointStateStyles(item.state)}`}>
+                {item.state}
+              </span>
+            </div>
+            <p className="mt-1">{item.description}</p>
+            <p className="mt-1 text-slate-600">Rationale: {item.rationale}</p>
+            <p className="mt-1 text-slate-600">Boundary: {item.non_executing_notice}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AuditTrailSkeletonSection({ trail }: { trail: AuditTrailSkeleton }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Audit Trail Skeleton (Derived / Read-only)</h3>
+        <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+          {trail.latest_state_hint}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-700">{trail.summary.note}</p>
+      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <p>Derived semantic events only. This is not a persisted production audit system.</p>
+        <p>No external logging, no workflow control, and no side effect is performed.</p>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Trail id</p>
+          <p className="mt-1">{trail.trail_id}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Event count</p>
+          <p className="mt-1">{trail.event_count}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Boundary flags</p>
+          <p className="mt-1">non_persistent={String(trail.boundary_flags.non_persistent)} · executed={String(trail.boundary_flags.executed)}</p>
+        </div>
+      </div>
+      <div className="mt-3 space-y-2">
+        {trail.events.map((event) => (
+          <div key={event.event_key} className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="font-semibold text-slate-900">{event.title}</p>
+              <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+                {event.derived_marker}
+              </span>
+            </div>
+            <p className="mt-1">Category: {event.category}</p>
+            <p className="mt-1">{event.description}</p>
+            <p className="mt-1 text-slate-600">Boundary: {event.boundary_note}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function DecisionSurfaceSection({
   decisionSurface,
   controlledSubmissionContract,
+  approvalCheckpointContract,
+  auditTrailSkeleton,
 }: {
   decisionSurface: InternalWorkflowDecisionSurfaceViewModel;
   controlledSubmissionContract?: ControlledSubmissionContract;
+  approvalCheckpointContract?: ApprovalCheckpointContract;
+  auditTrailSkeleton?: AuditTrailSkeleton;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -175,6 +270,8 @@ export default function DecisionSurfaceSection({
       </div>
 
       {controlledSubmissionContract ? <ControlledSubmissionReadinessSection contract={controlledSubmissionContract} /> : null}
+      {approvalCheckpointContract ? <ApprovalCheckpointSection contract={approvalCheckpointContract} /> : null}
+      {auditTrailSkeleton ? <AuditTrailSkeletonSection trail={auditTrailSkeleton} /> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
