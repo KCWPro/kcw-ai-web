@@ -224,9 +224,9 @@ export function buildInternalWorkflowDecisionSurface(params: {
   };
 
   const reviewNotes: string[] = [
-    "All items in this model are read-only representations.",
-    "human_confirmed_path entries describe manual handling paths, not executed actions.",
-    "not_yet_implemented_automation entries are explicit boundaries and remain unavailable.",
+    "Read-only guidance: all items in this model are representations, not executed actions.",
+    "Human-confirmed path items describe manual handling paths and still require operator confirmation.",
+    "Not-yet-implemented automation items are explicit boundaries and remain unavailable.",
   ];
 
   const sourceAlignmentNotes = [

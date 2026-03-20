@@ -92,17 +92,17 @@ function run() {
   const blockedHtml = renderScenario(null);
   assert.match(blockedHtml, /Internal Workflow Decision Surface/);
   assert.match(blockedHtml, /blocked/);
-  assert.doesNotMatch(blockedHtml, /ready_for_manual_progress/);
   assert.match(blockedHtml, /Not-yet-implemented automation/);
+  assert.doesNotMatch(blockedHtml, /ready_for_manual_progress/);
 
   const needsReviewHtml = renderScenario(partialAnalysis);
   assert.match(needsReviewHtml, /needs_review/);
+  assert.match(needsReviewHtml, /Human-confirmed paths/);
   assert.doesNotMatch(needsReviewHtml, /ready_for_manual_progress/);
-  assert.match(needsReviewHtml, /Human-confirmed path/);
 
   const readyHtml = renderScenario(readyAnalysis);
   assert.match(readyHtml, /ready_for_manual_progress/);
-  assert.match(readyHtml, /still require operator confirmation/i);
+  assert.match(readyHtml, /Manual handling paths that still require operator confirmation/i);
 
   const mismatchHtml = renderScenario(readyAnalysis, true);
   assert.match(mismatchHtml, /needs_review/);
@@ -110,11 +110,15 @@ function run() {
   assert.match(readyHtml, /Suggestion-only items/);
   assert.match(readyHtml, /Human-confirmed paths/);
   assert.match(readyHtml, /Not-yet-implemented automation/);
-
+  assert.match(readyHtml, /Read-only guidance/);
   assert.match(readyHtml, /Does not auto-advance workflow/);
   assert.match(readyHtml, /Does not contact customer automatically/);
   assert.match(readyHtml, /Does not create tasks automatically/);
   assert.match(readyHtml, /Does not write business records automatically/);
+
+  assert.doesNotMatch(readyHtml, /auto execute/i);
+  assert.doesNotMatch(readyHtml, /automatically triggered/i);
+  assert.doesNotMatch(readyHtml, /submitted automatically/i);
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }

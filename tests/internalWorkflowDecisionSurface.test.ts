@@ -46,7 +46,7 @@ function buildScenario(analysis: IntakeAnalysisResult | null, forceFollowUpUnava
     lead: { id: lead.id, urgency: lead.urgency, phone: lead.phone },
     analysis,
     guidance,
-    nowIso: "2026-03-19T00:00:00.000Z",
+    nowIso: "2026-03-20T00:00:00.000Z",
   });
 
   const estimateDraft = buildInternalEstimateDraft({
@@ -91,34 +91,38 @@ function run() {
   const blocked = buildScenario(null);
   assert.equal(blocked.model_version, "phase5-step2-decision-surface-v1");
   assert.equal(blocked.decision_status, "blocked");
-  assert.match(blocked.decision_summary, /blocked/i);
+  assert.equal(blocked.priority, "high");
+  assert.match(blocked.next_manual_review_action, /Recover analysis availability/i);
+  assert.ok(blocked.risk_flags.includes("decision_surface_blocked"));
+  assert.ok(blocked.source_alignment_notes.includes("continuity_state=blocked"));
   assert.ok(blocked.human_confirmed_paths.every((item) => item.status !== "ready"));
-  assert.ok(blocked.automation_boundary_notices.length >= 4);
-  assert.ok(blocked.automation_boundary_notices.every((item) => item.status === "not_available"));
 
   const needsReview = buildScenario(partialAnalysis);
   assert.equal(needsReview.decision_status, "needs_review");
-  assert.ok(needsReview.source_alignment_notes.some((item) => item === "continuity_state=needs_intake_completion"));
-  const followUpPath = needsReview.human_confirmed_paths.find((item) => item.id === "path_follow_up_review");
-  assert.ok(followUpPath);
-  assert.notEqual(followUpPath?.status, "ready");
+  assert.equal(needsReview.priority, "medium");
+  assert.match(needsReview.next_manual_review_action, /Manually verify intake completeness\/alignment/i);
+  assert.ok(needsReview.source_alignment_notes.includes("continuity_state=needs_intake_completion"));
+  assert.ok(needsReview.risk_flags.includes("decision_surface_alignment_needs_review"));
+  const needsReviewFollowUpPath = needsReview.human_confirmed_paths.find((item) => item.id === "path_follow_up_review");
+  assert.ok(needsReviewFollowUpPath);
+  assert.notEqual(needsReviewFollowUpPath?.status, "ready");
 
   const ready = buildScenario(readyAnalysis);
   assert.equal(ready.decision_status, "ready_for_manual_progress");
+  assert.equal(ready.priority, "low");
+  assert.equal(ready.next_manual_review_action, ready.suggestion_only_items.find((item) => item.id === "follow_up_snapshot")?.detail);
   assert.ok(ready.human_confirmed_paths.some((item) => item.id === "path_follow_up_review" && item.status === "ready"));
   assert.ok(ready.review_notes.some((item) => /not executed actions/i.test(item)));
 
   const mismatch = buildScenario(readyAnalysis, true);
   assert.equal(mismatch.decision_status, "needs_review");
-  assert.ok(mismatch.source_alignment_notes.some((item) => item === "follow_up_alignment=needs_review"));
+  assert.ok(mismatch.source_alignment_notes.includes("follow_up_alignment=needs_review"));
 
-  const suggestionLayers = ready.suggestion_only_items.map((item) => item.category);
-  const pathLayers = ready.human_confirmed_paths.map((item) => item.category);
-  const automationLayers = ready.automation_boundary_notices.map((item) => item.category);
-
-  assert.ok(suggestionLayers.every((category) => category === "suggestion_only"));
-  assert.ok(pathLayers.every((category) => category === "human_confirmed_path"));
-  assert.ok(automationLayers.every((category) => category === "not_yet_implemented_automation"));
+  assert.ok(blocked.suggestion_only_items.every((item) => item.category === "suggestion_only"));
+  assert.ok(blocked.human_confirmed_paths.every((item) => item.category === "human_confirmed_path"));
+  assert.ok(blocked.automation_boundary_notices.every((item) => item.category === "not_yet_implemented_automation"));
+  assert.ok(blocked.automation_boundary_notices.every((item) => item.status === "not_available"));
+  assert.ok(blocked.automation_boundary_notices.length >= 4);
 
   console.log("internalWorkflowDecisionSurface tests passed");
 }
