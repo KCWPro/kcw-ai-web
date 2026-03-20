@@ -29,6 +29,7 @@ function run() {
   assert.match(sample, /readiness\/allowed\/eligible != executed/i);
   assert.match(sample, /read-only compatible != controller-capable/i);
   assert.match(sample, /audit trace != persisted audit system/i);
+  assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
 
@@ -42,6 +43,7 @@ function run() {
   assert.ok(freezePrep.boundary_equations.includes("read-only compatible != controller-capable"));
   assert.ok(freezePrep.boundary_equations.includes("surfacing != controller"));
   assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));
+  assert.ok(freezePrep.boundary_equations.includes("continuity revalidation != capability expansion"));
   assert.ok(freezePrep.boundary_equations.includes("integrity hardening != capability expansion"));
   assert.ok(freezePrep.boundary_equations.includes("regression anchor != future execution contract"));
   assert.ok(freezePrep.forbidden_actions.includes("no completion/execution runtime states"));
