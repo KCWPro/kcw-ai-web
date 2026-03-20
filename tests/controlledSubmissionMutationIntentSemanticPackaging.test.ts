@@ -25,7 +25,7 @@ function run() {
   });
   assert.doesNotMatch(sample, packaging.forbidden_success_pattern);
   assert.match(sample, /intent recorded != submission completed/i);
-  assert.match(sample, /readiness\/allowed != executed/i);
+  assert.match(sample, /readiness\/allowed\/eligible != executed/i);
   assert.match(sample, /audit trace != persisted audit system/i);
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();

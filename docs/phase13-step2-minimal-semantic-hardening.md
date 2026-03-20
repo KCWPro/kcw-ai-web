@@ -32,7 +32,7 @@ Step 2 目标不是开始开发，也不是能力扩张。
 本步最小 hardening 仅包含以下项：
 
 1. 在 lifecycle boundary clauses 中新增并锁定高风险 anti-misread 条款：
-   - `readiness/allowed != executed`
+   - `readiness/allowed/eligible != executed`
    - `audit trace != persisted audit system`
    - `surfacing != controller`
    - `single-object semantic package != multi-object workflow engine`
@@ -119,4 +119,3 @@ Phase 13 Step 2 完成的是 **minimal semantic hardening**，不是 capability 
 未新增执行、完成、持久化、编排或控制器能力。
 
 本步到此停止，不进入 Step 3 实施。
-

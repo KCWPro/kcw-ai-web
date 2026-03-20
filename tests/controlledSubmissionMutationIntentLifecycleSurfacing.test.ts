@@ -71,7 +71,7 @@ function run() {
   assert.match(serialized, /intent recorded != submission completed/);
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
-  assert.match(serialized, /readiness\/allowed != executed/);
+  assert.match(serialized, /readiness\/allowed\/eligible != executed/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /surfacing != controller/);
 
