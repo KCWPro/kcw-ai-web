@@ -117,6 +117,9 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   "single-object semantic package != multi-object workflow engine",
   "scope-prep != implementation prewire",
   "boundary revalidation != skeleton runtime rollout",
+  "boundary revalidation != skeleton runtime activation",
+  "skeleton-readiness adjudication prep != skeleton runtime rollout",
+  "skeleton-readiness adjudication prep != skeleton runtime activation",
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -132,6 +135,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   "Lifecycle visibility is descriptive only and never grants controller authority.",
   "Scope-prep hardening is documentation/contract-only and never implementation prewire.",
   "Boundary revalidation hardening never opens skeleton runtime rollout.",
+  "Boundary revalidation hardening never opens skeleton runtime activation.",
+  "Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation.",
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
