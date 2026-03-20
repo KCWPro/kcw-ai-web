@@ -1,3 +1,4 @@
+import type { ControlledSubmissionContract } from "../../../../lib/controlledSubmissionContract";
 import type { InternalWorkflowDecisionSurfaceViewModel } from "../../../../lib/internalWorkflowDecisionSurface";
 
 function decisionStatusStyles(status: InternalWorkflowDecisionSurfaceViewModel["decision_status"]) {
@@ -10,6 +11,13 @@ function decisionItemStatusStyles(status: "ready" | "needs_review" | "blocked" |
   if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
   if (status === "needs_review") return "border-amber-200 bg-amber-50 text-amber-800";
   if (status === "not_available") return "border-slate-300 bg-slate-100 text-slate-700";
+  return "border-emerald-200 bg-emerald-50 text-emerald-800";
+}
+
+function controlledSubmissionStatusStyles(status: ControlledSubmissionContract["status"]) {
+  if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
+  if (status === "not_eligible") return "border-slate-300 bg-slate-100 text-slate-700";
+  if (status === "needs_manual_confirmation") return "border-amber-200 bg-amber-50 text-amber-800";
   return "border-emerald-200 bg-emerald-50 text-emerald-800";
 }
 
@@ -44,7 +52,93 @@ function DecisionItemList({
   );
 }
 
-export default function DecisionSurfaceSection({ decisionSurface }: { decisionSurface: InternalWorkflowDecisionSurfaceViewModel }) {
+function ControlledSubmissionReadinessSection({ contract }: { contract: ControlledSubmissionContract }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Controlled Submission Readiness (Read-only)</h3>
+        <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${controlledSubmissionStatusStyles(contract.status)}`}>
+          {contract.status}
+        </span>
+      </div>
+
+      <p className="mt-2 text-xs text-slate-700">Readiness interpretation only. No submit action is available in this step.</p>
+
+      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <p>Manual confirmation is still required.</p>
+        <p>No automatic execution is enabled.</p>
+        <p>No submission has been performed.</p>
+        <p>Readiness does not equal execution.</p>
+        <p>Human-confirmed path is not submitted. Submission-ready is not submitted.</p>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Selected path</p>
+          <p className="mt-1">{contract.selected_path_id || "none"}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Manual confirmation required</p>
+          <p className="mt-1">{contract.manual_confirmation_required ? "yes" : "no"}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">Automation boundary</p>
+          <p className="mt-1">
+            auto_execution_enabled={String(contract.automation_boundary.auto_execution_enabled)} · submitted=
+            {String(contract.automation_boundary.submitted)}
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-3 grid gap-3 md:grid-cols-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Readiness explanation</p>
+          {contract.reasons.length === 0 ? (
+            <p className="mt-1 text-slate-500">No reasons.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.reasons.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Missing requirements</p>
+          {contract.missing_requirements.length === 0 ? (
+            <p className="mt-1 text-slate-500">No missing requirements.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.missing_requirements.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700 md:col-span-1">
+          <p className="font-semibold text-slate-900">Blockers</p>
+          {contract.blockers.length === 0 ? (
+            <p className="mt-1 text-slate-500">No blockers.</p>
+          ) : (
+            <ul className="mt-1 list-disc space-y-1 pl-4">
+              {contract.blockers.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function DecisionSurfaceSection({
+  decisionSurface,
+  controlledSubmissionContract,
+}: {
+  decisionSurface: InternalWorkflowDecisionSurfaceViewModel;
+  controlledSubmissionContract?: ControlledSubmissionContract;
+}) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
@@ -69,6 +163,8 @@ export default function DecisionSurfaceSection({ decisionSurface }: { decisionSu
           write business records automatically.
         </p>
       </div>
+
+      {controlledSubmissionContract ? <ControlledSubmissionReadinessSection contract={controlledSubmissionContract} /> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">

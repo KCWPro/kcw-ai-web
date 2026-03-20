@@ -18,6 +18,7 @@ import {
 } from "@/lib/internalFollowUpWorkflowSuggestion";
 import { buildInternalWorkflowContinuity } from "@/lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDecisionSurface";
+import { buildControlledSubmissionContract } from "@/lib/controlledSubmissionContract";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
 
 function Field({ label, value }: { label: string; value?: string }) {
@@ -351,6 +352,21 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     continuity: workflowContinuity,
   });
 
+
+  const primaryHumanPath = workflowDecisionSurface.human_confirmed_paths.find((item) => item.status === "ready") ||
+    workflowDecisionSurface.human_confirmed_paths[0];
+
+  const controlledSubmissionContract = buildControlledSubmissionContract({
+    decision_status: workflowDecisionSurface.decision_status,
+    selected_path_category: primaryHumanPath?.category || "suggestion_only",
+    selected_path_id: primaryHumanPath?.id || null,
+    human_confirmation_received: false,
+    intake_quality_gate_passed: workflowContinuity.continuity_state === "ready_for_follow_up",
+    follow_up_alignment_status: workflowContinuity.follow_up_alignment.alignment_status,
+    path_availability: primaryHumanPath?.status === "ready" ? "available" : "unavailable",
+    has_blocking_risk: workflowDecisionSurface.decision_status === "blocked",
+  });
+
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -402,7 +418,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
             <IntakeAnalysisSection analysis={analysis} isFallback={analysisFallback} />
 
-            <DecisionSurfaceSection decisionSurface={workflowDecisionSurface} />
+            <DecisionSurfaceSection decisionSurface={workflowDecisionSurface} controlledSubmissionContract={controlledSubmissionContract} />
 
             <OperatorGuidancePanel guidance={guidance} />
 
