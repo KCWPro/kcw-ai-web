@@ -268,6 +268,7 @@ function run() {
   assert.match(serialized, /intent recorded != submission completed/i);
   assert.match(serialized, /replayed idempotently != workflow completed/i);
   assert.match(serialized, /blocked by boundary != approval finalized/i);
+  assert.match(serialized, /boundary revalidation != skeleton runtime activation/i);
   assert.match(serialized, /skeleton-readiness adjudication prep != skeleton runtime rollout/i);
   assert.match(serialized, /skeleton-readiness adjudication prep != skeleton runtime activation/i);
   assert.match(serialized, /minimal_intent_audit_only/i);

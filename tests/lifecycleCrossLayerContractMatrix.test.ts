@@ -105,8 +105,10 @@ function run() {
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /scope-prep != implementation prewire/);
   assert.match(serialized, /boundary revalidation != skeleton runtime rollout/);
+  assert.match(serialized, /boundary revalidation != skeleton runtime activation/);
   assert.match(serialized, /skeleton-readiness adjudication prep != skeleton runtime rollout/);
   assert.match(serialized, /skeleton-readiness adjudication prep != skeleton runtime activation/);
+  assert.match(serialized, /Boundary revalidation hardening never opens skeleton runtime activation\./);
   assert.match(serialized, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);

@@ -32,6 +32,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "single-object semantic package != multi-object workflow engine",
     "scope-prep != implementation prewire",
     "boundary revalidation != skeleton runtime rollout",
+    "boundary revalidation != skeleton runtime activation",
     "skeleton-readiness adjudication prep != skeleton runtime rollout",
     "skeleton-readiness adjudication prep != skeleton runtime activation",
     "continuity revalidation != capability expansion",

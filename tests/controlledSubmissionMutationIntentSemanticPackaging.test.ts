@@ -31,8 +31,10 @@ function run() {
   assert.match(sample, /audit trace != persisted audit system/i);
   assert.match(sample, /scope-prep != implementation prewire/i);
   assert.match(sample, /boundary revalidation != skeleton runtime rollout/i);
+  assert.match(sample, /boundary revalidation != skeleton runtime activation/i);
   assert.match(sample, /skeleton-readiness adjudication prep != skeleton runtime rollout/i);
   assert.match(sample, /skeleton-readiness adjudication prep != skeleton runtime activation/i);
+  assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
@@ -50,6 +52,7 @@ function run() {
   assert.ok(freezePrep.boundary_equations.includes("single-object semantic package != multi-object workflow engine"));
   assert.ok(freezePrep.boundary_equations.includes("scope-prep != implementation prewire"));
   assert.ok(freezePrep.boundary_equations.includes("boundary revalidation != skeleton runtime rollout"));
+  assert.ok(freezePrep.boundary_equations.includes("boundary revalidation != skeleton runtime activation"));
   assert.ok(freezePrep.boundary_equations.includes("skeleton-readiness adjudication prep != skeleton runtime rollout"));
   assert.ok(freezePrep.boundary_equations.includes("skeleton-readiness adjudication prep != skeleton runtime activation"));
   assert.ok(freezePrep.boundary_equations.includes("continuity revalidation != capability expansion"));
