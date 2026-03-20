@@ -241,6 +241,10 @@ function run() {
   assert.match(readyReadinessHtml, /idempotent_replay_non_completion/);
   assert.match(readyReadinessHtml, /Replay matched existing intent key and input fingerprint; no new execution occurred/);
   assert.match(readyReadinessHtml, /This section is not a workflow controller/);
+  assert.match(readyReadinessHtml, /anti_misread_clauses/);
+  assert.match(readyReadinessHtml, /intent recorded != submission completed/);
+  assert.match(readyReadinessHtml, /replayed idempotently != workflow completed/);
+  assert.match(readyReadinessHtml, /blocked by boundary != approval finalized/);
   assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);
   assert.match(readyReadinessHtml, /Precondition matrix/);

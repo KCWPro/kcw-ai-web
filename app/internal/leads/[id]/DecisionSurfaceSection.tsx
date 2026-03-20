@@ -393,6 +393,12 @@ function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSu
           internal_mutation_state_is_not_durable_audit_history=
           {String(readModel.semantic_boundary.internal_mutation_state_is_not_durable_audit_history)}
         </p>
+        <p className="mt-2 font-semibold text-slate-900">anti_misread_clauses</p>
+        <ul className="mt-1 list-disc space-y-1 pl-4">
+          {readModel.semantic_boundary_clauses.map((clause) => (
+            <li key={clause}>{clause}</li>
+          ))}
+        </ul>
         <p className="mt-2 text-slate-600">source: {readModel.source}</p>
       </div>
     </div>

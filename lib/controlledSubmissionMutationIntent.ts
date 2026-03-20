@@ -73,6 +73,7 @@ export type ControlledSubmissionMutationIntentLifecycleVisibility = {
   current_stage: ControlledSubmissionMutationIntentLifecycleStage;
   operator_outcome: ControlledSubmissionMutationIntentOperatorOutcome;
   transition_note: string;
+  semantic_boundary_clauses: typeof CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES;
   semantic_boundary: {
     lifecycle_visibility_is_not_completion: true;
     lifecycle_stage_is_not_external_execution: true;
@@ -100,6 +101,12 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
   status_expression_is_not_workflow_fully_completed: true,
   internal_mutation_state_is_not_durable_audit_history: true,
 } as const;
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
+  "intent recorded != submission completed",
+  "replayed idempotently != workflow completed",
+  "blocked by boundary != approval finalized",
+] as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
   "Read-only surfacing only. No approve/execute/complete action is exposed." as const;
@@ -266,6 +273,7 @@ function buildLifecycleVisibility(
       current_stage: "accepted_for_intent_recording",
       operator_outcome: "intent_recorded_non_completion",
       transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.accepted_for_intent_recording,
+      semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
       semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
     };
   }
@@ -276,6 +284,7 @@ function buildLifecycleVisibility(
       current_stage: "replayed_idempotently",
       operator_outcome: "idempotent_replay_non_completion",
       transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
+      semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
       semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
     };
   }
@@ -285,6 +294,7 @@ function buildLifecycleVisibility(
     current_stage: "blocked_by_boundary",
     operator_outcome: "rejected_non_completion",
     transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.blocked_by_boundary,
+    semantic_boundary_clauses: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
     semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
   };
 }
