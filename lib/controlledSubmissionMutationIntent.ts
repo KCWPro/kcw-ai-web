@@ -105,6 +105,18 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY =
 export const READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE =
   "read-only compatible != controller-capable" as const;
 
+export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_CARRYING_CLAUSE =
+  "adjudication-level skeleton carrying != runtime carrying" as const;
+
+export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE =
+  "adjudication-level skeleton carrying != skeleton runtime rollout" as const;
+
+export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ACTIVATION_CLAUSE =
+  "adjudication-level skeleton carrying != skeleton runtime activation" as const;
+
+export const CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE =
+  "candidate-b scope lock != runtime capability unlock" as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
   "checkpoint availability != approval completion",
@@ -120,6 +132,10 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   "boundary revalidation != skeleton runtime activation",
   "skeleton-readiness adjudication prep != skeleton runtime rollout",
   "skeleton-readiness adjudication prep != skeleton runtime activation",
+  ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_CARRYING_CLAUSE,
+  ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
+  ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ACTIVATION_CLAUSE,
+  CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -127,6 +143,12 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
   "Read-only surfacing only. No approve/execute/complete action is exposed." as const;
+
+export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE =
+  "Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation." as const;
+
+export const CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE =
+  "Candidate-B scope lock is boundary-only and never unlocks runtime capabilities." as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
@@ -137,6 +159,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   "Boundary revalidation hardening never opens skeleton runtime rollout.",
   "Boundary revalidation hardening never opens skeleton runtime activation.",
   "Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation.",
+  ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE,
+  CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
