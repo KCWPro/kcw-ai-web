@@ -23,6 +23,8 @@ import { buildApprovalCheckpointContract } from "@/lib/approvalCheckpointContrac
 import { buildAuditTrailSkeleton } from "@/lib/auditTrailSkeleton";
 import { buildBoundedWritePathContract } from "@/lib/boundedWritePathContract";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
+import { listControlledSubmissionMutationIntentAuditLog } from "@/lib/controlledSubmissionMutationIntent";
+import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "@/lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -399,6 +401,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
     dry_run_requested: true,
   });
 
+  const mutationIntentLifecycleReadModel = buildControlledSubmissionMutationIntentLifecycleReadModel({
+    lead_id: lead.id,
+    audit_log: listControlledSubmissionMutationIntentAuditLog(),
+  });
+
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
       <div className="mx-auto max-w-6xl space-y-5">
@@ -456,6 +463,7 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
               approvalCheckpointContract={approvalCheckpointContract}
               auditTrailSkeleton={auditTrailSkeleton}
               boundedWritePathContract={boundedWritePathContract}
+              mutationIntentLifecycleReadModel={mutationIntentLifecycleReadModel}
             />
 
             <OperatorGuidancePanel guidance={guidance} />

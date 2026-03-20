@@ -50,11 +50,59 @@ export type ControlledSubmissionMutationIntentAuditEntry = {
   intent_key: string;
   lead_id: string;
   write_state: "accepted_recorded" | "accepted_idempotent_replay" | "rejected";
+  lifecycle_stage: ControlledSubmissionMutationIntentLifecycleStage;
+  operator_outcome: ControlledSubmissionMutationIntentOperatorOutcome;
   rejection_reason: string | null;
   object_changed: boolean;
   occurred_at: string;
   boundary_note: "minimal_intent_audit_only";
 };
+
+export type ControlledSubmissionMutationIntentLifecycleStage =
+  | "accepted_for_intent_recording"
+  | "replayed_idempotently"
+  | "blocked_by_boundary";
+
+export type ControlledSubmissionMutationIntentOperatorOutcome =
+  | "intent_recorded_non_completion"
+  | "idempotent_replay_non_completion"
+  | "rejected_non_completion";
+
+export type ControlledSubmissionMutationIntentLifecycleVisibility = {
+  model_version: typeof CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_MODEL_VERSION;
+  current_stage: ControlledSubmissionMutationIntentLifecycleStage;
+  operator_outcome: ControlledSubmissionMutationIntentOperatorOutcome;
+  transition_note: string;
+  semantic_boundary: {
+    lifecycle_visibility_is_not_completion: true;
+    lifecycle_stage_is_not_external_execution: true;
+    observable_transition_is_not_approval_finalized: true;
+    status_expression_is_not_workflow_fully_completed: true;
+    internal_mutation_state_is_not_durable_audit_history: true;
+  };
+};
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_MODEL_VERSION = "phase11-step2-lifecycle-visibility-v1" as const;
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES: Record<
+  ControlledSubmissionMutationIntentLifecycleStage,
+  string
+> = {
+  accepted_for_intent_recording: "Intent was recorded under bounded non-executing semantics.",
+  replayed_idempotently: "Replay matched existing intent key and input fingerprint; no new execution occurred.",
+  blocked_by_boundary: "Boundary precondition failed; intent was not recorded and no execution path was entered.",
+} as const;
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY = {
+  lifecycle_visibility_is_not_completion: true,
+  lifecycle_stage_is_not_external_execution: true,
+  observable_transition_is_not_approval_finalized: true,
+  status_expression_is_not_workflow_fully_completed: true,
+  internal_mutation_state_is_not_durable_audit_history: true,
+} as const;
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
+  "Read-only surfacing only. No approve/execute/complete action is exposed." as const;
 
 export type ControlledSubmissionMutationIntentRejectReason =
   | "lead_not_found"
@@ -76,6 +124,7 @@ export type ControlledSubmissionMutationIntentWriteResult = {
   rejection_reason: ControlledSubmissionMutationIntentRejectReason | null;
   object_changed: boolean;
   intent_record: Readonly<ControlledSubmissionMutationIntentRecord> | null;
+  lifecycle_visibility: ControlledSubmissionMutationIntentLifecycleVisibility;
   boundary_assertion: {
     submission_completed: false;
     approval_completed: false;
@@ -145,6 +194,7 @@ function buildRejectedResult(reason: ControlledSubmissionMutationIntentRejectRea
     rejection_reason: reason,
     object_changed: false,
     intent_record: null,
+    lifecycle_visibility: buildLifecycleVisibility("rejected"),
     boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }
@@ -188,17 +238,54 @@ function buildMinimalAuditEntry(
   leadId: string,
   intentKey: string,
   nowIso: string,
-  result: Pick<ControlledSubmissionMutationIntentWriteResult, "write_state" | "rejection_reason" | "object_changed">,
+  result: Pick<
+    ControlledSubmissionMutationIntentWriteResult,
+    "write_state" | "rejection_reason" | "object_changed" | "lifecycle_visibility"
+  >,
 ): ControlledSubmissionMutationIntentAuditEntry {
   return {
     attempt_id: makeAttemptId(nowIso, leadId),
     intent_key: intentKey,
     lead_id: leadId,
     write_state: result.write_state,
+    lifecycle_stage: result.lifecycle_visibility.current_stage,
+    operator_outcome: result.lifecycle_visibility.operator_outcome,
     rejection_reason: result.rejection_reason,
     object_changed: result.object_changed,
     occurred_at: nowIso,
     boundary_note: "minimal_intent_audit_only",
+  };
+}
+
+function buildLifecycleVisibility(
+  writeState: ControlledSubmissionMutationIntentWriteState,
+): ControlledSubmissionMutationIntentLifecycleVisibility {
+  if (writeState === "accepted_recorded") {
+    return {
+      model_version: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_MODEL_VERSION,
+      current_stage: "accepted_for_intent_recording",
+      operator_outcome: "intent_recorded_non_completion",
+      transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.accepted_for_intent_recording,
+      semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
+    };
+  }
+
+  if (writeState === "accepted_idempotent_replay") {
+    return {
+      model_version: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_MODEL_VERSION,
+      current_stage: "replayed_idempotently",
+      operator_outcome: "idempotent_replay_non_completion",
+      transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
+      semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
+    };
+  }
+
+  return {
+    model_version: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_MODEL_VERSION,
+    current_stage: "blocked_by_boundary",
+    operator_outcome: "rejected_non_completion",
+    transition_note: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.blocked_by_boundary,
+    semantic_boundary: CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_SEMANTIC_BOUNDARY,
   };
 }
 
@@ -208,6 +295,7 @@ function buildAcceptedReplayResult(record: ControlledSubmissionMutationIntentRec
     rejection_reason: null,
     object_changed: false,
     intent_record: toReadonlyRecord(record),
+    lifecycle_visibility: buildLifecycleVisibility("accepted_idempotent_replay"),
     boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }
@@ -218,6 +306,7 @@ function buildAcceptedRecordedResult(record: ControlledSubmissionMutationIntentR
     rejection_reason: null,
     object_changed: true,
     intent_record: toReadonlyRecord(record),
+    lifecycle_visibility: buildLifecycleVisibility("accepted_recorded"),
     boundary_assertion: FIXED_RESULT_BOUNDARY_ASSERTION,
   };
 }

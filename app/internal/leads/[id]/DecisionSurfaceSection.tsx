@@ -3,6 +3,7 @@ import type { InternalWorkflowDecisionSurfaceViewModel } from "../../../../lib/i
 import type { ApprovalCheckpointContract } from "../../../../lib/approvalCheckpointContract";
 import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
 import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathContract";
+import type { ControlledSubmissionMutationIntentLifecycleReadModel } from "../../../../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 
 function decisionStatusStyles(status: InternalWorkflowDecisionSurfaceViewModel["decision_status"]) {
   if (status === "blocked") return "border-red-200 bg-red-50 text-red-800";
@@ -346,18 +347,72 @@ function BoundedWritePathSection({ contract }: { contract: BoundedWritePathContr
   );
 }
 
+function MutationIntentLifecycleSection({ readModel }: { readModel: ControlledSubmissionMutationIntentLifecycleReadModel }) {
+  return (
+    <div className="mt-4 rounded-xl border border-slate-200 bg-white p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-slate-900">Mutation Intent Lifecycle Visibility (Read-only)</h3>
+        <span className="rounded-full border border-slate-300 bg-slate-100 px-2 py-0.5 text-[11px] font-medium text-slate-700">
+          {readModel.visibility_state}
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-700">
+        Surfaced lifecycle visibility only. This section is not a workflow controller and does not advance state by itself.
+      </p>
+      <div className="mt-2 rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-800">
+        <p>{readModel.read_only_notice}</p>
+        <p>Surfaced operator outcome is not a completed/finalized/executed result.</p>
+      </div>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">current_stage</p>
+          <p className="mt-1">{readModel.current_stage}</p>
+        </div>
+        <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+          <p className="font-semibold text-slate-900">operator_outcome</p>
+          <p className="mt-1">{readModel.operator_outcome}</p>
+        </div>
+      </div>
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+        <p className="font-semibold text-slate-900">transition_note</p>
+        <p className="mt-1">{readModel.transition_note}</p>
+      </div>
+      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">
+        <p className="font-semibold text-slate-900">semantic_boundary</p>
+        <p className="mt-1">
+          lifecycle_visibility_is_not_completion={String(readModel.semantic_boundary.lifecycle_visibility_is_not_completion)} ·
+          lifecycle_stage_is_not_external_execution={String(readModel.semantic_boundary.lifecycle_stage_is_not_external_execution)}
+        </p>
+        <p className="mt-1">
+          observable_transition_is_not_approval_finalized=
+          {String(readModel.semantic_boundary.observable_transition_is_not_approval_finalized)} ·
+          status_expression_is_not_workflow_fully_completed=
+          {String(readModel.semantic_boundary.status_expression_is_not_workflow_fully_completed)}
+        </p>
+        <p className="mt-1">
+          internal_mutation_state_is_not_durable_audit_history=
+          {String(readModel.semantic_boundary.internal_mutation_state_is_not_durable_audit_history)}
+        </p>
+        <p className="mt-2 text-slate-600">source: {readModel.source}</p>
+      </div>
+    </div>
+  );
+}
+
 export default function DecisionSurfaceSection({
   decisionSurface,
   controlledSubmissionContract,
   approvalCheckpointContract,
   auditTrailSkeleton,
   boundedWritePathContract,
+  mutationIntentLifecycleReadModel,
 }: {
   decisionSurface: InternalWorkflowDecisionSurfaceViewModel;
   controlledSubmissionContract?: ControlledSubmissionContract;
   approvalCheckpointContract?: ApprovalCheckpointContract;
   auditTrailSkeleton?: AuditTrailSkeleton;
   boundedWritePathContract?: BoundedWritePathContract;
+  mutationIntentLifecycleReadModel?: ControlledSubmissionMutationIntentLifecycleReadModel;
 }) {
   return (
     <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -388,6 +443,7 @@ export default function DecisionSurfaceSection({
       {approvalCheckpointContract ? <ApprovalCheckpointSection contract={approvalCheckpointContract} /> : null}
       {auditTrailSkeleton ? <AuditTrailSkeletonSection trail={auditTrailSkeleton} /> : null}
       {boundedWritePathContract ? <BoundedWritePathSection contract={boundedWritePathContract} /> : null}
+      {mutationIntentLifecycleReadModel ? <MutationIntentLifecycleSection readModel={mutationIntentLifecycleReadModel} /> : null}
 
       <div className="mt-4 grid gap-3 md:grid-cols-3">
         <div className="rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-700">

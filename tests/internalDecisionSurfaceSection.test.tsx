@@ -14,6 +14,7 @@ import { buildInternalFollowUpWorkflowSuggestion } from "../lib/internalFollowUp
 import { buildOperatorGuidance } from "../lib/internalOperatorGuidance";
 import { buildInternalWorkflowContinuity } from "../lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "../lib/internalWorkflowDecisionSurface";
+import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import DecisionSurfaceSection from "../app/internal/leads/[id]/DecisionSurfaceSection";
 
 const lead = {
@@ -139,6 +140,23 @@ function renderScenario(
     has_blocking_risk: Boolean(contractInputOverride?.has_blocking_risk) || decisionSurface.decision_status === "blocked",
     dry_run_requested: true,
   });
+  const lifecycleReadModel = buildControlledSubmissionMutationIntentLifecycleReadModel({
+    lead_id: lead.id,
+    audit_log: [
+      {
+        attempt_id: "attempt_1",
+        intent_key: "intent::L-5002::path:path_follow_up_review::v1",
+        lead_id: lead.id,
+        write_state: "accepted_idempotent_replay",
+        lifecycle_stage: "replayed_idempotently",
+        operator_outcome: "idempotent_replay_non_completion",
+        rejection_reason: null,
+        object_changed: false,
+        occurred_at: "2026-03-20T00:00:00.000Z",
+        boundary_note: "minimal_intent_audit_only",
+      },
+    ],
+  });
 
   return renderToStaticMarkup(
     <DecisionSurfaceSection
@@ -147,6 +165,7 @@ function renderScenario(
       approvalCheckpointContract={approvalCheckpointContract}
       auditTrailSkeleton={auditTrailSkeleton}
       boundedWritePathContract={boundedWritePathContract}
+      mutationIntentLifecycleReadModel={lifecycleReadModel}
     />,
   );
 }
@@ -217,6 +236,12 @@ function run() {
   assert.match(readyReadinessHtml, /No persistence is performed/);
   assert.match(readyReadinessHtml, /No external write is performed/);
   assert.match(readyReadinessHtml, /No mutation is committed/);
+  assert.match(readyReadinessHtml, /Mutation Intent Lifecycle Visibility \(Read-only\)/);
+  assert.match(readyReadinessHtml, /replayed_idempotently/);
+  assert.match(readyReadinessHtml, /idempotent_replay_non_completion/);
+  assert.match(readyReadinessHtml, /Replay matched existing intent key and input fingerprint; no new execution occurred/);
+  assert.match(readyReadinessHtml, /This section is not a workflow controller/);
+  assert.match(readyReadinessHtml, /source: audit_log_derived/);
   assert.match(readyReadinessHtml, /Not a system-of-record update/);
   assert.match(readyReadinessHtml, /Precondition matrix/);
   assert.match(readyReadinessHtml, /Failure taxonomy summary/);
@@ -224,6 +249,8 @@ function run() {
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*approve/i);
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*submit/i);
   assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*execute/i);
+  assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*complete/i);
+  assert.doesNotMatch(readyReadinessHtml, /<button[^>]*>.*finalize/i);
   assert.doesNotMatch(readyReadinessHtml, /logged externally/i);
   assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
   assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);

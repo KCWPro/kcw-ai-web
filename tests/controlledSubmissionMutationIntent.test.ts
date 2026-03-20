@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_WRITE_STATES,
   getControlledSubmissionMutationIntentByLeadId,
   listControlledSubmissionMutationIntentAuditLog,
@@ -50,6 +51,14 @@ function run() {
   assert.ok(accepted.intent_record?.core_input_fingerprint);
   assert.equal(accepted.boundary_assertion.submission_completed, false);
   assert.equal(accepted.boundary_assertion.approval_completed, false);
+  assert.equal(accepted.lifecycle_visibility.current_stage, "accepted_for_intent_recording");
+  assert.equal(accepted.lifecycle_visibility.operator_outcome, "intent_recorded_non_completion");
+  assert.equal(
+    accepted.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.accepted_for_intent_recording,
+  );
+  assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_visibility_is_not_completion, true);
+  assert.equal(accepted.lifecycle_visibility.semantic_boundary.lifecycle_stage_is_not_external_execution, true);
   assert.equal(accepted.boundary_assertion.workflow_finished, false);
   assert.equal(accepted.boundary_assertion.no_external_execution_occurred, true);
   assert.equal(accepted.intent_record?.boundary_assertion.external_execution_occurred, false);
@@ -69,6 +78,12 @@ function run() {
 
   assert.equal(replay.write_state, "accepted_idempotent_replay");
   assert.doesNotMatch(replay.write_state, /completed|executed|approved/i);
+  assert.equal(replay.lifecycle_visibility.current_stage, "replayed_idempotently");
+  assert.equal(replay.lifecycle_visibility.operator_outcome, "idempotent_replay_non_completion");
+  assert.equal(
+    replay.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.replayed_idempotently,
+  );
   assert.equal(replay.object_changed, false);
   assert.equal(replay.intent_record?.intent_key, stored?.intent_key);
   assert.deepEqual(replay.boundary_assertion, accepted.boundary_assertion);
@@ -82,6 +97,12 @@ function run() {
   });
   assert.equal(invalidLead.write_state, "rejected");
   assert.doesNotMatch(invalidLead.write_state, /completed|executed|approved/i);
+  assert.equal(invalidLead.lifecycle_visibility.current_stage, "blocked_by_boundary");
+  assert.equal(invalidLead.lifecycle_visibility.operator_outcome, "rejected_non_completion");
+  assert.equal(
+    invalidLead.lifecycle_visibility.transition_note,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES.blocked_by_boundary,
+  );
   assert.equal(invalidLead.rejection_reason, "lead_not_found");
   assert.equal(getControlledSubmissionMutationIntentByLeadId("lead-1001")?.intent_key, stored?.intent_key);
 
@@ -208,6 +229,10 @@ function run() {
   assert.ok(auditLog.some((entry) => entry.write_state === "accepted_recorded"));
   assert.ok(auditLog.some((entry) => entry.write_state === "accepted_idempotent_replay"));
   assert.ok(auditLog.some((entry) => entry.write_state === "rejected"));
+  assert.ok(auditLog.some((entry) => entry.lifecycle_stage === "accepted_for_intent_recording"));
+  assert.ok(auditLog.some((entry) => entry.lifecycle_stage === "replayed_idempotently"));
+  assert.ok(auditLog.some((entry) => entry.lifecycle_stage === "blocked_by_boundary"));
+  assert.ok(auditLog.every((entry) => /_non_completion$/.test(entry.operator_outcome)));
   assert.ok(auditLog.every((entry) => entry.boundary_note === "minimal_intent_audit_only"));
   assert.ok(auditLog.every((entry) => !("actor_id" in entry)));
   assert.ok(auditLog.every((entry) => !("source" in entry)));
@@ -234,6 +259,7 @@ function run() {
 
   const serialized = JSON.stringify({ accepted, replay, stored, auditLog });
   assert.doesNotMatch(serialized, /submission completed|approval completed|workflow finished|external execution succeeded/i);
+  assert.doesNotMatch(serialized, /approval finalized|workflow completed|submission executed|completed successfully/i);
   assert.match(serialized, /minimal_intent_audit_only/i);
 
   console.log("controlledSubmissionMutationIntent tests passed");
