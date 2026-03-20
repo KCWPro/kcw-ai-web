@@ -14,6 +14,7 @@ export type ControlledSubmissionMutationIntentWriteInput = {
   lead_id: string;
   actor_id: string;
   source: ControlledSubmissionMutationIntentSource;
+  intent_key: string;
   readiness_input: ControlledSubmissionReadinessInput;
 };
 
@@ -27,6 +28,7 @@ export type ControlledSubmissionMutationIntentRecord = {
   actor_id: string;
   source: ControlledSubmissionMutationIntentSource;
   recorded_at: string;
+  core_input_fingerprint: string;
   contract_snapshot: {
     controlled_submission_status: "submission_ready";
     gate_state: "allowed";
@@ -47,8 +49,6 @@ export type ControlledSubmissionMutationIntentAuditEntry = {
   attempt_id: string;
   intent_key: string;
   lead_id: string;
-  actor_id: string;
-  source: ControlledSubmissionMutationIntentSource;
   write_state: "accepted_recorded" | "accepted_idempotent_replay" | "rejected";
   rejection_reason: string | null;
   object_changed: boolean;
@@ -56,15 +56,31 @@ export type ControlledSubmissionMutationIntentAuditEntry = {
   boundary_note: "minimal_intent_audit_only";
 };
 
+export type ControlledSubmissionMutationIntentRejectReason =
+  | "lead_not_found"
+  | "invalid_actor_id"
+  | "invalid_source"
+  | "selected_path_id_missing"
+  | "invalid_intent_key_format"
+  | "intent_key_mismatch_with_input"
+  | "readiness_boundary_invalid"
+  | "controlled_submission_gate_or_readiness_not_satisfied"
+  | "checkpoint_not_ready_for_review"
+  | "audit_trail_not_in_read_only_alignment"
+  | "bounded_write_path_not_dry_run_ready"
+  | "single_object_conflict_existing_intent_key_mismatch"
+  | "idempotent_replay_core_input_mismatch";
+
 export type ControlledSubmissionMutationIntentWriteResult = {
   write_state: "accepted_recorded" | "accepted_idempotent_replay" | "rejected";
-  rejection_reason: string | null;
+  rejection_reason: ControlledSubmissionMutationIntentRejectReason | null;
   object_changed: boolean;
   intent_record: ControlledSubmissionMutationIntentRecord | null;
   boundary_assertion: {
     submission_completed: false;
     approval_completed: false;
-    external_execution_occurred: false;
+    workflow_finished: false;
+    no_external_execution_occurred: true;
     full_audit_persistence_system: false;
   };
 };
@@ -76,11 +92,37 @@ function makeAttemptId(nowIso: string, leadId: string) {
   return `attempt_${leadId}_${nowIso}`;
 }
 
-function makeIntentKey(leadId: string, selectedPathId: string) {
-  return `${leadId}::${selectedPathId}::phase10-step1-v1`;
+function isSupportedSource(source: string): source is ControlledSubmissionMutationIntentSource {
+  return source === "internal_operator" || source === "internal_api";
 }
 
-function buildRejectedResult(reason: string): ControlledSubmissionMutationIntentWriteResult {
+function buildExpectedIntentKey(leadId: string, selectedPathId: string) {
+  return `intent::${leadId}::path:${selectedPathId}::v1`;
+}
+
+function isValidIntentKeyFormat(intentKey: string) {
+  return /^intent::[a-zA-Z0-9_-]+::path:[a-zA-Z0-9_-]+::v1$/.test(intentKey);
+}
+
+function buildCoreInputFingerprint(input: ControlledSubmissionMutationIntentWriteInput) {
+  const payload = {
+    lead_id: input.lead_id,
+    actor_id: input.actor_id.trim(),
+    source: input.source,
+    intent_key: input.intent_key,
+    decision_status: input.readiness_input.decision_status,
+    selected_path_category: input.readiness_input.selected_path_category,
+    selected_path_id: input.readiness_input.selected_path_id,
+    manual_confirmation_received: input.readiness_input.manual_confirmation_received,
+    intake_quality_gate_passed: input.readiness_input.intake_quality_gate_passed,
+    follow_up_alignment_status: input.readiness_input.follow_up_alignment_status,
+    path_availability: input.readiness_input.path_availability,
+    has_blocking_risk: input.readiness_input.has_blocking_risk,
+  };
+  return JSON.stringify(payload);
+}
+
+function buildRejectedResult(reason: ControlledSubmissionMutationIntentRejectReason): ControlledSubmissionMutationIntentWriteResult {
   return {
     write_state: "rejected",
     rejection_reason: reason,
@@ -89,7 +131,8 @@ function buildRejectedResult(reason: string): ControlledSubmissionMutationIntent
     boundary_assertion: {
       submission_completed: false,
       approval_completed: false,
-      external_execution_occurred: false,
+      workflow_finished: false,
+      no_external_execution_occurred: true,
       full_audit_persistence_system: false,
     },
   };
@@ -110,8 +153,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id || "unknown"),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -127,8 +168,68 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
+      write_state: rejection.write_state,
+      rejection_reason: rejection.rejection_reason,
+      object_changed: rejection.object_changed,
+      occurred_at: nowIso,
+      boundary_note: "minimal_intent_audit_only",
+    });
+    return rejection;
+  }
+
+  if (!isSupportedSource(input.source)) {
+    const rejection = buildRejectedResult("invalid_source");
+    appendAuditEntry({
+      attempt_id: makeAttemptId(nowIso, input.lead_id),
+      intent_key: "n/a",
+      lead_id: input.lead_id,
+      write_state: rejection.write_state,
+      rejection_reason: rejection.rejection_reason,
+      object_changed: rejection.object_changed,
+      occurred_at: nowIso,
+      boundary_note: "minimal_intent_audit_only",
+    });
+    return rejection;
+  }
+
+  const selectedPathId = input.readiness_input.selected_path_id;
+  if (!selectedPathId || !selectedPathId.trim()) {
+    const rejection = buildRejectedResult("selected_path_id_missing");
+    appendAuditEntry({
+      attempt_id: makeAttemptId(nowIso, input.lead_id),
+      intent_key: "n/a",
+      lead_id: input.lead_id,
+      write_state: rejection.write_state,
+      rejection_reason: rejection.rejection_reason,
+      object_changed: rejection.object_changed,
+      occurred_at: nowIso,
+      boundary_note: "minimal_intent_audit_only",
+    });
+    return rejection;
+  }
+
+  if (!isValidIntentKeyFormat(input.intent_key)) {
+    const rejection = buildRejectedResult("invalid_intent_key_format");
+    appendAuditEntry({
+      attempt_id: makeAttemptId(nowIso, input.lead_id),
+      intent_key: input.intent_key,
+      lead_id: input.lead_id,
+      write_state: rejection.write_state,
+      rejection_reason: rejection.rejection_reason,
+      object_changed: rejection.object_changed,
+      occurred_at: nowIso,
+      boundary_note: "minimal_intent_audit_only",
+    });
+    return rejection;
+  }
+
+  const expectedIntentKey = buildExpectedIntentKey(input.lead_id, selectedPathId);
+  if (input.intent_key !== expectedIntentKey) {
+    const rejection = buildRejectedResult("intent_key_mismatch_with_input");
+    appendAuditEntry({
+      attempt_id: makeAttemptId(nowIso, input.lead_id),
+      intent_key: input.intent_key,
+      lead_id: input.lead_id,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -145,8 +246,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -163,8 +262,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -189,8 +286,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -215,8 +310,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -243,8 +336,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: "n/a",
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: rejection.write_state,
       rejection_reason: rejection.rejection_reason,
       object_changed: rejection.object_changed,
@@ -254,25 +345,8 @@ export function recordControlledSubmissionMutationIntent(
     return rejection;
   }
 
-  const selectedPathId = input.readiness_input.selected_path_id;
-  if (!selectedPathId) {
-    const rejection = buildRejectedResult("selected_path_id_missing");
-    appendAuditEntry({
-      attempt_id: makeAttemptId(nowIso, input.lead_id),
-      intent_key: "n/a",
-      lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
-      write_state: rejection.write_state,
-      rejection_reason: rejection.rejection_reason,
-      object_changed: rejection.object_changed,
-      occurred_at: nowIso,
-      boundary_note: "minimal_intent_audit_only",
-    });
-    return rejection;
-  }
-
-  const intentKey = makeIntentKey(input.lead_id, selectedPathId);
+  const intentKey = input.intent_key;
+  const fingerprint = buildCoreInputFingerprint(input);
   const existing = intentStore.get(input.lead_id);
 
   if (existing) {
@@ -282,8 +356,20 @@ export function recordControlledSubmissionMutationIntent(
         attempt_id: makeAttemptId(nowIso, input.lead_id),
         intent_key: intentKey,
         lead_id: input.lead_id,
-        actor_id: input.actor_id,
-        source: input.source,
+        write_state: rejection.write_state,
+        rejection_reason: rejection.rejection_reason,
+        object_changed: rejection.object_changed,
+        occurred_at: nowIso,
+        boundary_note: "minimal_intent_audit_only",
+      });
+      return rejection;
+    }
+    if (existing.core_input_fingerprint !== fingerprint) {
+      const rejection = buildRejectedResult("idempotent_replay_core_input_mismatch");
+      appendAuditEntry({
+        attempt_id: makeAttemptId(nowIso, input.lead_id),
+        intent_key: intentKey,
+        lead_id: input.lead_id,
         write_state: rejection.write_state,
         rejection_reason: rejection.rejection_reason,
         object_changed: rejection.object_changed,
@@ -301,7 +387,8 @@ export function recordControlledSubmissionMutationIntent(
       boundary_assertion: {
         submission_completed: false,
         approval_completed: false,
-        external_execution_occurred: false,
+        workflow_finished: false,
+        no_external_execution_occurred: true,
         full_audit_persistence_system: false,
       },
     };
@@ -310,8 +397,6 @@ export function recordControlledSubmissionMutationIntent(
       attempt_id: makeAttemptId(nowIso, input.lead_id),
       intent_key: existing.intent_key,
       lead_id: input.lead_id,
-      actor_id: input.actor_id,
-      source: input.source,
       write_state: replayResult.write_state,
       rejection_reason: replayResult.rejection_reason,
       object_changed: replayResult.object_changed,
@@ -332,6 +417,7 @@ export function recordControlledSubmissionMutationIntent(
     actor_id: input.actor_id.trim(),
     source: input.source,
     recorded_at: nowIso,
+    core_input_fingerprint: fingerprint,
     contract_snapshot: {
       controlled_submission_status: controlledSubmission.status,
       gate_state: controlledSubmission.gate_state,
@@ -358,7 +444,8 @@ export function recordControlledSubmissionMutationIntent(
     boundary_assertion: {
       submission_completed: false,
       approval_completed: false,
-      external_execution_occurred: false,
+      workflow_finished: false,
+      no_external_execution_occurred: true,
       full_audit_persistence_system: false,
     },
   };
@@ -367,8 +454,6 @@ export function recordControlledSubmissionMutationIntent(
     attempt_id: makeAttemptId(nowIso, input.lead_id),
     intent_key: intentRecord.intent_key,
     lead_id: input.lead_id,
-    actor_id: input.actor_id,
-    source: input.source,
     write_state: accepted.write_state,
     rejection_reason: accepted.rejection_reason,
     object_changed: accepted.object_changed,
