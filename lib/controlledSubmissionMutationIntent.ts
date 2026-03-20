@@ -111,6 +111,14 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
   "Read-only surfacing only. No approve/execute/complete action is exposed." as const;
 
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES = [
+  "completed successfully",
+  "executed successfully",
+  "submission executed",
+  "approval completed",
+  "workflow finished",
+] as const;
+
 export type ControlledSubmissionMutationIntentRejectReason =
   | "lead_not_found"
   | "invalid_actor_id"
@@ -506,6 +514,13 @@ export function getControlledSubmissionMutationIntentByLeadId(leadId: string) {
 
 export function listControlledSubmissionMutationIntentAuditLog() {
   return intentAuditLog.map((entry) => toReadonlyAuditEntry(entry));
+}
+
+export function buildControlledSubmissionMutationIntentForbiddenSuccessPattern() {
+  const escaped = CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES.map((phrase) =>
+    phrase.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"),
+  );
+  return new RegExp(escaped.join("|"), "i");
 }
 
 export function resetControlledSubmissionMutationIntentStore() {

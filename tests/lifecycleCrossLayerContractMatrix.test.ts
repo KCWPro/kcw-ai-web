@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import {
+  buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
@@ -91,7 +92,7 @@ function run() {
   assert.deepEqual(readModelMissing.semantic_boundary_clauses, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES);
 
   const serialized = JSON.stringify({ accepted, replayed, rejected, readModelVisible, readModelMissing });
-  assert.doesNotMatch(serialized, /completed successfully|executed successfully/i);
+  assert.doesNotMatch(serialized, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());
   assert.match(serialized, /intent recorded != submission completed/);
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);

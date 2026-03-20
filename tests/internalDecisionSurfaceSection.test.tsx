@@ -15,6 +15,7 @@ import { buildOperatorGuidance } from "../lib/internalOperatorGuidance";
 import { buildInternalWorkflowContinuity } from "../lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "../lib/internalWorkflowDecisionSurface";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import { buildControlledSubmissionMutationIntentForbiddenSuccessPattern } from "../lib/controlledSubmissionMutationIntent";
 import DecisionSurfaceSection from "../app/internal/leads/[id]/DecisionSurfaceSection";
 
 const lead = {
@@ -259,6 +260,7 @@ function run() {
   assert.doesNotMatch(readyReadinessHtml, /official audit record/i);
   assert.doesNotMatch(readyReadinessHtml, /dispatch action|trigger workflow|workflow control panel/i);
   assert.doesNotMatch(readyReadinessHtml, /write now|commit now|persist now|execute now|submit now/i);
+  assert.doesNotMatch(readyReadinessHtml, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());
 
   console.log("internalDecisionSurfaceSection UI tests passed");
 }

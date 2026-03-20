@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
+  buildControlledSubmissionMutationIntentForbiddenSuccessPattern,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_TRANSITION_NOTES,
@@ -63,7 +64,7 @@ function run() {
   assert.equal(notAvailable.read_only_notice, CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE);
 
   const serialized = JSON.stringify({ visible, notAvailable });
-  assert.doesNotMatch(serialized, /completed successfully|executed successfully/i);
+  assert.doesNotMatch(serialized, buildControlledSubmissionMutationIntentForbiddenSuccessPattern());
   assert.match(serialized, /intent recorded != submission completed/);
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
