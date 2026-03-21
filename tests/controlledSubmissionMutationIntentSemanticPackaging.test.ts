@@ -11,6 +11,7 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ACTIVATION_CLAUSE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
@@ -57,6 +58,7 @@ function run() {
   assert.match(sample, /runtime-level semantics lock != runtime activation/i);
   assert.match(sample, /runtime-level semantics lock != execution unlock/i);
   assert.match(sample, /runtime-level semantics lock != controller rollout/i);
+  assert.match(sample, /contract-only runtime-level lock != implementation prewire/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
@@ -73,6 +75,7 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ACTIVATION_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_notice_lines.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
@@ -125,6 +128,7 @@ function run() {
   assert.ok(phase20Lock.boundary_equations.includes("runtime-level semantics lock != runtime activation"));
   assert.ok(phase20Lock.boundary_equations.includes("runtime-level semantics lock != execution unlock"));
   assert.ok(phase20Lock.boundary_equations.includes("runtime-level semantics lock != controller rollout"));
+  assert.ok(phase20Lock.boundary_equations.includes("contract-only runtime-level lock != implementation prewire"));
   assert.ok(phase20Lock.forbidden_actions.includes("no runtime rollout"));
   assert.ok(phase20Lock.forbidden_actions.includes("no runtime activation"));
   assert.ok(phase20Lock.forbidden_actions.includes("no execution unlock"));

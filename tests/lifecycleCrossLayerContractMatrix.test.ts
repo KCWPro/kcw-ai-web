@@ -116,6 +116,7 @@ function run() {
   assert.match(serialized, /runtime-level semantics lock != runtime activation/);
   assert.match(serialized, /runtime-level semantics lock != execution unlock/);
   assert.match(serialized, /runtime-level semantics lock != controller rollout/);
+  assert.match(serialized, /contract-only runtime-level lock != implementation prewire/);
   assert.match(serialized, /Boundary revalidation hardening never opens skeleton runtime activation\./);
   assert.match(serialized, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
   assert.match(serialized, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./);
