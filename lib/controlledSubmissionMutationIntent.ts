@@ -117,6 +117,21 @@ export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ACTIVATION_CLAU
 export const CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE =
   "candidate-b scope lock != runtime capability unlock" as const;
 
+export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ROLLOUT_CLAUSE =
+  "runtime-level semantics lock != runtime rollout" as const;
+
+export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ACTIVATION_CLAUSE =
+  "runtime-level semantics lock != runtime activation" as const;
+
+export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE =
+  "runtime-level semantics lock != execution unlock" as const;
+
+export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
+  "runtime-level semantics lock != controller rollout" as const;
+
+export const CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
+  "contract-only runtime-level lock != implementation prewire" as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
   "checkpoint availability != approval completion",
@@ -136,6 +151,11 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ACTIVATION_CLAUSE,
   CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
+  RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
+  RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_RUNTIME_ACTIVATION_CLAUSE,
+  RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -150,6 +170,9 @@ export const ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE =
 export const CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE =
   "Candidate-B scope lock is boundary-only and never unlocks runtime capabilities." as const;
 
+export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE =
+  "Runtime-level semantics lock is contract-only and never opens rollout, activation, execution, or controller rollout." as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
@@ -161,6 +184,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   "Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation.",
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE,
   CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
+  RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
