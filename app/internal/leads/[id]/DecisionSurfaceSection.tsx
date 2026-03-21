@@ -81,6 +81,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>No submission has been performed.</p>
         <p>Readiness does not equal execution.</p>
         <p>Human-confirmed path is not submitted. Submission-ready is not submitted.</p>
+        <p>Runtime-level semantics lock is contract-only; no runtime rollout or activation is opened.</p>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-4">
