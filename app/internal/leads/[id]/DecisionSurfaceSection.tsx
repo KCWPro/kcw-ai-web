@@ -5,6 +5,7 @@ import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
 import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathContract";
 import type { ControlledSubmissionMutationIntentLifecycleReadModel } from "../../../../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
+  CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
 } from "../../../../lib/controlledSubmissionMutationIntent";
@@ -88,6 +89,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>Human-confirmed path is not submitted. Submission-ready is not submitted.</p>
         <p>{RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
+        <p>{CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-4">
