@@ -6,9 +6,15 @@ import {
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
   CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
+  CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ACTIVATION_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ROLLOUT_CLAUSE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
@@ -21,9 +27,11 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE20_RUNTIME_LEVEL_LOCK_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE21_ROLLOUT_ACTIVATION_LEVEL_LOCK_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
   getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentPhase20RuntimeLevelLockSummary,
+  getControlledSubmissionMutationIntentPhase21RolloutActivationLevelLockSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -59,11 +67,20 @@ function run() {
   assert.match(sample, /runtime-level semantics lock != execution unlock/i);
   assert.match(sample, /runtime-level semantics lock != controller rollout/i);
   assert.match(sample, /contract-only runtime-level lock != implementation prewire/i);
+  assert.match(sample, /rollout\/activation-level skeleton lock != runtime capability rollout/i);
+  assert.match(sample, /rollout\/activation-level skeleton lock != runtime capability activation/i);
+  assert.match(sample, /rollout\/activation-level skeleton lock != execution unlock/i);
+  assert.match(sample, /rollout\/activation-level skeleton lock != controller rollout/i);
+  assert.match(sample, /contract-gated rollout\/activation-level skeleton lock != implementation prewire/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
   assert.match(sample, /Candidate-B scope lock is boundary-only and never unlocks runtime capabilities\./i);
   assert.match(sample, /Runtime-level semantics lock is contract-only and never opens rollout, activation, execution, or controller rollout\./i);
+  assert.match(
+    sample,
+    /Rollout\/activation-level skeleton lock is contract-gated and never opens runtime capability rollout, activation, execution, or controller rollout\./i,
+  );
   assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
@@ -76,9 +93,17 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ROLLOUT_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ACTIVATION_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(
+    packaging.boundary_clauses.includes(CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE),
+  );
   assert.ok(packaging.boundary_notice_lines.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -134,6 +159,23 @@ function run() {
   assert.ok(phase20Lock.forbidden_actions.includes("no execution unlock"));
   assert.ok(phase20Lock.forbidden_actions.includes("no controller rollout"));
   assert.ok(phase20Lock.forbidden_actions.includes("no implementation prewire"));
+
+  const phase21Lock = getControlledSubmissionMutationIntentPhase21RolloutActivationLevelLockSummary();
+  assert.equal(phase21Lock, CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE21_ROLLOUT_ACTIVATION_LEVEL_LOCK_SUMMARY);
+  assert.ok(Object.isFrozen(phase21Lock));
+  assert.equal(phase21Lock.scope, "candidate_b_single_object_rollout_activation_level_skeleton_lock_only");
+  assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != runtime capability rollout"));
+  assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != runtime capability activation"));
+  assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != execution unlock"));
+  assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != controller rollout"));
+  assert.ok(
+    phase21Lock.boundary_equations.includes("contract-gated rollout/activation-level skeleton lock != implementation prewire"),
+  );
+  assert.ok(phase21Lock.forbidden_actions.includes("no runtime capability rollout"));
+  assert.ok(phase21Lock.forbidden_actions.includes("no runtime capability activation"));
+  assert.ok(phase21Lock.forbidden_actions.includes("no execution unlock"));
+  assert.ok(phase21Lock.forbidden_actions.includes("no controller rollout"));
+  assert.ok(phase21Lock.forbidden_actions.includes("no implementation prewire"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }
