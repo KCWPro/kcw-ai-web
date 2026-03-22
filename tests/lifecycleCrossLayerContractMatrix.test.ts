@@ -137,6 +137,7 @@ function run() {
   assert.match(serialized, /active-ready != capability activation active/);
   assert.match(serialized, /active-ready != execution unlock/);
   assert.match(serialized, /active-ready != controller rollout/);
+  assert.match(serialized, /runtime-readiness gap clarification != runtime unlock/);
   assert.match(serialized, /readiness-contract != implementation prewire/);
   assert.match(serialized, /Boundary revalidation hardening never opens skeleton runtime activation\./);
   assert.match(serialized, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
@@ -168,6 +169,7 @@ function run() {
   );
   assert.match(serialized, /Readiness-contract semantics are boundary-only and never implementation prewire\./);
   assert.match(serialized, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./);
+  assert.match(serialized, /Runtime-readiness gap clarification is non-active boundary-only and never runtime unlock\./);
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
   assert.match(serialized, /continuity revalidation != capability expansion/);

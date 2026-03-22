@@ -192,6 +192,9 @@ export const READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
 export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE =
   "active-ready allowed != capability active open" as const;
 
+export const RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE =
+  "runtime-readiness gap clarification != runtime unlock" as const;
+
 export const ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE =
   "allowed/eligible read-model presence != execution authority" as const;
 
@@ -240,6 +243,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -278,6 +282,9 @@ export const READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE =
 export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE =
   "Active-ready allowed is a readiness-contract state only; capability active remains not open." as const;
 
+export const RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE =
+  "Runtime-readiness gap clarification is non-active boundary-only and never runtime unlock." as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
@@ -297,6 +304,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
   READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
