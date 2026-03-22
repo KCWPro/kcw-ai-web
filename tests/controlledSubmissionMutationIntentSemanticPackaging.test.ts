@@ -4,6 +4,7 @@ import {
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_CARRYING_CLAUSE,
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE,
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE,
+  ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
   CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
   CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
@@ -51,6 +52,7 @@ function run() {
   assert.match(sample, /intent recorded != submission completed/i);
   assert.match(sample, /checkpoint availability != approval completion/i);
   assert.match(sample, /readiness\/allowed\/eligible != executed/i);
+  assert.match(sample, /allowed\/eligible read-model presence != execution authority/i);
   assert.match(sample, /read-only compatible != controller-capable/i);
   assert.match(sample, /audit trace != persisted audit system/i);
   assert.match(sample, /scope-prep != implementation prewire/i);
@@ -85,6 +87,7 @@ function run() {
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
   assert.ok(packaging.boundary_clauses.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_CARRYING_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ACTIVATION_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE));
@@ -168,6 +171,7 @@ function run() {
   assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != runtime capability activation"));
   assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != execution unlock"));
   assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != controller rollout"));
+  assert.ok(phase21Lock.boundary_equations.includes("allowed/eligible read-model presence != execution authority"));
   assert.ok(
     phase21Lock.boundary_equations.includes("contract-gated rollout/activation-level skeleton lock != implementation prewire"),
   );

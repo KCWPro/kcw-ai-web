@@ -84,6 +84,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>No automatic execution is enabled.</p>
         <p>No submission has been performed.</p>
         <p>Readiness does not equal execution.</p>
+        <p>Allowed/eligible read-model presence is not execution authority.</p>
         <p>Human-confirmed path is not submitted. Submission-ready is not submitted.</p>
         <p>{RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>

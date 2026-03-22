@@ -101,6 +101,7 @@ function run() {
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);
+  assert.match(serialized, /allowed\/eligible read-model presence != execution authority/);
   assert.match(serialized, /read-only compatible != controller-capable/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /scope-prep != implementation prewire/);
