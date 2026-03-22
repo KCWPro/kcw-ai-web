@@ -7,6 +7,8 @@ import {
   ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+  CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
   CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
@@ -81,6 +83,8 @@ function run() {
   assert.match(sample, /contract-gated rollout\/activation-level skeleton lock != implementation prewire/i);
   assert.match(sample, /capability-level semantics lock != capability rollout active/i);
   assert.match(sample, /capability-level semantics lock != capability activation active/i);
+  assert.match(sample, /capability-level semantics lock != execution unlock/i);
+  assert.match(sample, /capability-level semantics lock != controller rollout/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
@@ -113,6 +117,8 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
   assert.ok(
     packaging.boundary_clauses.includes(CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE),
   );
@@ -187,6 +193,8 @@ function run() {
   assert.ok(phase21Lock.boundary_equations.includes("rollout/activation-level skeleton lock != controller rollout"));
   assert.ok(phase21Lock.boundary_equations.includes("capability-level semantics lock != capability rollout active"));
   assert.ok(phase21Lock.boundary_equations.includes("capability-level semantics lock != capability activation active"));
+  assert.ok(phase21Lock.boundary_equations.includes("capability-level semantics lock != execution unlock"));
+  assert.ok(phase21Lock.boundary_equations.includes("capability-level semantics lock != controller rollout"));
   assert.ok(phase21Lock.boundary_equations.includes("allowed/eligible read-model presence != execution authority"));
   assert.ok(
     phase21Lock.boundary_equations.includes("contract-gated rollout/activation-level skeleton lock != implementation prewire"),
@@ -205,8 +213,8 @@ function run() {
   assert.equal(phase22Lock.scope, "candidate_b_single_object_capability_level_semantics_lock_only");
   assert.ok(phase22Lock.boundary_equations.includes("capability-level semantics lock != capability rollout active"));
   assert.ok(phase22Lock.boundary_equations.includes("capability-level semantics lock != capability activation active"));
-  assert.ok(phase22Lock.boundary_equations.includes("rollout/activation-level skeleton lock != execution unlock"));
-  assert.ok(phase22Lock.boundary_equations.includes("rollout/activation-level skeleton lock != controller rollout"));
+  assert.ok(phase22Lock.boundary_equations.includes("capability-level semantics lock != execution unlock"));
+  assert.ok(phase22Lock.boundary_equations.includes("capability-level semantics lock != controller rollout"));
   assert.ok(
     phase22Lock.boundary_equations.includes("contract-gated rollout/activation-level skeleton lock != implementation prewire"),
   );

@@ -153,6 +153,12 @@ export const CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CL
 export const CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE =
   "capability-level semantics lock != capability activation active" as const;
 
+export const CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE =
+  "capability-level semantics lock != execution unlock" as const;
+
+export const CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
+  "capability-level semantics lock != controller rollout" as const;
+
 export const ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE =
   "allowed/eligible read-model presence != execution authority" as const;
 
@@ -188,6 +194,8 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+  CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
