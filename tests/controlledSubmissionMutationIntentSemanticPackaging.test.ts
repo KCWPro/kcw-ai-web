@@ -16,6 +16,13 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+  NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
@@ -35,11 +42,13 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE20_RUNTIME_LEVEL_LOCK_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE21_ROLLOUT_ACTIVATION_LEVEL_LOCK_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE22_CAPABILITY_LEVEL_LOCK_HARDENING_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE23_NON_ACTIVE_CONTINUITY_HARDENING_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
   getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentPhase20RuntimeLevelLockSummary,
   getControlledSubmissionMutationIntentPhase21RolloutActivationLevelLockSummary,
   getControlledSubmissionMutationIntentPhase22CapabilityLevelLockHardeningSummary,
+  getControlledSubmissionMutationIntentPhase23NonActiveContinuityHardeningSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -85,6 +94,11 @@ function run() {
   assert.match(sample, /capability-level semantics lock != capability activation active/i);
   assert.match(sample, /capability-level semantics lock != execution unlock/i);
   assert.match(sample, /capability-level semantics lock != controller rollout/i);
+  assert.match(sample, /non-active continuity != capability rollout active/i);
+  assert.match(sample, /non-active continuity != capability activation active/i);
+  assert.match(sample, /non-active continuity != execution unlock/i);
+  assert.match(sample, /non-active continuity != controller rollout/i);
+  assert.match(sample, /non-active continuity != implementation prewire/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
@@ -119,6 +133,11 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(
     packaging.boundary_clauses.includes(CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE),
   );
@@ -127,6 +146,8 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -226,6 +247,25 @@ function run() {
   assert.ok(phase22Lock.forbidden_actions.includes("no controller rollout"));
   assert.ok(phase22Lock.forbidden_actions.includes("no implementation prewire"));
   assert.ok(phase22Lock.forbidden_actions.includes("no multi-object workflow expansion"));
+
+  const phase23Lock = getControlledSubmissionMutationIntentPhase23NonActiveContinuityHardeningSummary();
+  assert.equal(phase23Lock, CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE23_NON_ACTIVE_CONTINUITY_HARDENING_SUMMARY);
+  assert.ok(Object.isFrozen(phase23Lock));
+  assert.equal(phase23Lock.scope, "candidate_a_single_object_contract_gated_non_active_continuity_only");
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != capability rollout active"));
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != capability activation active"));
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != execution unlock"));
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != controller rollout"));
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != implementation prewire"));
+  assert.ok(phase23Lock.boundary_equations.includes("allowed/eligible read-model presence != execution authority"));
+  assert.ok(phase23Lock.boundary_notice_lines.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(phase23Lock.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(phase23Lock.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
+  assert.ok(phase23Lock.forbidden_actions.includes("no capability rollout active"));
+  assert.ok(phase23Lock.forbidden_actions.includes("no capability activation active"));
+  assert.ok(phase23Lock.forbidden_actions.includes("no execution unlock"));
+  assert.ok(phase23Lock.forbidden_actions.includes("no controller rollout"));
+  assert.ok(phase23Lock.forbidden_actions.includes("no implementation prewire"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }

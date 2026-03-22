@@ -6,6 +6,7 @@ import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathC
 import type { ControlledSubmissionMutationIntentLifecycleReadModel } from "../../../../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
+  NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
 } from "../../../../lib/controlledSubmissionMutationIntent";
@@ -90,6 +91,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>{RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
+        <p>{NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE}</p>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-4">

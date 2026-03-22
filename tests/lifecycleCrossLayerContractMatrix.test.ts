@@ -127,6 +127,11 @@ function run() {
   assert.match(serialized, /capability-level semantics lock != capability activation active/);
   assert.match(serialized, /capability-level semantics lock != execution unlock/);
   assert.match(serialized, /capability-level semantics lock != controller rollout/);
+  assert.match(serialized, /non-active continuity != capability rollout active/);
+  assert.match(serialized, /non-active continuity != capability activation active/);
+  assert.match(serialized, /non-active continuity != execution unlock/);
+  assert.match(serialized, /non-active continuity != controller rollout/);
+  assert.match(serialized, /non-active continuity != implementation prewire/);
   assert.match(serialized, /Boundary revalidation hardening never opens skeleton runtime activation\./);
   assert.match(serialized, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
   assert.match(serialized, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./);
@@ -142,6 +147,14 @@ function run() {
   assert.match(
     serialized,
     /Capability-level semantics lock is contract-gated candidate-level only and never means capability rollout active, capability activation active, execution unlock, or controller rollout\./,
+  );
+  assert.match(
+    serialized,
+    /Non-active continuity hardening is contract-gated only and never means capability rollout active, capability activation active, execution unlock, or controller rollout\./,
+  );
+  assert.match(
+    serialized,
+    /Non-active continuity hardening is boundary-only and never implementation prewire\./,
   );
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
