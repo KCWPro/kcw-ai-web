@@ -132,12 +132,31 @@ export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
 export const CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
   "contract-only runtime-level lock != implementation prewire" as const;
 
+export const ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ROLLOUT_CLAUSE =
+  "rollout/activation-level skeleton lock != runtime capability rollout" as const;
+
+export const ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ACTIVATION_CLAUSE =
+  "rollout/activation-level skeleton lock != runtime capability activation" as const;
+
+export const ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE =
+  "rollout/activation-level skeleton lock != execution unlock" as const;
+
+export const ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
+  "rollout/activation-level skeleton lock != controller rollout" as const;
+
+export const CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
+  "contract-gated rollout/activation-level skeleton lock != implementation prewire" as const;
+
+export const ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE =
+  "allowed/eligible read-model presence != execution authority" as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = [
   "intent recorded != submission completed",
   "checkpoint availability != approval completion",
   "replayed idempotently != workflow completed",
   "blocked by boundary != approval finalized",
   "readiness/allowed/eligible != executed",
+  ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
   READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
   "audit trace != persisted audit system",
   "surfacing != controller",
@@ -156,6 +175,11 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ROLLOUT_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_RUNTIME_CAPABILITY_ACTIVATION_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -173,6 +197,9 @@ export const CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE =
 export const RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE =
   "Runtime-level semantics lock is contract-only and never opens rollout, activation, execution, or controller rollout." as const;
 
+export const ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE =
+  "Rollout/activation-level skeleton lock is contract-gated and never opens runtime capability rollout, activation, execution, or controller rollout." as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
@@ -185,6 +212,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_NOTICE,
   CANDIDATE_B_SCOPE_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
+  ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;

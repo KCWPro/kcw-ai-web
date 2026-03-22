@@ -101,6 +101,7 @@ function run() {
   assert.match(serialized, /replayed idempotently != workflow completed/);
   assert.match(serialized, /blocked by boundary != approval finalized/);
   assert.match(serialized, /readiness\/allowed\/eligible != executed/);
+  assert.match(serialized, /allowed\/eligible read-model presence != execution authority/);
   assert.match(serialized, /read-only compatible != controller-capable/);
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /scope-prep != implementation prewire/);
@@ -117,6 +118,11 @@ function run() {
   assert.match(serialized, /runtime-level semantics lock != execution unlock/);
   assert.match(serialized, /runtime-level semantics lock != controller rollout/);
   assert.match(serialized, /contract-only runtime-level lock != implementation prewire/);
+  assert.match(serialized, /rollout\/activation-level skeleton lock != runtime capability rollout/);
+  assert.match(serialized, /rollout\/activation-level skeleton lock != runtime capability activation/);
+  assert.match(serialized, /rollout\/activation-level skeleton lock != execution unlock/);
+  assert.match(serialized, /rollout\/activation-level skeleton lock != controller rollout/);
+  assert.match(serialized, /contract-gated rollout\/activation-level skeleton lock != implementation prewire/);
   assert.match(serialized, /Boundary revalidation hardening never opens skeleton runtime activation\./);
   assert.match(serialized, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./);
   assert.match(serialized, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./);
@@ -124,6 +130,10 @@ function run() {
   assert.match(
     serialized,
     /Runtime-level semantics lock is contract-only and never opens rollout, activation, execution, or controller rollout\./,
+  );
+  assert.match(
+    serialized,
+    /Rollout\/activation-level skeleton lock is contract-gated and never opens runtime capability rollout, activation, execution, or controller rollout\./,
   );
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
