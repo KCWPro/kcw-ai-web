@@ -33,6 +33,8 @@ import {
   READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
   READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
@@ -168,6 +170,7 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
@@ -186,6 +189,7 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -341,9 +345,13 @@ function run() {
   assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != execution unlock"));
   assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != controller rollout"));
   assert.ok(phase25Step2Lock.boundary_equations.includes("runtime-readiness gap clarification != runtime unlock"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("runtime-readiness gap clarification != implementation prewire"));
   assert.ok(phase25Step2Lock.boundary_equations.includes("readiness-contract != implementation prewire"));
   assert.ok(
     phase25Step2Lock.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE),
+  );
+  assert.ok(
+    phase25Step2Lock.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE),
   );
   assert.ok(phase25Step2Lock.forbidden_actions.includes("no runtime unlock"));
   assert.ok(phase25Step2Lock.forbidden_actions.includes("no capability rollout active"));

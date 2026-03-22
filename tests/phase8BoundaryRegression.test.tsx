@@ -108,6 +108,7 @@ function run() {
   assert.match(html, /Readiness-contract semantics are boundary-only and never implementation prewire\./);
   assert.match(html, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./);
   assert.match(html, /Runtime-readiness gap clarification is non-active boundary-only and never runtime unlock\./);
+  assert.match(html, /Runtime-readiness gap clarification is boundary-only and never implementation prewire\./);
   assert.match(html, /Checkpoint is not approval completion/);
   assert.match(html, /not a persisted production audit system/);
   assert.match(html, /Dry-run semantic interpretation only/);
