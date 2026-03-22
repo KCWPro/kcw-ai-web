@@ -171,6 +171,9 @@ export const NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE =
 export const NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
   "non-active continuity != controller rollout" as const;
 
+export const NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
+  "non-active continuity != implementation prewire" as const;
+
 export const ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE =
   "allowed/eligible read-model presence != execution authority" as const;
 
@@ -212,6 +215,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -238,6 +242,9 @@ export const CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE =
 export const NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE =
   "Non-active continuity hardening is contract-gated only and never means capability rollout active, capability activation active, execution unlock, or controller rollout." as const;
 
+export const NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE =
+  "Non-active continuity hardening is boundary-only and never implementation prewire." as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
@@ -253,6 +260,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;

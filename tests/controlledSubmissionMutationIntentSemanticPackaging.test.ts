@@ -17,6 +17,8 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
   NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
@@ -96,6 +98,7 @@ function run() {
   assert.match(sample, /non-active continuity != capability activation active/i);
   assert.match(sample, /non-active continuity != execution unlock/i);
   assert.match(sample, /non-active continuity != controller rollout/i);
+  assert.match(sample, /non-active continuity != implementation prewire/i);
   assert.match(sample, /Boundary revalidation hardening never opens skeleton runtime activation\./i);
   assert.match(sample, /Skeleton-readiness adjudication prep never opens skeleton runtime rollout or activation\./i);
   assert.match(sample, /Adjudication-level skeleton carrying never opens runtime carrying, rollout, or activation\./i);
@@ -134,6 +137,7 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(
     packaging.boundary_clauses.includes(CONTRACT_GATED_ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE),
   );
@@ -143,6 +147,7 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -251,9 +256,11 @@ function run() {
   assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != capability activation active"));
   assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != execution unlock"));
   assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != controller rollout"));
+  assert.ok(phase23Lock.boundary_equations.includes("non-active continuity != implementation prewire"));
   assert.ok(phase23Lock.boundary_equations.includes("allowed/eligible read-model presence != execution authority"));
   assert.ok(phase23Lock.boundary_notice_lines.includes(CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(phase23Lock.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(phase23Lock.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
   assert.ok(phase23Lock.forbidden_actions.includes("no capability rollout active"));
   assert.ok(phase23Lock.forbidden_actions.includes("no capability activation active"));
   assert.ok(phase23Lock.forbidden_actions.includes("no execution unlock"));
