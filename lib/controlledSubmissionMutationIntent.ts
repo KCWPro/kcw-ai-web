@@ -174,6 +174,24 @@ export const NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
 export const NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
   "non-active continuity != implementation prewire" as const;
 
+export const ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE =
+  "active-ready != capability rollout active" as const;
+
+export const ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE =
+  "active-ready != capability activation active" as const;
+
+export const ACTIVE_READY_IS_NOT_EXECUTION_UNLOCK_CLAUSE =
+  "active-ready != execution unlock" as const;
+
+export const ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
+  "active-ready != controller rollout" as const;
+
+export const READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE =
+  "readiness-contract != implementation prewire" as const;
+
+export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE =
+  "active-ready allowed != capability active open" as const;
+
 export const ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE =
   "allowed/eligible read-model presence != execution authority" as const;
 
@@ -216,6 +234,12 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
+  ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+  ACTIVE_READY_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
   "regression anchor != future execution contract",
@@ -245,6 +269,15 @@ export const NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE =
 export const NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE =
   "Non-active continuity hardening is boundary-only and never implementation prewire." as const;
 
+export const ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE =
+  "Active-ready semantics are eligibility-only and never runtime rollout, runtime activation, execution unlock, or controller rollout." as const;
+
+export const READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE =
+  "Readiness-contract semantics are boundary-only and never implementation prewire." as const;
+
+export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE =
+  "Active-ready allowed is a readiness-contract state only; capability active remains not open." as const;
+
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES = [
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE,
   "Allowed/eligible state is read-model semantics only; it does not grant execution authority.",
@@ -261,6 +294,9 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
+  ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
+  READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
+  ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
   "Continuity revalidation hardening is boundary-only and never capability expansion.",
   "Freeze boundary integrity hardening never opens runtime capability paths.",
 ] as const;
