@@ -104,6 +104,8 @@ function run() {
   assert.match(html, /Bounded Write-Path Contract \(Design-only \/ Read-only\)/);
 
   assert.match(html, /Readiness does not equal execution/);
+  assert.match(html, /Active-ready semantics are eligibility-only and never runtime rollout, runtime activation, execution unlock, or controller rollout\./);
+  assert.match(html, /Readiness-contract semantics are boundary-only and never implementation prewire\./);
   assert.match(html, /Checkpoint is not approval completion/);
   assert.match(html, /not a persisted production audit system/);
   assert.match(html, /Dry-run semantic interpretation only/);

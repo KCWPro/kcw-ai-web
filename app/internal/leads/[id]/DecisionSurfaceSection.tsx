@@ -5,8 +5,10 @@ import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
 import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathContract";
 import type { ControlledSubmissionMutationIntentLifecycleReadModel } from "../../../../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
+  ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
+  READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   RUNTIME_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
 } from "../../../../lib/controlledSubmissionMutationIntent";
@@ -92,6 +94,8 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>{ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE}</p>
+        <p>{ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE}</p>
+        <p>{READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE}</p>
       </div>
 
       <div className="mt-3 grid gap-3 md:grid-cols-4">
