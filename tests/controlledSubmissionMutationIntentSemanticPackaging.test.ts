@@ -1,5 +1,7 @@
 import assert from "node:assert/strict";
 import {
+  ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE,
+  ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
   ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
   ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
   ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
@@ -109,6 +111,7 @@ function run() {
   assert.match(sample, /non-active continuity != controller rollout/i);
   assert.match(sample, /non-active continuity != implementation prewire/i);
   assert.match(sample, /active-ready != capability rollout active/i);
+  assert.match(sample, /active-ready allowed != capability active open/i);
   assert.match(sample, /active-ready != capability activation active/i);
   assert.match(sample, /active-ready != execution unlock/i);
   assert.match(sample, /active-ready != controller rollout/i);
@@ -131,6 +134,7 @@ function run() {
     /Active-ready semantics are eligibility-only and never runtime rollout, runtime activation, execution unlock, or controller rollout\./i,
   );
   assert.match(sample, /Readiness-contract semantics are boundary-only and never implementation prewire\./i);
+  assert.match(sample, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./i);
   assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
   assert.match(sample, /regression anchor != future execution contract/i);
@@ -158,6 +162,7 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
@@ -174,6 +179,7 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -298,12 +304,14 @@ function run() {
   assert.ok(Object.isFrozen(phase24Lock));
   assert.equal(phase24Lock.scope, "candidate_b_single_object_minimal_readiness_contract_hardening_only");
   assert.ok(phase24Lock.boundary_equations.includes("active-ready != capability rollout active"));
+  assert.ok(phase24Lock.boundary_equations.includes("active-ready allowed != capability active open"));
   assert.ok(phase24Lock.boundary_equations.includes("active-ready != capability activation active"));
   assert.ok(phase24Lock.boundary_equations.includes("active-ready != execution unlock"));
   assert.ok(phase24Lock.boundary_equations.includes("active-ready != controller rollout"));
   assert.ok(phase24Lock.boundary_equations.includes("readiness-contract != implementation prewire"));
   assert.ok(phase24Lock.boundary_notice_lines.includes(ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(phase24Lock.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
+  assert.ok(phase24Lock.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
   assert.ok(phase24Lock.forbidden_actions.includes("no capability rollout active"));
   assert.ok(phase24Lock.forbidden_actions.includes("no capability activation active"));
   assert.ok(phase24Lock.forbidden_actions.includes("no execution unlock"));

@@ -133,6 +133,7 @@ function run() {
   assert.match(serialized, /non-active continuity != controller rollout/);
   assert.match(serialized, /non-active continuity != implementation prewire/);
   assert.match(serialized, /active-ready != capability rollout active/);
+  assert.match(serialized, /active-ready allowed != capability active open/);
   assert.match(serialized, /active-ready != capability activation active/);
   assert.match(serialized, /active-ready != execution unlock/);
   assert.match(serialized, /active-ready != controller rollout/);
@@ -166,6 +167,7 @@ function run() {
     /Active-ready semantics are eligibility-only and never runtime rollout, runtime activation, execution unlock, or controller rollout\./,
   );
   assert.match(serialized, /Readiness-contract semantics are boundary-only and never implementation prewire\./);
+  assert.match(serialized, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./);
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
   assert.match(serialized, /continuity revalidation != capability expansion/);
