@@ -142,6 +142,7 @@ function run() {
   assert.match(serialized, /active-runtime candidate != execution unlock/);
   assert.match(serialized, /active-runtime candidate != completion unlock/);
   assert.match(serialized, /active-runtime candidate != controller rollout/);
+  assert.match(serialized, /active-runtime continuity != operational close/);
   assert.match(serialized, /narrow contract-gated active-runtime != implementation prewire beyond scope/);
   assert.match(serialized, /runtime-readiness gap clarification != runtime unlock/);
   assert.match(serialized, /runtime-readiness gap clarification != implementation prewire/);
@@ -182,6 +183,10 @@ function run() {
   );
   assert.match(
     serialized,
+    /Active-runtime continuity is boundary-only and never means operational close, platform completion, or unrestricted execution\/completion behavior\./,
+  );
+  assert.match(
+    serialized,
     /Narrow contract-gated active-runtime hardening is boundary-only and never implementation prewire beyond scope\./,
   );
   assert.match(serialized, /Runtime-readiness gap clarification is non-active boundary-only and never runtime unlock\./);
@@ -190,7 +195,7 @@ function run() {
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
   assert.match(serialized, /continuity revalidation != capability expansion/);
   assert.match(serialized, /integrity hardening != capability expansion/);
-  assert.match(serialized, /regression anchor != future execution contract/);
+  assert.match(serialized, /regression anchor != future unrestricted execution contract/);
 
   console.log("lifecycleCrossLayerContractMatrix tests passed");
 }

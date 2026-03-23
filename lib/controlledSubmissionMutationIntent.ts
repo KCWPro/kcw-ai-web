@@ -207,6 +207,9 @@ export const ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE =
 export const ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE =
   "active-runtime candidate != controller rollout" as const;
 
+export const ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE =
+  "active-runtime continuity != operational close" as const;
+
 export const NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE =
   "narrow contract-gated active-runtime != implementation prewire beyond scope" as const;
 
@@ -269,12 +272,13 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE,
   NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
-  "regression anchor != future execution contract",
+  "regression anchor != future unrestricted execution contract",
 ] as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =
@@ -313,6 +317,9 @@ export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE =
 export const ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE =
   "Active-runtime candidate is narrow contract-gated only; it never means generalized capability rollout active, generalized capability activation active, execution/completion unlock, or controller rollout." as const;
 
+export const ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE =
+  "Active-runtime continuity is boundary-only and never means operational close, platform completion, or unrestricted execution/completion behavior." as const;
+
 export const NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE =
   "Narrow contract-gated active-runtime hardening is boundary-only and never implementation prewire beyond scope." as const;
 
@@ -342,6 +349,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LIN
   READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
+  ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE,
   NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE,
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,

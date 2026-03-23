@@ -1,6 +1,8 @@
 import {
   ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE,
+  ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE,
+  ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
@@ -86,7 +88,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY =
     "skeleton-readiness adjudication prep != skeleton runtime activation",
     "continuity revalidation != capability expansion",
     "integrity hardening != capability expansion",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   forbidden_actions: [
     "no approve/execute/finalize/complete entry",
@@ -121,7 +123,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE19_ADJUDICATION_LOCK_SUM
     CANDIDATE_B_SCOPE_LOCK_IS_NOT_RUNTIME_CAPABILITY_UNLOCK_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   forbidden_actions: [
     "no runtime carrying",
@@ -143,7 +145,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE20_RUNTIME_LEVEL_LOCK_SU
     CONTRACT_ONLY_RUNTIME_LEVEL_LOCK_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   forbidden_actions: [
     "no runtime rollout",
@@ -169,7 +171,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE21_ROLLOUT_ACTIVATION_LE
     ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   forbidden_actions: [
     "no runtime capability rollout",
@@ -193,7 +195,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE22_CAPABILITY_LEVEL_LOCK
     ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   boundary_notice_lines: [
     ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
@@ -222,7 +224,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE23_NON_ACTIVE_CONTINUITY
     ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   boundary_notice_lines: [
     CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
@@ -251,7 +253,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE24_MINIMAL_READINESS_CON
     ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   boundary_notice_lines: [
     ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
@@ -283,7 +285,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE25_STEP2_MINIMAL_NON_ACT
     ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
     READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
     "single-object semantic package != multi-object workflow engine",
-    "regression anchor != future execution contract",
+    "regression anchor != future unrestricted execution contract",
   ] as const,
   boundary_notice_lines: [
     ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
@@ -316,7 +318,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_
       ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
       READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
       "single-object semantic package != multi-object workflow engine",
-      "regression anchor != future execution contract",
+      "regression anchor != future unrestricted execution contract",
     ] as const,
     boundary_notice_lines: [
       ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
@@ -329,6 +331,76 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_
       "no generalized capability activation active",
       "no execution unlock",
       "no completion unlock",
+      "no controller rollout",
+      "no implementation prewire beyond scope",
+      "no multi-object workflow expansion",
+    ] as const,
+  });
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP2_MINIMAL_NARROW_ACTIVE_RUNTIME_CONTINUITY_HARDENING_SUMMARY =
+  Object.freeze({
+    scope: "candidate_a_single_object_minimal_narrow_active_runtime_continuity_hardening_only",
+    boundary_equations: [
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+      ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE,
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE,
+      ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
+      READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
+      "single-object semantic package != multi-object workflow engine",
+      "regression anchor != future unrestricted execution contract",
+    ] as const,
+    boundary_notice_lines: [
+      ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
+      ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE,
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
+      ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
+      READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
+    ] as const,
+    forbidden_actions: [
+      "no generalized capability rollout active",
+      "no generalized capability activation active",
+      "no execution unlock",
+      "no completion unlock",
+      "no operational close",
+      "no controller rollout",
+      "no implementation prewire beyond scope",
+      "no multi-object workflow expansion",
+    ] as const,
+  });
+
+export const CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP3_FREEZE_PREP_NARROW_ACTIVE_RUNTIME_CONTINUITY_CONSISTENCY_CONSOLIDATION_SUMMARY =
+  Object.freeze({
+    scope: "candidate_a_single_object_freeze_prep_narrow_active_runtime_continuity_consistency_only",
+    boundary_equations: [
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE,
+      ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+      ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE,
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE,
+      ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE,
+      READ_ONLY_COMPATIBILITY_IS_NOT_CONTROLLER_CAPABLE_CLAUSE,
+      "single-object semantic package != multi-object workflow engine",
+      "regression anchor != future unrestricted execution contract",
+    ] as const,
+    boundary_notice_lines: [
+      ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
+      ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE,
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
+      ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
+      READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
+    ] as const,
+    forbidden_actions: [
+      "no generalized capability rollout active",
+      "no generalized capability activation active",
+      "no execution unlock",
+      "no completion unlock",
+      "no operational close",
       "no controller rollout",
       "no implementation prewire beyond scope",
       "no multi-object workflow expansion",
@@ -373,4 +445,12 @@ export function getControlledSubmissionMutationIntentPhase25Step2MinimalNonActiv
 
 export function getControlledSubmissionMutationIntentPhase26Step2MinimalNarrowContractGatedActiveRuntimeHardeningSummary() {
   return CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_HARDENING_SUMMARY;
+}
+
+export function getControlledSubmissionMutationIntentPhase27Step2MinimalNarrowActiveRuntimeContinuityHardeningSummary() {
+  return CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP2_MINIMAL_NARROW_ACTIVE_RUNTIME_CONTINUITY_HARDENING_SUMMARY;
+}
+
+export function getControlledSubmissionMutationIntentPhase27Step3FreezePrepNarrowActiveRuntimeContinuityConsistencyConsolidationSummary() {
+  return CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP3_FREEZE_PREP_NARROW_ACTIVE_RUNTIME_CONTINUITY_CONSISTENCY_CONSOLIDATION_SUMMARY;
 }
