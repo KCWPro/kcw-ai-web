@@ -137,6 +137,12 @@ function run() {
   assert.match(serialized, /active-ready != capability activation active/);
   assert.match(serialized, /active-ready != execution unlock/);
   assert.match(serialized, /active-ready != controller rollout/);
+  assert.match(serialized, /active-runtime candidate != generalized capability rollout active/);
+  assert.match(serialized, /active-runtime candidate != generalized capability activation active/);
+  assert.match(serialized, /active-runtime candidate != execution unlock/);
+  assert.match(serialized, /active-runtime candidate != completion unlock/);
+  assert.match(serialized, /active-runtime candidate != controller rollout/);
+  assert.match(serialized, /narrow contract-gated active-runtime != implementation prewire beyond scope/);
   assert.match(serialized, /runtime-readiness gap clarification != runtime unlock/);
   assert.match(serialized, /runtime-readiness gap clarification != implementation prewire/);
   assert.match(serialized, /readiness-contract != implementation prewire/);
@@ -170,6 +176,14 @@ function run() {
   );
   assert.match(serialized, /Readiness-contract semantics are boundary-only and never implementation prewire\./);
   assert.match(serialized, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./);
+  assert.match(
+    serialized,
+    /Active-runtime candidate is narrow contract-gated only; it never means generalized capability rollout active, generalized capability activation active, execution\/completion unlock, or controller rollout\./,
+  );
+  assert.match(
+    serialized,
+    /Narrow contract-gated active-runtime hardening is boundary-only and never implementation prewire beyond scope\./,
+  );
   assert.match(serialized, /Runtime-readiness gap clarification is non-active boundary-only and never runtime unlock\./);
   assert.match(serialized, /Runtime-readiness gap clarification is boundary-only and never implementation prewire\./);
   assert.match(serialized, /Continuity revalidation hardening is boundary-only and never capability expansion\./);

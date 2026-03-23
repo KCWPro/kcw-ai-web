@@ -1,5 +1,11 @@
 import assert from "node:assert/strict";
 import {
+  ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
+  ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE,
+  ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
+  ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
+  ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE,
+  ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
   ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
@@ -23,6 +29,8 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_FORBIDDEN_SUCCESS_PHRASES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_NOTICE_LINES,
+  NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE,
+  NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_BOUNDARY_ONLY_NOTICE,
   NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
@@ -58,6 +66,7 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE23_NON_ACTIVE_CONTINUITY_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE24_MINIMAL_READINESS_CONTRACT_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE25_STEP2_MINIMAL_NON_ACTIVE_RUNTIME_READINESS_GAP_HARDENING_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_HARDENING_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
   getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentPhase20RuntimeLevelLockSummary,
@@ -66,6 +75,7 @@ import {
   getControlledSubmissionMutationIntentPhase23NonActiveContinuityHardeningSummary,
   getControlledSubmissionMutationIntentPhase24MinimalReadinessContractHardeningSummary,
   getControlledSubmissionMutationIntentPhase25Step2MinimalNonActiveRuntimeReadinessGapHardeningSummary,
+  getControlledSubmissionMutationIntentPhase26Step2MinimalNarrowContractGatedActiveRuntimeHardeningSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -118,6 +128,12 @@ function run() {
   assert.match(sample, /non-active continuity != implementation prewire/i);
   assert.match(sample, /active-ready != capability rollout active/i);
   assert.match(sample, /active-ready allowed != capability active open/i);
+  assert.match(sample, /active-runtime candidate != generalized capability rollout active/i);
+  assert.match(sample, /active-runtime candidate != generalized capability activation active/i);
+  assert.match(sample, /active-runtime candidate != execution unlock/i);
+  assert.match(sample, /active-runtime candidate != completion unlock/i);
+  assert.match(sample, /active-runtime candidate != controller rollout/i);
+  assert.match(sample, /narrow contract-gated active-runtime != implementation prewire beyond scope/i);
   assert.match(sample, /active-ready != capability activation active/i);
   assert.match(sample, /active-ready != execution unlock/i);
   assert.match(sample, /active-ready != controller rollout/i);
@@ -169,6 +185,16 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NOT_GENERALIZED_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NOT_COMPLETION_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
+  assert.ok(
+    packaging.boundary_clauses.includes(
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_CLAUSE,
+    ),
+  );
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
@@ -188,6 +214,12 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE));
+  assert.ok(
+    packaging.boundary_notice_lines.includes(
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
+    ),
+  );
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
 
@@ -359,6 +391,42 @@ function run() {
   assert.ok(phase25Step2Lock.forbidden_actions.includes("no execution unlock"));
   assert.ok(phase25Step2Lock.forbidden_actions.includes("no controller rollout"));
   assert.ok(phase25Step2Lock.forbidden_actions.includes("no implementation prewire"));
+
+  const phase26Step2Lock = getControlledSubmissionMutationIntentPhase26Step2MinimalNarrowContractGatedActiveRuntimeHardeningSummary();
+  assert.equal(
+    phase26Step2Lock,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_HARDENING_SUMMARY,
+  );
+  assert.ok(Object.isFrozen(phase26Step2Lock));
+  assert.equal(
+    phase26Step2Lock.scope,
+    "candidate_b_single_object_minimal_narrow_contract_gated_active_runtime_hardening_only",
+  );
+  assert.ok(
+    phase26Step2Lock.boundary_equations.includes("active-runtime candidate != generalized capability rollout active"),
+  );
+  assert.ok(
+    phase26Step2Lock.boundary_equations.includes("active-runtime candidate != generalized capability activation active"),
+  );
+  assert.ok(phase26Step2Lock.boundary_equations.includes("active-runtime candidate != execution unlock"));
+  assert.ok(phase26Step2Lock.boundary_equations.includes("active-runtime candidate != completion unlock"));
+  assert.ok(phase26Step2Lock.boundary_equations.includes("active-runtime candidate != controller rollout"));
+  assert.ok(
+    phase26Step2Lock.boundary_equations.includes(
+      "narrow contract-gated active-runtime != implementation prewire beyond scope",
+    ),
+  );
+  assert.ok(
+    phase26Step2Lock.boundary_notice_lines.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE),
+  );
+  assert.ok(
+    phase26Step2Lock.boundary_notice_lines.includes(
+      NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE,
+    ),
+  );
+  assert.ok(phase26Step2Lock.forbidden_actions.includes("no generalized capability rollout active"));
+  assert.ok(phase26Step2Lock.forbidden_actions.includes("no generalized capability activation active"));
+  assert.ok(phase26Step2Lock.forbidden_actions.includes("no completion unlock"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }
