@@ -32,6 +32,10 @@ import {
   NON_ACTIVE_CONTINUITY_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
   READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE,
   READINESS_CONTRACT_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE,
+  RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_BOUNDARY_ONLY_NOTICE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE,
   ROLLOUT_ACTIVATION_LEVEL_SKELETON_LOCK_IS_NOT_EXECUTION_UNLOCK_CLAUSE,
@@ -53,6 +57,7 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE22_CAPABILITY_LEVEL_LOCK_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE23_NON_ACTIVE_CONTINUITY_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE24_MINIMAL_READINESS_CONTRACT_HARDENING_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE25_STEP2_MINIMAL_NON_ACTIVE_RUNTIME_READINESS_GAP_HARDENING_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
   getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentPhase20RuntimeLevelLockSummary,
@@ -60,6 +65,7 @@ import {
   getControlledSubmissionMutationIntentPhase22CapabilityLevelLockHardeningSummary,
   getControlledSubmissionMutationIntentPhase23NonActiveContinuityHardeningSummary,
   getControlledSubmissionMutationIntentPhase24MinimalReadinessContractHardeningSummary,
+  getControlledSubmissionMutationIntentPhase25Step2MinimalNonActiveRuntimeReadinessGapHardeningSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -163,6 +169,8 @@ function run() {
   assert.ok(packaging.boundary_clauses.includes(NON_ACTIVE_CONTINUITY_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ROLLOUT_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_RUNTIME_UNLOCK_CLAUSE));
+  assert.ok(packaging.boundary_clauses.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CAPABILITY_ACTIVATION_ACTIVE_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_EXECUTION_UNLOCK_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ACTIVE_READY_IS_NOT_CONTROLLER_ROLLOUT_CLAUSE));
@@ -180,6 +188,8 @@ function run() {
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(packaging.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE));
+  assert.ok(packaging.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE));
 
   const freezePrep = getControlledSubmissionMutationIntentFreezePrepHandoffSummary();
   assert.equal(freezePrep, CONTROLLED_SUBMISSION_MUTATION_INTENT_FREEZE_PREP_HANDOFF_SUMMARY);
@@ -312,11 +322,43 @@ function run() {
   assert.ok(phase24Lock.boundary_notice_lines.includes(ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(phase24Lock.boundary_notice_lines.includes(READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE));
   assert.ok(phase24Lock.boundary_notice_lines.includes(ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE));
+  assert.ok(phase24Lock.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE));
   assert.ok(phase24Lock.forbidden_actions.includes("no capability rollout active"));
   assert.ok(phase24Lock.forbidden_actions.includes("no capability activation active"));
   assert.ok(phase24Lock.forbidden_actions.includes("no execution unlock"));
   assert.ok(phase24Lock.forbidden_actions.includes("no controller rollout"));
   assert.ok(phase24Lock.forbidden_actions.includes("no implementation prewire"));
+
+  const phase25Step2Lock = getControlledSubmissionMutationIntentPhase25Step2MinimalNonActiveRuntimeReadinessGapHardeningSummary();
+  assert.equal(
+    phase25Step2Lock,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE25_STEP2_MINIMAL_NON_ACTIVE_RUNTIME_READINESS_GAP_HARDENING_SUMMARY,
+  );
+  assert.ok(Object.isFrozen(phase25Step2Lock));
+  assert.equal(
+    phase25Step2Lock.scope,
+    "candidate_a_single_object_minimal_non_active_runtime_readiness_gap_hardening_only",
+  );
+  assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready allowed != capability active open"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != capability rollout active"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != capability activation active"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != execution unlock"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("active-ready != controller rollout"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("runtime-readiness gap clarification != runtime unlock"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("runtime-readiness gap clarification != implementation prewire"));
+  assert.ok(phase25Step2Lock.boundary_equations.includes("readiness-contract != implementation prewire"));
+  assert.ok(
+    phase25Step2Lock.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE),
+  );
+  assert.ok(
+    phase25Step2Lock.boundary_notice_lines.includes(RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE),
+  );
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no runtime unlock"));
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no capability rollout active"));
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no capability activation active"));
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no execution unlock"));
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no controller rollout"));
+  assert.ok(phase25Step2Lock.forbidden_actions.includes("no implementation prewire"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }
