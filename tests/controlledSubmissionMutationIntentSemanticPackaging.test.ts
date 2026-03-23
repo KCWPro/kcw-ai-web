@@ -496,6 +496,7 @@ function run() {
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no execution unlock"));
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no completion unlock"));
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no operational close"));
+  assert.ok(phase27Step2Lock.forbidden_actions.includes("no generalized execution/completion behavior"));
 
   const phase27Step3FreezePrep =
     getControlledSubmissionMutationIntentPhase27Step3FreezePrepNarrowActiveRuntimeContinuityConsistencyConsolidationSummary();
@@ -538,6 +539,7 @@ function run() {
     ),
   );
   assert.ok(phase27Step3FreezePrep.forbidden_actions.includes("no operational close"));
+  assert.ok(phase27Step3FreezePrep.forbidden_actions.includes("no generalized execution/completion behavior"));
 
   const phase28Step2Lock = getControlledSubmissionMutationIntentPhase28Step2MinimalNarrowActiveRuntimeContinuityHardeningSummary();
   assert.equal(
