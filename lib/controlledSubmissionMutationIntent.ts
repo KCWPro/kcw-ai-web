@@ -311,7 +311,7 @@ export const ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE =
   "Active-ready allowed is a readiness-contract state only; capability active remains not open." as const;
 
 export const ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE =
-  "Active-runtime candidate is narrow contract-gated only; it never means generalized rollout/activation, execution/completion unlock, or controller rollout." as const;
+  "Active-runtime candidate is narrow contract-gated only; it never means generalized capability rollout active, generalized capability activation active, execution/completion unlock, or controller rollout." as const;
 
 export const NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_IS_NOT_IMPLEMENTATION_PREWIRE_BEYOND_SCOPE_NOTICE =
   "Narrow contract-gated active-runtime hardening is boundary-only and never implementation prewire beyond scope." as const;

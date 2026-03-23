@@ -178,7 +178,7 @@ function run() {
   assert.match(serialized, /Active-ready allowed is a readiness-contract state only; capability active remains not open\./);
   assert.match(
     serialized,
-    /Active-runtime candidate is narrow contract-gated only; it never means generalized rollout\/activation, execution\/completion unlock, or controller rollout\./,
+    /Active-runtime candidate is narrow contract-gated only; it never means generalized capability rollout active, generalized capability activation active, execution\/completion unlock, or controller rollout\./,
   );
   assert.match(
     serialized,
