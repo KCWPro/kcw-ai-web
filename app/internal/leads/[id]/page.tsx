@@ -479,11 +479,11 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
 
           <div className="space-y-5">
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <LeadStatusUpdater leadId={lead.id} initialStatus={lead.status} />
+              <LeadStatusUpdater initialStatus={lead.status} />
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <LeadNotesEditor leadId={lead.id} initialNotes={lead.internal_notes} />
+              <LeadNotesEditor initialNotes={lead.internal_notes} />
             </div>
           </div>
         </section>

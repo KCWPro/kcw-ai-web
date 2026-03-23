@@ -86,6 +86,14 @@ export default function HomePage() {
               Bilingual Service (English / 中文)
             </p>
 
+            <div className="mt-5 max-w-2xl rounded-xl border border-amber-300/50 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
+              <p className="font-semibold uppercase tracking-wide text-amber-200">Preview / Beta Notice</p>
+              <p className="mt-1">
+                This experience is currently in controlled testing for validation and is not a fully operational
+                production release.
+              </p>
+            </div>
+
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="tel:6265037777"
