@@ -29,11 +29,19 @@ export default function InternalDashboardPage() {
       <div className="mx-auto max-w-7xl space-y-8">
         <header className="rounded-2xl bg-slate-900 px-6 py-7 text-white shadow-lg">
           <p className="text-sm uppercase tracking-[0.2em] text-slate-300">Internal Admin</p>
-          <h1 className="mt-2 text-3xl font-semibold">KCW AI Operations</h1>
+          <h1 className="mt-2 text-3xl font-semibold">KCW Internal Preview Workspace</h1>
           <p className="mt-2 text-sm text-slate-300">
-            Daily lead operations overview for dispatch, quoting, and follow-up.
+            Read-only and suggestion-first preview for internal lead review and coordination.
           </p>
         </header>
+
+        <section className="rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-900 shadow-sm">
+          <p className="font-semibold uppercase tracking-wide">Beta Boundary</p>
+          <p className="mt-1">
+            This internal area is a controlled Beta preview for review/suggestion workflows only. It does not
+            represent automated execution, workflow advancement, or external write authority.
+          </p>
+        </section>
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
@@ -74,11 +82,11 @@ export default function InternalDashboardPage() {
 
           <div className="space-y-4 lg:col-span-2">
             <div className={cardBase}>
-              <h2 className="text-lg font-semibold">AI Action Center</h2>
+              <h2 className="text-lg font-semibold">Suggestion Review Center</h2>
               <ul className="mt-3 space-y-3 text-sm text-slate-600">
-                <li>• Check new and follow-up leads for immediate routing.</li>
-                <li>• 1 quote draft can be sent after price review.</li>
-                <li>• 1 follow-up is due within the next hour.</li>
+                <li>• Review new and follow-up leads for operator decision support.</li>
+                <li>• Quote draft suggestions are preview-only until manually approved outside this page.</li>
+                <li>• Follow-up suggestions are informational and do not auto-send.</li>
               </ul>
             </div>
 
@@ -92,10 +100,10 @@ export default function InternalDashboardPage() {
                   Open Leads Queue
                 </Link>
                 <button className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700">
-                  Generate Daily Follow-up List
+                  Preview Daily Follow-up Suggestions
                 </button>
                 <button className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700">
-                  Draft Quote Reminder Messages
+                  Preview Quote Reminder Drafts
                 </button>
               </div>
             </div>

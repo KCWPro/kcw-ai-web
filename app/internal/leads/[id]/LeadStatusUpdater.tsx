@@ -6,51 +6,24 @@ import { LeadStatus, statusLabels } from "@/lib/internalLeads";
 const statusOrder: LeadStatus[] = ["new", "follow_up", "quoted", "scheduled", "completed", "archived"];
 
 type LeadStatusUpdaterProps = {
-  leadId: string;
   initialStatus: string;
 };
 
-export default function LeadStatusUpdater({ leadId, initialStatus }: LeadStatusUpdaterProps) {
+export default function LeadStatusUpdater({ initialStatus }: LeadStatusUpdaterProps) {
   const [status, setStatus] = useState<string>(initialStatus || "new");
-  const [saving, setSaving] = useState(false);
-  const [message, setMessage] = useState<string>("");
-
-  async function handleUpdate() {
-    setSaving(true);
-    setMessage("");
-
-    try {
-      const res = await fetch(`/api/internal/leads/${leadId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status }),
-      });
-
-      const data = await res.json();
-
-      if (!res.ok || !data.success) {
-        throw new Error(data?.error || "Failed to update status");
-      }
-
-      setStatus(data.lead.status);
-      setMessage("Status saved.");
-    } catch (error: unknown) {
-      const messageText = error instanceof Error ? error.message : "Failed to update status";
-      setMessage(messageText);
-    } finally {
-      setSaving(false);
-    }
-  }
 
   return (
     <div className="space-y-2">
-      <h2 className="text-lg font-semibold">Lead Status</h2>
+      <h2 className="text-lg font-semibold">Lead Status (Preview Only)</h2>
+      <p className="text-xs text-amber-700">
+        Beta boundary: status updates are disabled here. This page is read-only and does not write to Google
+        Sheets.
+      </p>
       <div className="flex items-center gap-2">
         <select
           value={status}
           onChange={(event) => setStatus(event.target.value)}
-          className="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none ring-slate-900 focus:ring"
-          disabled={saving}
+          className="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2 text-sm text-slate-600 outline-none"
         >
           {statusOrder.map((option) => (
             <option key={option} value={option}>
@@ -60,14 +33,13 @@ export default function LeadStatusUpdater({ leadId, initialStatus }: LeadStatusU
         </select>
         <button
           type="button"
-          onClick={handleUpdate}
-          disabled={saving}
-          className="rounded-lg bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-60"
+          disabled
+          className="rounded-lg bg-slate-400 px-3 py-2 text-sm font-medium text-white opacity-70"
+          title="Disabled in Beta preview"
         >
-          {saving ? "Saving..." : "Save"}
+          Save disabled
         </button>
       </div>
-      {message ? <p className="text-xs text-slate-500">{message}</p> : null}
     </div>
   );
 }
