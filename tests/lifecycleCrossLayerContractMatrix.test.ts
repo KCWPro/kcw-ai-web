@@ -142,6 +142,7 @@ function run() {
   assert.match(serialized, /active-runtime candidate != execution unlock/);
   assert.match(serialized, /active-runtime candidate != completion unlock/);
   assert.match(serialized, /active-runtime candidate != controller rollout/);
+  assert.match(serialized, /active-runtime continuity != operational close/);
   assert.match(serialized, /narrow contract-gated active-runtime != implementation prewire beyond scope/);
   assert.match(serialized, /runtime-readiness gap clarification != runtime unlock/);
   assert.match(serialized, /runtime-readiness gap clarification != implementation prewire/);
@@ -179,6 +180,10 @@ function run() {
   assert.match(
     serialized,
     /Active-runtime candidate is narrow contract-gated only; it never means generalized capability rollout active, generalized capability activation active, execution\/completion unlock, or controller rollout\./,
+  );
+  assert.match(
+    serialized,
+    /Active-runtime continuity is boundary-only and never means operational close, platform completion, or unrestricted execution\/completion behavior\./,
   );
   assert.match(
     serialized,
