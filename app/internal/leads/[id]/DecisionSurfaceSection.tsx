@@ -5,6 +5,7 @@ import type { AuditTrailSkeleton } from "../../../../lib/auditTrailSkeleton";
 import type { BoundedWritePathContract } from "../../../../lib/boundedWritePathContract";
 import type { ControlledSubmissionMutationIntentLifecycleReadModel } from "../../../../lib/controlledSubmissionMutationIntentLifecycleSurfacing";
 import {
+  ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE,
   ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE,
   ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE,
   CAPABILITY_LEVEL_SEMANTICS_LOCK_IS_BOUNDARY_ONLY_NOTICE,
@@ -100,6 +101,7 @@ function ControlledSubmissionReadinessSection({ contract }: { contract: Controll
         <p>{ACTIVE_READY_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{READINESS_CONTRACT_IS_BOUNDARY_ONLY_NOTICE}</p>
         <p>{ACTIVE_READY_ALLOWED_IS_NOT_CAPABILITY_ACTIVE_OPEN_NOTICE}</p>
+        <p>{ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE}</p>
         <p>{RUNTIME_READINESS_GAP_CLARIFICATION_IS_NON_ACTIVE_ONLY_NOTICE}</p>
         <p>{RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_NOTICE}</p>
       </div>
