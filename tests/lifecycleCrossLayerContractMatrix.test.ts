@@ -195,7 +195,7 @@ function run() {
   assert.match(serialized, /single-object semantic package != multi-object workflow engine/);
   assert.match(serialized, /continuity revalidation != capability expansion/);
   assert.match(serialized, /integrity hardening != capability expansion/);
-  assert.match(serialized, /regression anchor != future execution contract/);
+  assert.match(serialized, /regression anchor != future unrestricted execution contract/);
 
   console.log("lifecycleCrossLayerContractMatrix tests passed");
 }

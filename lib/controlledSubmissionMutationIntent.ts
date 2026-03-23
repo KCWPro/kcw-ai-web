@@ -278,7 +278,7 @@ export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_BOUNDARY_CLAUSES = 
   RUNTIME_READINESS_GAP_CLARIFICATION_IS_NOT_IMPLEMENTATION_PREWIRE_CLAUSE,
   "continuity revalidation != capability expansion",
   "integrity hardening != capability expansion",
-  "regression anchor != future execution contract",
+  "regression anchor != future unrestricted execution contract",
 ] as const;
 
 export const CONTROLLED_SUBMISSION_MUTATION_INTENT_LIFECYCLE_READ_ONLY_NOTICE =

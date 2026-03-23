@@ -76,7 +76,7 @@ function run() {
   assert.match(serialized, /audit trace != persisted audit system/);
   assert.match(serialized, /surfacing != controller/);
   assert.match(serialized, /integrity hardening != capability expansion/);
-  assert.match(serialized, /regression anchor != future execution contract/);
+  assert.match(serialized, /regression anchor != future unrestricted execution contract/);
 
   console.log("controlledSubmissionMutationIntentLifecycleSurfacing tests passed");
 }

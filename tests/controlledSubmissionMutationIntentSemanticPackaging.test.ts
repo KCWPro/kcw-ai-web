@@ -70,6 +70,7 @@ import {
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE25_STEP2_MINIMAL_NON_ACTIVE_RUNTIME_READINESS_GAP_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE26_STEP2_MINIMAL_NARROW_CONTRACT_GATED_ACTIVE_RUNTIME_HARDENING_SUMMARY,
   CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP2_MINIMAL_NARROW_ACTIVE_RUNTIME_CONTINUITY_HARDENING_SUMMARY,
+  CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP3_FREEZE_PREP_NARROW_ACTIVE_RUNTIME_CONTINUITY_CONSISTENCY_CONSOLIDATION_SUMMARY,
   getControlledSubmissionMutationIntentFreezePrepHandoffSummary,
   getControlledSubmissionMutationIntentPhase19AdjudicationLockSummary,
   getControlledSubmissionMutationIntentPhase20RuntimeLevelLockSummary,
@@ -80,6 +81,7 @@ import {
   getControlledSubmissionMutationIntentPhase25Step2MinimalNonActiveRuntimeReadinessGapHardeningSummary,
   getControlledSubmissionMutationIntentPhase26Step2MinimalNarrowContractGatedActiveRuntimeHardeningSummary,
   getControlledSubmissionMutationIntentPhase27Step2MinimalNarrowActiveRuntimeContinuityHardeningSummary,
+  getControlledSubmissionMutationIntentPhase27Step3FreezePrepNarrowActiveRuntimeContinuityConsistencyConsolidationSummary,
   getControlledSubmissionMutationIntentSemanticPackaging,
 } from "../lib/controlledSubmissionMutationIntentSemanticPackaging";
 
@@ -168,7 +170,7 @@ function run() {
   );
   assert.match(sample, /Continuity revalidation hardening is boundary-only and never capability expansion\./i);
   assert.match(sample, /integrity hardening != capability expansion/i);
-  assert.match(sample, /regression anchor != future execution contract/i);
+  assert.match(sample, /regression anchor != future unrestricted execution contract/i);
   assert.ok(packaging.boundary_clauses.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_CARRYING_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ALLOWED_ELIGIBLE_READ_MODEL_PRESENCE_IS_NOT_EXECUTION_AUTHORITY_CLAUSE));
   assert.ok(packaging.boundary_clauses.includes(ADJUDICATION_LEVEL_SKELETON_CARRYING_IS_NOT_RUNTIME_ROLLOUT_CLAUSE));
@@ -251,7 +253,7 @@ function run() {
   assert.ok(freezePrep.boundary_equations.includes("skeleton-readiness adjudication prep != skeleton runtime activation"));
   assert.ok(freezePrep.boundary_equations.includes("continuity revalidation != capability expansion"));
   assert.ok(freezePrep.boundary_equations.includes("integrity hardening != capability expansion"));
-  assert.ok(freezePrep.boundary_equations.includes("regression anchor != future execution contract"));
+  assert.ok(freezePrep.boundary_equations.includes("regression anchor != future unrestricted execution contract"));
   assert.ok(freezePrep.forbidden_actions.includes("no skeleton runtime rollout"));
   assert.ok(freezePrep.forbidden_actions.includes("no skeleton runtime activation"));
   assert.ok(freezePrep.forbidden_actions.includes("no completion/execution runtime states"));
@@ -473,6 +475,38 @@ function run() {
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no execution unlock"));
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no completion unlock"));
   assert.ok(phase27Step2Lock.forbidden_actions.includes("no operational close"));
+
+  const phase27Step3FreezePrep =
+    getControlledSubmissionMutationIntentPhase27Step3FreezePrepNarrowActiveRuntimeContinuityConsistencyConsolidationSummary();
+  assert.equal(
+    phase27Step3FreezePrep,
+    CONTROLLED_SUBMISSION_MUTATION_INTENT_PHASE27_STEP3_FREEZE_PREP_NARROW_ACTIVE_RUNTIME_CONTINUITY_CONSISTENCY_CONSOLIDATION_SUMMARY,
+  );
+  assert.ok(Object.isFrozen(phase27Step3FreezePrep));
+  assert.equal(
+    phase27Step3FreezePrep.scope,
+    "candidate_a_single_object_freeze_prep_narrow_active_runtime_continuity_consistency_only",
+  );
+  assert.ok(
+    phase27Step3FreezePrep.boundary_equations.includes("active-runtime candidate != generalized capability rollout active"),
+  );
+  assert.ok(
+    phase27Step3FreezePrep.boundary_equations.includes("active-runtime candidate != generalized capability activation active"),
+  );
+  assert.ok(phase27Step3FreezePrep.boundary_equations.includes("active-runtime candidate != execution unlock"));
+  assert.ok(phase27Step3FreezePrep.boundary_equations.includes("active-runtime candidate != completion unlock"));
+  assert.ok(phase27Step3FreezePrep.boundary_equations.includes("active-runtime candidate != controller rollout"));
+  assert.ok(
+    phase27Step3FreezePrep.boundary_equations.includes(ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_CLAUSE),
+  );
+  assert.ok(phase27Step3FreezePrep.boundary_equations.includes("regression anchor != future unrestricted execution contract"));
+  assert.ok(
+    phase27Step3FreezePrep.boundary_notice_lines.includes(ACTIVE_RUNTIME_CANDIDATE_IS_NARROW_CONTRACT_GATED_ONLY_NOTICE),
+  );
+  assert.ok(
+    phase27Step3FreezePrep.boundary_notice_lines.includes(ACTIVE_RUNTIME_CONTINUITY_IS_NOT_OPERATIONAL_CLOSE_NOTICE),
+  );
+  assert.ok(phase27Step3FreezePrep.forbidden_actions.includes("no operational close"));
 
   console.log("controlledSubmissionMutationIntentSemanticPackaging tests passed");
 }
