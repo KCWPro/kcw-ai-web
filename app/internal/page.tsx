@@ -3,10 +3,11 @@ import { buildIntakeAnalysis, type IntakeAnalysisResult } from "@/lib/aiIntakeAn
 import { buildInternalActionHandoff } from "@/lib/internalActionHandoff";
 import { buildInternalEstimateDraft } from "@/lib/internalEstimateDraft";
 import { buildInternalFollowUpWorkflowSuggestion } from "@/lib/internalFollowUpWorkflowSuggestion";
-import { internalLeads, statusLabels, type KcwLead } from "@/lib/internalLeads";
+import { statusLabels, type KcwLead, type LeadStatus } from "@/lib/internalLeads";
 import { buildOperatorGuidance } from "@/lib/internalOperatorGuidance";
 import { buildInternalWorkflowContinuity } from "@/lib/internalWorkflowContinuity";
 import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDecisionSurface";
+import { readInternalLeadsFromGoogleSheet } from "@/lib/internalLeadsStore";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md";
@@ -31,6 +32,10 @@ function createdAtTime(value: string) {
   return 0;
 }
 
+function resolveStatusLabel(status: string) {
+  return statusLabels[status as LeadStatus] || status;
+}
+
 function toAnalysisInput(lead: KcwLead) {
   return {
     service_type: lead.service_type,
@@ -52,6 +57,29 @@ type LeadRuntimeSnapshot = {
   estimateAvailability: "available" | "unavailable";
   nextReviewSuggestion: string;
 };
+
+function toDashboardLead(lead: Awaited<ReturnType<typeof readInternalLeadsFromGoogleSheet>>[number]): KcwLead {
+  const status = (lead.status || "new") as LeadStatus;
+  const source = (lead.source || "website") as KcwLead["source"];
+  const urgency = (lead.urgency || "medium") as KcwLead["urgency"];
+
+  return {
+    id: lead.id,
+    customer_name: lead.customer_name,
+    phone: lead.phone,
+    city: lead.city,
+    service_type: lead.service_type,
+    urgency,
+    source,
+    status,
+    created_at: lead.created_at,
+    preferred_visit_window: lead.problem_duration || "",
+    intake_raw: lead.customer_notes || "",
+    ai_summary: lead.ai_summary || "",
+    suggested_next_step: "",
+    internal_notes: lead.internal_notes || "",
+  };
+}
 
 async function buildLeadRuntimeSnapshot(lead: KcwLead): Promise<LeadRuntimeSnapshot> {
   let analysis: IntakeAnalysisResult | null = null;
@@ -125,7 +153,10 @@ async function buildLeadRuntimeSnapshot(lead: KcwLead): Promise<LeadRuntimeSnaps
 }
 
 export default async function InternalDashboardPage() {
-  const sortedLeads = [...internalLeads].sort((a, b) => createdAtTime(b.created_at) - createdAtTime(a.created_at));
+  const internalLeads = await readInternalLeadsFromGoogleSheet();
+  const sortedLeads = internalLeads
+    .map((lead) => toDashboardLead(lead))
+    .sort((a, b) => createdAtTime(b.created_at) - createdAtTime(a.created_at));
   const leadSnapshots = await Promise.all(sortedLeads.map((lead) => buildLeadRuntimeSnapshot(lead)));
   const todayKey = new Date().toISOString().slice(0, 10);
 
@@ -210,7 +241,7 @@ export default async function InternalDashboardPage() {
               {leadsToday.length} leads entered today ({todayKey}). Preview is read-only and for operator-reviewed triage.
             </p>
             <p className="mt-3 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-700">
-              Latest added lead: {latestLead ? `${latestLead.customer_name} · ${latestLead.city} · ${latestLead.service_type} · ${statusLabels[latestLead.status]}` : "No leads in preview dataset."}
+              Latest added lead: {latestLead ? `${latestLead.customer_name} · ${latestLead.city} · ${latestLead.service_type} · ${resolveStatusLabel(latestLead.status)}` : "No leads in preview dataset."}
             </p>
           </div>
 
@@ -224,7 +255,7 @@ export default async function InternalDashboardPage() {
                 <li key={lead.id} className="rounded-lg border border-red-100 bg-red-50 px-3 py-2">
                   <p className="font-medium text-red-900">{lead.customer_name}</p>
                   <p className="text-xs text-red-800">
-                    {lead.city} · {lead.service_type} · {statusLabels[lead.status]}
+                    {lead.city} · {lead.service_type} · {resolveStatusLabel(lead.status)}
                   </p>
                 </li>
               ))}
@@ -291,7 +322,7 @@ export default async function InternalDashboardPage() {
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                       <p className="font-medium text-slate-800">{snapshot.lead.customer_name}</p>
                       <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-700">
-                        {statusLabels[snapshot.lead.status]}
+                        {resolveStatusLabel(snapshot.lead.status)}
                       </span>
                     </div>
                     <p className="text-sm text-slate-500">
