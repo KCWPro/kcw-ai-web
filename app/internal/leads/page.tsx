@@ -163,6 +163,9 @@ export default function InternalLeadsPage() {
   }, []);
 
   const filteredLeads = useMemo(() => {
+    const hasPinnedDrillDownIds = drillDownIds !== null;
+    const matchesPinnedIds = (leadId: string) => !hasPinnedDrillDownIds || drillDownIds.has(leadId);
+
     return leads.filter((lead) => {
       const q = search.toLowerCase();
       const matchSearch =
@@ -178,28 +181,28 @@ export default function InternalLeadsPage() {
         (drillDownMode === "created_today" && createdAtKey === todayKey) ||
         (drillDownMode === "urgent" && lead.urgency === "high") ||
         (drillDownMode === "needs_review" &&
-          ((drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
         (drillDownMode === "follow_up_available" &&
-          ((followUpScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((followUpScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
         (drillDownMode === "estimate_available" &&
-          ((estimateScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((estimateScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
       const matchQueueFilter =
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
         (queueFilter === "urgent" && lead.urgency === "high") ||
         (queueFilter === "needs_review" &&
-          ((drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
         (queueFilter === "follow_up_available" &&
-          ((followUpScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((followUpScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
         (queueFilter === "estimate_available" &&
-          ((estimateScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+          ((estimateScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
             (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
-      const matchDrillDownIds = drillDownIds === null || drillDownIds.has(lead.id);
+      const matchDrillDownIds = matchesPinnedIds(lead.id);
 
       return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
     });

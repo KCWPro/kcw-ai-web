@@ -206,7 +206,7 @@ export default async function InternalDashboardPage() {
   const needsIntakeCompletionCount = leadSnapshots.filter(
     (snapshot) => snapshot.continuityState === "needs_intake_completion",
   ).length;
-  const needsReviewCount = leadSnapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length;
+  const needsReviewOnlyCount = leadSnapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length;
 
   const followUpAvailableSnapshots = leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot));
   const followUpAvailableCount = followUpAvailableSnapshots.length;
@@ -345,7 +345,8 @@ export default async function InternalDashboardPage() {
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Decision-surface preview: {needsReviewCount} needs_review · {needsIntakeCompletionCount} needs_intake_completion · {blockedCount} blocked.
+              Runtime snapshot queue: {needsReviewLeads.length} total · {needsReviewOnlyCount} needs_review ·{" "}
+              {needsIntakeCompletionCount} needs_intake_completion · {blockedCount} blocked.
             </p>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {needsReviewLeads.slice(0, 3).map((snapshot) => (
