@@ -82,33 +82,32 @@ export default function HomePage() {
             KCW Construction & Plumbing Inc.
           </p>
           <h1 className="mt-5 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
-            Licensed Plumbing & Construction Services You Can Trust
+            Trusted Plumbing Help in Greater Los Angeles
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-6 text-blue-100 sm:text-base md:text-lg">
-            Serving Los Angeles area homeowners and businesses with water heater, leak repair, drain cleaning, gas
-            line, repipe, and remodel plumbing services.
+            Licensed and insured support for water heaters, leaks, drains, gas lines, repipes, and remodel plumbing.
           </p>
           <p className="mt-4 text-sm font-medium text-slate-200">
             Licensed • Insured • Fast Response • English / 中文 / 粵語 / 台山話
           </p>
 
           <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-            <Link
-              href="/request-service"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-            >
-              Request Service
-            </Link>
             <a
               href="tel:6265037777"
-              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-amber-300 px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-amber-200"
             >
               Call 626-503-7777
             </a>
+            <Link
+              href="/request-service"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Request Service Online
+            </Link>
           </div>
 
           <p className="mt-4 max-w-2xl text-sm text-blue-100">
-            Tell us what&apos;s happening and our team will review your request and follow up as soon as possible.
+            Call now for urgent issues, or submit the Request Service form in about 1-2 minutes.
           </p>
 
           <div className="mt-6 max-w-3xl rounded-xl border border-amber-300/50 bg-amber-200/10 px-4 py-3 text-xs text-amber-100 sm:text-sm">
@@ -121,7 +120,7 @@ export default function HomePage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold tracking-tight">Why Customers Feel Comfortable Contacting KCW</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Why Customers Trust KCW</h2>
           <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {trustCards.map((card) => (
               <article key={card.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
@@ -133,14 +132,14 @@ export default function HomePage() {
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold tracking-tight">Core Plumbing & Construction Services</h2>
+          <h2 className="text-2xl font-semibold tracking-tight">Core Services</h2>
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
             {serviceCards.map((service) => (
               <article key={service.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
                 <h3 className="text-lg font-semibold text-slate-900">{service.title}</h3>
                 <p className="mt-3 text-sm leading-6 text-slate-600">{service.description}</p>
                 <Link href="/request-service" className="mt-5 inline-flex text-sm font-semibold text-blue-700 hover:text-blue-800">
-                  Request Service
+                  Request Service →
                 </Link>
               </article>
             ))}
@@ -177,8 +176,8 @@ export default function HomePage() {
         <section className="mt-12 rounded-3xl border border-blue-200 bg-gradient-to-r from-blue-900 to-slate-900 px-6 py-10 text-white shadow-xl md:px-10 md:py-12">
           <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Need Plumbing or Construction Help?</h2>
           <p className="mt-3 max-w-2xl text-sm text-blue-100 sm:text-base">
-            Call us now or send a service request online. Tell us what&apos;s happening and our team will review your
-            request as soon as possible.
+            Call us now or send a Request Service form online. We review every request and follow up as soon as
+            possible.
           </p>
           <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
             <a
@@ -191,7 +190,7 @@ export default function HomePage() {
               href="/request-service"
               className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
             >
-              Request Service
+              Request Service Online
             </Link>
           </div>
           <p className="mt-4 text-sm text-blue-100">If your issue is urgent, calling us directly is the fastest option.</p>
