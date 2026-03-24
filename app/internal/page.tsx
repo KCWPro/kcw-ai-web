@@ -10,8 +10,9 @@ import { buildInternalWorkflowContinuity } from "@/lib/internalWorkflowContinuit
 import { buildInternalWorkflowDecisionSurface } from "@/lib/internalWorkflowDecisionSurface";
 import { readInternalLeadsFromGoogleSheet } from "@/lib/internalLeadsStore";
 
-const cardBase =
-  "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md";
+const cardBase = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md";
+const cardInteractive =
+  "group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -205,18 +206,22 @@ export default async function InternalDashboardPage() {
     {
       label: "New Today",
       value: leadsToday.length,
+      href: "/internal/leads?filter=new_today",
     },
     {
       label: "Urgent Leads",
       value: urgentLeads.length,
+      href: "/internal/leads?filter=urgent",
     },
     {
       label: "Needs Review",
       value: needsReviewLeads.length,
+      href: "/internal/leads?filter=needs_review",
     },
     {
       label: "Follow-up Suggestions",
       value: `${followUpAvailableCount}/${leadSnapshots.length}`,
+      href: "/internal/leads?filter=follow_up_available",
     },
   ];
 
@@ -251,10 +256,13 @@ export default async function InternalDashboardPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
-            <div key={item.label} className={cardBase}>
-              <p className="text-sm font-medium text-slate-500">{item.label}</p>
+            <Link key={item.label} href={item.href} className={cardInteractive}>
+              <p className="text-sm font-medium text-slate-500 group-hover:text-slate-700">{item.label}</p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{item.value}</p>
-            </div>
+              <p className="mt-3 text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4">
+                View matching leads
+              </p>
+            </Link>
           ))}
         </section>
 
@@ -270,7 +278,15 @@ export default async function InternalDashboardPage() {
           </div>
 
           <div className={cardBase}>
-            <h2 className="text-lg font-semibold">Urgent / High-priority Summary</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Urgent / High-priority Summary</h2>
+              <Link
+                href="/internal/leads?filter=urgent"
+                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+              >
+                View leads
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               {urgentLeads.length} urgent leads currently visible for review. This is a suggestion-only prioritization signal.
             </p>
@@ -288,7 +304,15 @@ export default async function InternalDashboardPage() {
           </div>
 
           <div className={cardBase}>
-            <h2 className="text-lg font-semibold">Needs Review Summary</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Needs Review Summary</h2>
+              <Link
+                href="/internal/leads?filter=needs_review"
+                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+              >
+                Inspect queue
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               Decision-surface preview: {needsReviewCount} needs_review · {needsIntakeCompletionCount} needs_intake_completion · {blockedCount} blocked.
             </p>
@@ -307,7 +331,15 @@ export default async function InternalDashboardPage() {
 
         <section className="grid gap-5 lg:grid-cols-2">
           <div className={cardBase}>
-            <h2 className="text-lg font-semibold">Follow-up Suggestion Availability</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Follow-up Suggestion Availability</h2>
+              <Link
+                href="/internal/leads?filter=follow_up_available"
+                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+              >
+                View matching leads
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               Suggestion available: {followUpAvailableCount} · unavailable: {leadSnapshots.length - followUpAvailableCount}.
             </p>
@@ -317,7 +349,15 @@ export default async function InternalDashboardPage() {
           </div>
 
           <div className={cardBase}>
-            <h2 className="text-lg font-semibold">Estimate Draft Availability</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">Estimate Draft Availability</h2>
+              <Link
+                href="/internal/leads?filter=estimate_available"
+                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+              >
+                View matching leads
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               Estimate draft suggestion available: {estimateAvailableCount} · unavailable: {leadSnapshots.length - estimateAvailableCount}.
             </p>
@@ -331,7 +371,15 @@ export default async function InternalDashboardPage() {
           <div className="space-y-4 lg:col-span-3">
             <div className={`${cardBase} p-0`}>
               <div className="border-b border-slate-200 px-5 py-4">
-                <h2 className="text-lg font-semibold">Recent Leads Next-step Preview</h2>
+                <div className="flex items-center justify-between gap-3">
+                  <h2 className="text-lg font-semibold">Recent Leads Next-step Preview</h2>
+                  <Link
+                    href="/internal/leads"
+                    className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+                  >
+                    View leads
+                  </Link>
+                </div>
                 <p className="mt-1 text-xs text-slate-500">
                   Suggestion-only next step preview for operator review. No automatic execution or status advancement.
                 </p>
