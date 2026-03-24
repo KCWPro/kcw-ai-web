@@ -37,6 +37,8 @@ const queueFilterLabels: Record<QueueFilter, string> = {
   estimate_available: "Estimate draft queue",
 };
 
+type DrillDownMode = "all" | "created_today" | "urgent" | "needs_review" | "follow_up_available" | "estimate_available";
+
 export default function InternalLeadsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
@@ -44,8 +46,10 @@ export default function InternalLeadsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
+  const [drillDownMode, setDrillDownMode] = useState<DrillDownMode>("all");
   const [drillDownIds, setDrillDownIds] = useState<Set<string> | null>(null);
   const [followUpScope, setFollowUpScope] = useState<"available" | null>(null);
+  const [estimateScope, setEstimateScope] = useState<"available" | null>(null);
 
   async function loadLeads() {
     try {
@@ -81,7 +85,11 @@ export default function InternalLeadsPage() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const rawFilter = params.get("filter");
+    const rawCreated = params.get("created");
+    const rawUrgency = params.get("urgency");
+    const rawReview = params.get("review");
     const rawFollowUpScope = params.get("followup");
+    const rawEstimateScope = params.get("estimate");
     const rawIds = params.get("ids");
 
     if (rawFollowUpScope === "available") {
@@ -89,12 +97,43 @@ export default function InternalLeadsPage() {
     } else {
       setFollowUpScope(null);
     }
+    if (rawEstimateScope === "available") {
+      setEstimateScope("available");
+    } else {
+      setEstimateScope(null);
+    }
 
     const parsedIds = (rawIds || "")
       .split(",")
       .map((id) => id.trim())
       .filter((id) => id.length > 0);
     setDrillDownIds(parsedIds.length > 0 ? new Set(parsedIds) : null);
+
+    if (rawCreated === "today") {
+      setDrillDownMode("created_today");
+      setQueueFilter("new_today");
+      return;
+    }
+    if (rawUrgency === "urgent") {
+      setDrillDownMode("urgent");
+      setQueueFilter("urgent");
+      return;
+    }
+    if (rawReview === "1") {
+      setDrillDownMode("needs_review");
+      setQueueFilter("needs_review");
+      return;
+    }
+    if (rawFollowUpScope === "available") {
+      setDrillDownMode("follow_up_available");
+      setQueueFilter("follow_up_available");
+      return;
+    }
+    if (rawEstimateScope === "available") {
+      setDrillDownMode("estimate_available");
+      setQueueFilter("estimate_available");
+      return;
+    }
 
     if (
       rawFilter === "new_today" ||
@@ -104,9 +143,21 @@ export default function InternalLeadsPage() {
       rawFilter === "estimate_available"
     ) {
       setQueueFilter(rawFilter);
+      setDrillDownMode(
+        rawFilter === "new_today"
+          ? "created_today"
+          : rawFilter === "urgent"
+            ? "urgent"
+            : rawFilter === "needs_review"
+              ? "needs_review"
+              : rawFilter === "follow_up_available"
+                ? "follow_up_available"
+                : "estimate_available",
+      );
       return;
     }
     setQueueFilter("all");
+    setDrillDownMode("all");
   }, []);
 
   const filteredLeads = useMemo(() => {
@@ -120,6 +171,18 @@ export default function InternalLeadsPage() {
 
       const matchStatus = status === "all" || lead.status === status;
       const createdAtKey = lead.created_at?.slice(0, 10);
+      const matchDrillDownMode =
+        drillDownMode === "all" ||
+        (drillDownMode === "created_today" && createdAtKey === todayKey) ||
+        (drillDownMode === "urgent" && lead.urgency === "high") ||
+        (drillDownMode === "needs_review" &&
+          ((drillDownIds !== null && drillDownIds.has(lead.id)) || (drillDownIds === null && (lead.status === "new" || lead.status === "follow_up")))) ||
+        (drillDownMode === "follow_up_available" &&
+          ((followUpScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+            (followUpScope !== "available" && lead.status === "follow_up"))) ||
+        (drillDownMode === "estimate_available" &&
+          ((estimateScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+            (estimateScope !== "available" && lead.status === "quoted")));
       const matchQueueFilter =
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
@@ -131,9 +194,9 @@ export default function InternalLeadsPage() {
         (queueFilter === "estimate_available" && lead.status === "quoted");
       const matchDrillDownIds = drillDownIds === null || drillDownIds.has(lead.id);
 
-      return matchSearch && matchStatus && matchQueueFilter && matchDrillDownIds;
+      return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
     });
-  }, [drillDownIds, followUpScope, leads, queueFilter, search, status, todayKey]);
+  }, [drillDownIds, drillDownMode, estimateScope, followUpScope, leads, queueFilter, search, status, todayKey]);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -176,9 +239,10 @@ export default function InternalLeadsPage() {
           <p>
             Active dashboard filter: <span className="font-semibold text-slate-900">{queueFilterLabels[queueFilter]}</span>
           </p>
-          {followUpScope === "available" && drillDownIds !== null ? (
+          {(followUpScope === "available" || estimateScope === "available" || drillDownMode === "needs_review") &&
+          drillDownIds !== null ? (
             <p className="mt-1 text-xs text-slate-600">
-              Follow-up availability drill-down is pinned to dashboard runtime snapshot IDs ({drillDownIds.size}).
+              Dashboard drill-down is pinned to runtime snapshot IDs ({drillDownIds.size}) to keep counts aligned.
             </p>
           ) : null}
           {queueFilter !== "all" ? (

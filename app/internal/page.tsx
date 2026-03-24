@@ -201,8 +201,13 @@ export default async function InternalDashboardPage() {
 
   const followUpAvailableCount = leadSnapshots.filter((snapshot) => snapshot.followUpAvailability === "available").length;
   const estimateAvailableCount = leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available").length;
+  const needsReviewIds = needsReviewLeads.map((snapshot) => snapshot.lead.id).join(",");
   const followUpAvailableIds = leadSnapshots
     .filter((snapshot) => snapshot.followUpAvailability === "available")
+    .map((snapshot) => snapshot.lead.id)
+    .join(",");
+  const estimateAvailableIds = leadSnapshots
+    .filter((snapshot) => snapshot.estimateAvailability === "available")
     .map((snapshot) => snapshot.lead.id)
     .join(",");
 
@@ -210,22 +215,22 @@ export default async function InternalDashboardPage() {
     {
       label: "New Today",
       value: leadsToday.length,
-      href: "/internal/leads?filter=new_today",
+      href: "/internal/leads?created=today",
     },
     {
       label: "Urgent Leads",
       value: urgentLeads.length,
-      href: "/internal/leads?filter=urgent",
+      href: "/internal/leads?urgency=urgent",
     },
     {
       label: "Needs Review",
       value: needsReviewLeads.length,
-      href: "/internal/leads?filter=needs_review",
+      href: `/internal/leads?review=1&ids=${encodeURIComponent(needsReviewIds)}`,
     },
     {
       label: "Follow-up Suggestions",
       value: `${followUpAvailableCount}/${leadSnapshots.length}`,
-      href: `/internal/leads?filter=follow_up_available&followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`,
+      href: `/internal/leads?followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`,
     },
   ];
 
@@ -279,7 +284,15 @@ export default async function InternalDashboardPage() {
 
         <section className="grid gap-5 lg:grid-cols-3">
           <div className={cardBase}>
-            <h2 className="text-lg font-semibold">New Leads Today Summary</h2>
+            <div className="flex items-center justify-between gap-3">
+              <h2 className="text-lg font-semibold">New Leads Today Summary</h2>
+              <Link
+                href="/internal/leads?created=today"
+                className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+              >
+                View leads
+              </Link>
+            </div>
             <p className="mt-2 text-sm text-slate-600">
               {leadsToday.length} leads entered today ({todayKey}). Preview is read-only and for operator-reviewed triage.
             </p>
@@ -292,10 +305,10 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Urgent / High-priority Summary</h2>
               <Link
-                href="/internal/leads?filter=urgent"
+                href="/internal/leads?urgency=urgent"
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
-                View leads
+                Inspect queue
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
@@ -318,10 +331,10 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Needs Review Summary</h2>
               <Link
-                href="/internal/leads?filter=needs_review"
+                href={`/internal/leads?review=1&ids=${encodeURIComponent(needsReviewIds)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
-                Inspect queue
+                View matching leads
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
@@ -345,10 +358,10 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Follow-up Suggestion Availability</h2>
               <Link
-                href={`/internal/leads?filter=follow_up_available&followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`}
+                href={`/internal/leads?followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
-                View matching leads
+                Preview matching leads
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
@@ -363,10 +376,10 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Estimate Draft Availability</h2>
               <Link
-                href="/internal/leads?filter=estimate_available"
+                href={`/internal/leads?estimate=available&ids=${encodeURIComponent(estimateAvailableIds)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
-                View matching leads
+                Preview matching leads
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
