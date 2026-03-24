@@ -169,6 +169,11 @@ function InternalLeadsPageContent() {
     const hasExplicitPinnedIds = hasDrillDownIdsParam;
 
     return leads.filter((lead) => {
+      const matchDrillDownIds = matchesPinnedIds(lead.id);
+      if (hasExplicitPinnedIds) {
+        return matchDrillDownIds;
+      }
+
       const q = search.toLowerCase();
       const matchSearch =
         lead.customer_name.toLowerCase().includes(q) ||
@@ -187,14 +192,12 @@ function InternalLeadsPageContent() {
         (drillDownMode === "follow_up_available" && (followUpScope === "available" ? false : lead.status === "follow_up")) ||
         (drillDownMode === "estimate_available" && (estimateScope === "available" ? false : lead.status === "quoted"));
       const matchQueueFilter =
-        hasExplicitPinnedIds ||
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
         (queueFilter === "urgent" && lead.urgency === "high") ||
         (queueFilter === "needs_review" && (lead.status === "new" || lead.status === "follow_up")) ||
         (queueFilter === "follow_up_available" && (followUpScope === "available" ? false : lead.status === "follow_up")) ||
         (queueFilter === "estimate_available" && (estimateScope === "available" ? false : lead.status === "quoted"));
-      const matchDrillDownIds = matchesPinnedIds(lead.id);
 
       return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
     });

@@ -228,12 +228,7 @@ export default async function InternalDashboardPage() {
 
   const runtimeBuckets: Record<"needsReview" | "followUpAvailable" | "estimateAvailable", RuntimeDrillDownBucket> = {
     needsReview: toRuntimeDrillDownBucket(needsReviewLeads, (snapshots) => {
-      const blockedCount = snapshots.filter((snapshot) => snapshot.decisionStatus === "blocked").length;
-      const needsIntakeCompletionCount = snapshots.filter(
-        (snapshot) => snapshot.continuityState === "needs_intake_completion",
-      ).length;
-      const needsReviewOnlyCount = snapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length;
-      return `Runtime snapshot queue: ${snapshots.length} total · ${needsReviewOnlyCount} needs_review · ${needsIntakeCompletionCount} needs_intake_completion · ${blockedCount} blocked.`;
+      return `Runtime snapshot queue: ${snapshots.length} leads in a single Needs Review bucket.`;
     }),
     followUpAvailable: toRuntimeDrillDownBucket(
       leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot)),
@@ -243,6 +238,14 @@ export default async function InternalDashboardPage() {
       leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available"),
       (snapshots) => `Estimate draft suggestion available: ${snapshots.length} · unavailable: ${leadSnapshots.length - snapshots.length}.`,
     ),
+  };
+  const needsReviewBucket = runtimeBuckets.needsReview;
+  const needsReviewBreakdown = {
+    blocked: needsReviewBucket.snapshots.filter((snapshot) => snapshot.decisionStatus === "blocked").length,
+    needsReview: needsReviewBucket.snapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length,
+    needsIntakeCompletion: needsReviewBucket.snapshots.filter(
+      (snapshot) => snapshot.continuityState === "needs_intake_completion",
+    ).length,
   };
 
   const stats = [
@@ -258,8 +261,8 @@ export default async function InternalDashboardPage() {
     },
     {
       label: "Needs Review",
-      value: runtimeBuckets.needsReview.count,
-      href: `/internal/leads?review=1&ids=${encodeURIComponent(runtimeBuckets.needsReview.idsQuery)}`,
+      value: needsReviewBucket.count,
+      href: `/internal/leads?review=1&ids=${encodeURIComponent(needsReviewBucket.idsQuery)}`,
     },
     {
       label: "Follow-up Suggestions",
@@ -365,15 +368,19 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Needs Review Summary</h2>
               <Link
-                href={`/internal/leads?review=1&ids=${encodeURIComponent(runtimeBuckets.needsReview.idsQuery)}`}
+                href={`/internal/leads?review=1&ids=${encodeURIComponent(needsReviewBucket.idsQuery)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
                 View matching leads
               </Link>
             </div>
-            <p className="mt-2 text-sm text-slate-600">{runtimeBuckets.needsReview.summaryText}</p>
+            <p className="mt-2 text-sm text-slate-600">{needsReviewBucket.summaryText}</p>
+            <p className="mt-1 text-xs text-slate-500">
+              Breakdown (auxiliary only): {needsReviewBreakdown.needsReview} needs_review ·{" "}
+              {needsReviewBreakdown.needsIntakeCompletion} needs_intake_completion · {needsReviewBreakdown.blocked} blocked.
+            </p>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
-              {runtimeBuckets.needsReview.snapshots.slice(0, 3).map((snapshot) => (
+              {needsReviewBucket.snapshots.slice(0, 3).map((snapshot) => (
                 <li key={snapshot.lead.id} className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
                   <Link href={`/internal/leads/${snapshot.lead.id}`} className="font-medium text-amber-900 underline decoration-amber-300 underline-offset-2 hover:text-amber-700">
                     {snapshot.lead.customer_name}
