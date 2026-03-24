@@ -72,6 +72,10 @@ type RuntimeDrillDownBucket = {
   previewNames: string[];
 };
 
+function toStableLeadId(value: string) {
+  return value.trim();
+}
+
 function toDashboardLead(lead: Awaited<ReturnType<typeof readInternalLeadsFromGoogleSheet>>[number]): KcwLead {
   const status = (lead.status || "new") as LeadStatus;
   const source = (lead.source || "website") as KcwLead["source"];
@@ -190,6 +194,30 @@ function toRuntimeDrillDownBucket(
   };
 }
 
+function toNeedsReviewBucket(snapshots: LeadRuntimeSnapshot[]): RuntimeDrillDownBucket {
+  const firstSnapshotById = new Map<string, LeadRuntimeSnapshot>();
+
+  for (const snapshot of snapshots) {
+    const stableId = toStableLeadId(snapshot.lead.id);
+    if (stableId.length === 0 || firstSnapshotById.has(stableId)) {
+      continue;
+    }
+    firstSnapshotById.set(stableId, snapshot);
+  }
+
+  const scopedSnapshots = Array.from(firstSnapshotById.values());
+  const scopedIds = scopedSnapshots.map((snapshot) => snapshot.lead.id);
+
+  return {
+    snapshots: scopedSnapshots,
+    ids: scopedIds,
+    idsQuery: scopedIds.join(","),
+    count: scopedSnapshots.length,
+    summaryText: `Runtime snapshot queue: ${scopedSnapshots.length} leads in a single Needs Review bucket.`,
+    previewNames: scopedSnapshots.slice(0, 3).map((snapshot) => snapshot.lead.customer_name),
+  };
+}
+
 export default async function InternalDashboardPage() {
   noStore();
 
@@ -226,10 +254,9 @@ export default async function InternalDashboardPage() {
       return createdAtTime(b.lead.created_at) - createdAtTime(a.lead.created_at);
     });
 
-  const runtimeBuckets: Record<"needsReview" | "followUpAvailable" | "estimateAvailable", RuntimeDrillDownBucket> = {
-    needsReview: toRuntimeDrillDownBucket(needsReviewLeads, (snapshots) => {
-      return `Runtime snapshot queue: ${snapshots.length} leads in a single Needs Review bucket.`;
-    }),
+  const needsReviewBucket = toNeedsReviewBucket(needsReviewLeads);
+
+  const runtimeBuckets: Record<"followUpAvailable" | "estimateAvailable", RuntimeDrillDownBucket> = {
     followUpAvailable: toRuntimeDrillDownBucket(
       leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot)),
       (snapshots) => `Suggestion available: ${snapshots.length} · unavailable: ${leadSnapshots.length - snapshots.length}.`,
@@ -238,14 +265,6 @@ export default async function InternalDashboardPage() {
       leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available"),
       (snapshots) => `Estimate draft suggestion available: ${snapshots.length} · unavailable: ${leadSnapshots.length - snapshots.length}.`,
     ),
-  };
-  const needsReviewBucket = runtimeBuckets.needsReview;
-  const needsReviewBreakdown = {
-    blocked: needsReviewBucket.snapshots.filter((snapshot) => snapshot.decisionStatus === "blocked").length,
-    needsReview: needsReviewBucket.snapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length,
-    needsIntakeCompletion: needsReviewBucket.snapshots.filter(
-      (snapshot) => snapshot.continuityState === "needs_intake_completion",
-    ).length,
   };
 
   const stats = [
@@ -375,10 +394,6 @@ export default async function InternalDashboardPage() {
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">{needsReviewBucket.summaryText}</p>
-            <p className="mt-1 text-xs text-slate-500">
-              Breakdown (auxiliary only): {needsReviewBreakdown.needsReview} needs_review ·{" "}
-              {needsReviewBreakdown.needsIntakeCompletion} needs_intake_completion · {needsReviewBreakdown.blocked} blocked.
-            </p>
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {needsReviewBucket.snapshots.slice(0, 3).map((snapshot) => (
                 <li key={snapshot.lead.id} className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
