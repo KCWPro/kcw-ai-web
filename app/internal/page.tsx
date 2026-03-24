@@ -12,7 +12,7 @@ import { readInternalLeadsFromGoogleSheet } from "@/lib/internalLeadsStore";
 
 const cardBase = "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md";
 const cardInteractive =
-  "group block rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-slate-500";
+  "group relative rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-md focus-within:outline-none focus-within:ring-2 focus-within:ring-slate-500";
 
 export const dynamic = "force-dynamic";
 export const revalidate = 0;
@@ -256,13 +256,20 @@ export default async function InternalDashboardPage() {
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
-            <Link key={item.label} href={item.href} className={cardInteractive}>
+            <div key={item.label} className={cardInteractive}>
               <p className="text-sm font-medium text-slate-500 group-hover:text-slate-700">{item.label}</p>
               <p className="mt-3 text-3xl font-semibold text-slate-900">{item.value}</p>
               <p className="mt-3 text-sm font-medium text-slate-700 underline decoration-slate-300 underline-offset-4">
                 View matching leads
               </p>
-            </Link>
+              <Link
+                href={item.href}
+                className="absolute inset-0 rounded-2xl focus-visible:outline-none"
+                aria-label={`${item.label} drill-down`}
+              >
+                <span className="sr-only">{item.label} drill-down</span>
+              </Link>
+            </div>
           ))}
         </section>
 
