@@ -179,45 +179,21 @@ function InternalLeadsPageContent() {
       const matchStatus = status === "all" || lead.status === status;
       const createdAtKey = lead.created_at?.slice(0, 10);
       const matchDrillDownMode =
+        hasExplicitPinnedIds ||
         drillDownMode === "all" ||
         (drillDownMode === "created_today" && createdAtKey === todayKey) ||
         (drillDownMode === "urgent" && lead.urgency === "high") ||
-        (drillDownMode === "needs_review" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : lead.status === "new" || lead.status === "follow_up")) ||
-        (drillDownMode === "follow_up_available" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : followUpScope === "available"
-              ? false
-              : lead.status === "follow_up")) ||
-        (drillDownMode === "estimate_available" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : estimateScope === "available"
-              ? false
-              : lead.status === "quoted"));
+        (drillDownMode === "needs_review" && (lead.status === "new" || lead.status === "follow_up")) ||
+        (drillDownMode === "follow_up_available" && (followUpScope === "available" ? false : lead.status === "follow_up")) ||
+        (drillDownMode === "estimate_available" && (estimateScope === "available" ? false : lead.status === "quoted"));
       const matchQueueFilter =
+        hasExplicitPinnedIds ||
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
         (queueFilter === "urgent" && lead.urgency === "high") ||
-        (queueFilter === "needs_review" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : lead.status === "new" || lead.status === "follow_up")) ||
-        (queueFilter === "follow_up_available" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : followUpScope === "available"
-              ? false
-              : lead.status === "follow_up")) ||
-        (queueFilter === "estimate_available" &&
-          (hasExplicitPinnedIds
-            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
-            : estimateScope === "available"
-              ? false
-              : lead.status === "quoted"));
+        (queueFilter === "needs_review" && (lead.status === "new" || lead.status === "follow_up")) ||
+        (queueFilter === "follow_up_available" && (followUpScope === "available" ? false : lead.status === "follow_up")) ||
+        (queueFilter === "estimate_available" && (estimateScope === "available" ? false : lead.status === "quoted"));
       const matchDrillDownIds = matchesPinnedIds(lead.id);
 
       return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
