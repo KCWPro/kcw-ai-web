@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { unstable_noStore as noStore } from "next/cache";
 import { buildIntakeAnalysis, type IntakeAnalysisResult } from "@/lib/aiIntakeAnalysis";
 import { buildInternalActionHandoff } from "@/lib/internalActionHandoff";
 import { buildInternalEstimateDraft } from "@/lib/internalEstimateDraft";
@@ -11,6 +12,9 @@ import { readInternalLeadsFromGoogleSheet } from "@/lib/internalLeadsStore";
 
 const cardBase =
   "rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:shadow-md";
+
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
 
 function toDateKey(value: string) {
   const normalized = value.trim().replace(" ", "T");
@@ -153,7 +157,17 @@ async function buildLeadRuntimeSnapshot(lead: KcwLead): Promise<LeadRuntimeSnaps
 }
 
 export default async function InternalDashboardPage() {
-  const internalLeads = await readInternalLeadsFromGoogleSheet();
+  noStore();
+
+  let sourceWarning: string | null = null;
+  let internalLeads: Awaited<ReturnType<typeof readInternalLeadsFromGoogleSheet>> = [];
+
+  try {
+    internalLeads = await readInternalLeadsFromGoogleSheet();
+  } catch (error) {
+    sourceWarning = error instanceof Error ? error.message : "Failed to read Google Sheet leads at runtime.";
+  }
+
   const sortedLeads = internalLeads
     .map((lead) => toDashboardLead(lead))
     .sort((a, b) => createdAtTime(b.created_at) - createdAtTime(a.created_at));
@@ -224,6 +238,16 @@ export default async function InternalDashboardPage() {
             represent automated execution, workflow advancement, or external write authority.
           </p>
         </section>
+
+        {sourceWarning ? (
+          <section className="rounded-2xl border border-rose-200 bg-rose-50 px-5 py-4 text-sm text-rose-900 shadow-sm">
+            <p className="font-semibold uppercase tracking-wide">Runtime Data Warning</p>
+            <p className="mt-1">
+              Google Sheets live read is currently unavailable. Dashboard shell is rendered in read-only Beta mode.
+            </p>
+            <p className="mt-2 text-xs text-rose-800">{sourceWarning}</p>
+          </section>
+        ) : null}
 
         <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           {stats.map((item) => (
