@@ -1,225 +1,215 @@
-const trustItems = [
-  { label: "License", value: "#1129463" },
-  { label: "Phone", value: "626-503-7777", href: "tel:6265037777" },
-  { label: "Email", value: "kcwpro7777@gmail.com", href: "mailto:kcwpro7777@gmail.com" },
-  { label: "Service Area", value: "Greater Los Angeles" },
-];
+import Link from 'next/link';
 
-const services = [
+const trustCards = [
   {
-    title: "Plumbing Repairs",
+    title: 'Licensed Contractor',
     description:
-      "Fast diagnosis and reliable repair for leaks, fixtures, and everyday plumbing issues.",
+      'California licensed plumbing and construction service support for residential and commercial needs.',
   },
   {
-    title: "Water Line Installation",
+    title: 'Insured Service',
     description:
-      "Safe, code-conscious installation and replacement for residential and light commercial water lines.",
+      'Work handled with professionalism, clear communication, and proper job coordination.',
   },
   {
-    title: "Drain Cleaning",
+    title: 'Greater Los Angeles Service Area',
     description:
-      "Targeted clearing and preventive maintenance to restore flow and reduce recurring clogs.",
+      'Serving nearby homeowners, property owners, and businesses across the Los Angeles area.',
   },
   {
-    title: "Water Heater Installation",
-    description:
-      "Professional tank and tankless water heater installation with proper setup and testing.",
+    title: 'Multilingual Communication',
+    description: 'English, Mandarin, Cantonese, and Taishanese support available.',
   },
   {
-    title: "Gas Line Work",
+    title: 'Honest Recommendations',
     description:
-      "Careful gas line installation and repair performed with licensed, safety-first discipline.",
+      'Clear explanations and practical options based on the actual issue.',
   },
   {
-    title: "Remodeling / Construction",
+    title: 'Responsive Support',
     description:
-      "Integrated construction and plumbing support for renovation projects from rough-in to finish.",
+      'We aim to review requests promptly and help you understand the next step.',
   },
 ];
 
-const advantages = [
+const serviceCards = [
   {
-    icon: "🛡️",
-    title: "Licensed & Professional",
-    text: "California licensed team with disciplined, review-first execution.",
+    title: 'Water Heater Services',
+    description:
+      'Installation, replacement, and related plumbing work for residential and light commercial properties.',
   },
   {
-    icon: "⚡",
-    title: "Fast Response",
-    text: "Prompt scheduling and clear communication to keep your project moving.",
+    title: 'Leak Detection & Repair',
+    description:
+      'Help with visible leaks, hidden plumbing concerns, and practical repair recommendations.',
   },
   {
-    icon: "🌐",
-    title: "Bilingual Communication",
-    text: "English / 中文 service for smooth coordination from start to finish.",
+    title: 'Drain Cleaning & Unclogging',
+    description:
+      'Support for clogged drains and drainage issues with clear follow-up recommendations.',
   },
   {
-    icon: "📍",
-    title: "Trusted Local Service",
-    text: "Focused on Greater Los Angeles with practical local experience.",
+    title: 'Gas Line Repair & Installation',
+    description:
+      'Gas line related service support, repairs, testing coordination, and installation work as needed.',
   },
+  {
+    title: 'Repipe Services',
+    description:
+      'Water line replacement and repipe support for homes needing long-term plumbing improvement.',
+  },
+  {
+    title: 'Remodel Plumbing',
+    description:
+      'Plumbing work for kitchen, bathroom, and renovation-related projects.',
+  },
+];
+
+const chooseUsItems = [
+  'Licensed and insured',
+  'Fast response and clear next steps',
+  'Honest recommendations based on actual needs',
+  'Multilingual communication',
+  'Reliable support for plumbing and construction work',
 ];
 
 export default function HomePage() {
   return (
     <main className="min-h-screen bg-slate-50 text-slate-900">
-      <div className="mx-auto max-w-6xl px-6 py-8 md:py-12">
-        <section className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-6 py-14 text-white shadow-2xl md:px-12 md:py-20">
-          <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(to_right,rgba(148,163,184,0.12)_1px,transparent_1px),linear-gradient(to_bottom,rgba(148,163,184,0.12)_1px,transparent_1px)] bg-[size:40px_40px]" />
-          <div className="pointer-events-none absolute -right-20 -top-20 h-80 w-80 rounded-full bg-blue-400/20 blur-3xl" />
-          <div className="pointer-events-none absolute -bottom-24 -left-16 h-80 w-80 rounded-full bg-cyan-300/15 blur-3xl" />
+      <div className="mx-auto max-w-6xl px-5 py-8 sm:px-6 md:py-12">
+        <section className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-950 via-blue-950 to-slate-900 px-5 py-10 text-white shadow-xl sm:px-8 md:px-12 md:py-16">
+          <p className="inline-flex rounded-full border border-white/25 bg-white/10 px-3 py-1 text-xs font-semibold tracking-wide text-blue-100">
+            KCW Construction & Plumbing Inc.
+          </p>
+          <h1 className="mt-5 max-w-3xl text-3xl font-bold leading-tight tracking-tight sm:text-4xl md:text-5xl">
+            Licensed Plumbing & Construction Services You Can Trust
+          </h1>
+          <p className="mt-4 max-w-3xl text-sm leading-6 text-blue-100 sm:text-base md:text-lg">
+            Serving Los Angeles area homeowners and businesses with water heater, leak repair, drain cleaning, gas
+            line, repipe, and remodel plumbing services.
+          </p>
+          <p className="mt-4 text-sm font-medium text-slate-200">
+            Licensed • Insured • Fast Response • English / 中文 / 粵語 / 台山話
+          </p>
 
-          <div className="relative z-10 max-w-3xl">
-            <p className="mb-4 inline-flex rounded-full border border-white/25 bg-white/10 px-4 py-1 text-xs font-semibold tracking-wide text-blue-100">
-              Professional Plumbing & Construction · Southern California
+          <div className="mt-7 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <Link
+              href="/request-service"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+            >
+              Request Service
+            </Link>
+            <a
+              href="tel:6265037777"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Call 626-503-7777
+            </a>
+          </div>
+
+          <p className="mt-4 max-w-2xl text-sm text-blue-100">
+            Tell us what&apos;s happening and our team will review your request and follow up as soon as possible.
+          </p>
+
+          <div className="mt-6 max-w-3xl rounded-xl border border-amber-300/50 bg-amber-200/10 px-4 py-3 text-xs text-amber-100 sm:text-sm">
+            <p className="font-semibold uppercase tracking-wide text-amber-200">Controlled Internal Beta Notice</p>
+            <p className="mt-1">
+              Our internal workflow platform remains in controlled Beta. Customer service requests are actively
+              reviewed by our team.
             </p>
-
-            <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-6xl">
-              KCW Construction & Plumbing Inc.
-            </h1>
-
-            <p className="mt-5 text-lg text-blue-100 md:text-xl">
-              Licensed Plumbing & Construction Service
-            </p>
-            <p className="mt-1 text-base text-slate-200">
-              Bilingual Service (English / 中文)
-            </p>
-
-            <div className="mt-5 max-w-2xl rounded-xl border border-amber-300/50 bg-amber-200/10 px-4 py-3 text-sm text-amber-100">
-              <p className="font-semibold uppercase tracking-wide text-amber-200">Preview / Beta Notice</p>
-              <p className="mt-1">
-                This experience is currently in controlled testing for validation and is not a fully operational
-                production release.
-              </p>
-            </div>
-
-            <div className="mt-8 flex flex-wrap gap-3">
-              <a
-                href="tel:6265037777"
-                className="inline-flex items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 shadow-lg transition hover:bg-slate-100"
-              >
-                Call Now
-              </a>
-              <a
-                href="https://app.kcwpro.com"
-                className="inline-flex items-center justify-center rounded-xl border border-white/40 bg-white/10 px-6 py-3 text-sm font-semibold text-white backdrop-blur transition hover:bg-white/20"
-              >
-                Get Free Quote
-              </a>
-            </div>
           </div>
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-            Company Trust
-          </h2>
-          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {trustItems.map((item) => (
-              <article
-                key={item.label}
-                className="flex min-h-[118px] flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm"
-              >
-                <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
-                  {item.label}
-                </p>
-                {item.href ? (
-                  <a
-                    href={item.href}
-                    className="mt-2 block text-lg font-semibold leading-snug text-slate-900 break-keep whitespace-nowrap hover:text-blue-700"
-                  >
-                    {item.value}
-                  </a>
-                ) : (
-                  <p className="mt-2 text-lg font-semibold leading-snug text-slate-900 break-keep">
-                    {item.value}
-                  </p>
-                )}
+          <h2 className="text-2xl font-semibold tracking-tight">Why Customers Feel Comfortable Contacting KCW</h2>
+          <div className="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {trustCards.map((card) => (
+              <article key={card.title} className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+                <h3 className="text-base font-semibold text-slate-900">{card.title}</h3>
+                <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
               </article>
             ))}
           </div>
         </section>
 
         <section className="mt-12">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-            Services
-          </h2>
-          <div className="mt-5 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-            {services.map((service) => (
-              <article
-                key={service.title}
-                className="flex h-full min-h-[188px] flex-col rounded-2xl border border-slate-200 bg-white p-6 shadow-sm transition duration-200 hover:-translate-y-px hover:shadow"
-              >
-                <h3 className="text-lg font-semibold leading-snug text-slate-900">
-                  {service.title}
-                </h3>
-                <p className="mt-3 text-sm leading-6 text-slate-600">
-                  {service.description}
-                </p>
+          <h2 className="text-2xl font-semibold tracking-tight">Core Plumbing & Construction Services</h2>
+          <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {serviceCards.map((service) => (
+              <article key={service.title} className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-900">{service.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-600">{service.description}</p>
+                <Link href="/request-service" className="mt-5 inline-flex text-sm font-semibold text-blue-700 hover:text-blue-800">
+                  Request Service
+                </Link>
               </article>
             ))}
           </div>
         </section>
 
         <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-          <h2 className="text-2xl font-semibold tracking-tight text-slate-900">
-            Why Choose KCW
-          </h2>
-          <div className="mt-6 grid gap-4 md:grid-cols-2">
-            {advantages.map((item) => (
-              <article
-                key={item.title}
-                className="rounded-2xl border border-slate-200 bg-slate-50/80 p-5"
-              >
-                <div className="flex items-start gap-3 text-left">
-                  <span className="mt-0.5 text-2xl" aria-hidden>
-                    {item.icon}
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-base font-semibold leading-snug text-slate-900">
-                      {item.title}
-                    </h3>
-                    <p className="mt-2 text-sm leading-6 text-slate-600">{item.text}</p>
-                  </div>
-                </div>
-              </article>
+          <h2 className="text-2xl font-semibold tracking-tight">Why Homeowners and Property Owners Choose KCW</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            We focus on clear communication, practical solutions, and a professional customer experience from the
+            first contact to the next step.
+          </p>
+          <ul className="mt-5 grid gap-3 text-sm text-slate-700 sm:grid-cols-2">
+            {chooseUsItems.map((item) => (
+              <li key={item} className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                {item}
+              </li>
             ))}
-          </div>
+          </ul>
+        </section>
+
+        <section className="mt-12 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+          <h2 className="text-2xl font-semibold tracking-tight">Serving Greater Los Angeles Area</h2>
+          <p className="mt-3 max-w-3xl text-sm leading-6 text-slate-600">
+            We provide plumbing and construction service support for customers across the Greater Los Angeles area and
+            nearby communities.
+          </p>
+          <p className="mt-2 text-sm text-slate-600">
+            If you are unsure whether your property is within our service area, contact us and we&apos;ll help confirm the
+            next step.
+          </p>
         </section>
 
         <section className="mt-12 rounded-3xl border border-blue-200 bg-gradient-to-r from-blue-900 to-slate-900 px-6 py-10 text-white shadow-xl md:px-10 md:py-12">
-          <h2 className="text-3xl font-semibold tracking-tight">
-            Ready to start your project?
-          </h2>
-          <p className="mt-3 max-w-2xl text-base text-blue-100 md:text-lg">
-            Call KCW today for fast, licensed service in Greater Los Angeles.
+          <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Need Plumbing or Construction Help?</h2>
+          <p className="mt-3 max-w-2xl text-sm text-blue-100 sm:text-base">
+            Call us now or send a service request online. Tell us what&apos;s happening and our team will review your
+            request as soon as possible.
           </p>
-          <a
-            href="tel:6265037777"
-            className="mt-7 inline-flex items-center justify-center rounded-xl bg-white px-7 py-3.5 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
-          >
-            Call Now
-          </a>
+          <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+            <a
+              href="tel:6265037777"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl bg-white px-6 py-3 text-sm font-semibold text-slate-900 transition hover:bg-slate-100"
+            >
+              Call 626-503-7777
+            </a>
+            <Link
+              href="/request-service"
+              className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/45 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20"
+            >
+              Request Service
+            </Link>
+          </div>
+          <p className="mt-4 text-sm text-blue-100">If your issue is urgent, calling us directly is the fastest option.</p>
         </section>
       </div>
 
       <footer className="border-t border-slate-200 bg-white">
-        <div className="mx-auto grid max-w-6xl grid-cols-1 gap-x-8 gap-y-2 px-6 py-8 text-sm text-slate-600 sm:grid-cols-2 lg:grid-cols-5 lg:items-center">
-          <p className="font-semibold text-slate-900">
-            KCW Construction & Plumbing Inc.
-          </p>
-          <p>开诚建筑管道工程公司</p>
+        <div className="mx-auto grid max-w-6xl gap-2 px-5 py-8 text-sm text-slate-600 sm:grid-cols-2 md:px-6 lg:grid-cols-3">
+          <p className="font-semibold text-slate-900">KCW Construction & Plumbing Inc.</p>
           <p>License #1129463</p>
-          <a href="tel:6265037777" className="whitespace-nowrap hover:text-blue-700">
+          <a href="tel:6265037777" className="hover:text-blue-700">
             626-503-7777
           </a>
-          <a
-            href="mailto:kcwpro7777@gmail.com"
-            className="break-keep whitespace-nowrap hover:text-blue-700"
-          >
-            kcwpro7777@gmail.com
-          </a>
+          <Link href="/request-service" className="hover:text-blue-700">
+            Request Service
+          </Link>
+          <p>English / 中文 / 粵語 / 台山話</p>
+          <p>© {new Date().getFullYear()} KCW Construction & Plumbing Inc.</p>
         </div>
       </footer>
     </main>
