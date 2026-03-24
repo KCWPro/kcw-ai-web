@@ -97,21 +97,24 @@ export default function RequestServicePage() {
             <>
               <h1 className="text-3xl font-semibold tracking-tight">Request Service</h1>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Tell us a few details about your plumbing or construction issue. We&apos;ll review your request and follow
-                up as soon as possible.
+                Share the essentials below. Our team will review and follow up as soon as possible.
               </p>
-              <p className="mt-2 text-sm text-slate-600">
-                If your issue is urgent, please call us directly at{' '}
-                <a href="tel:6265037777" className="font-semibold text-blue-700 hover:text-blue-800">
+              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                Urgent issue? Call{' '}
+                <a href="tel:6265037777" className="font-semibold text-amber-800 underline hover:text-amber-900">
                   626-503-7777
                 </a>
                 .
               </p>
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-sm font-semibold text-slate-900">Step 1 · Required Details</p>
+                  <p className="mt-1 text-xs text-slate-600">This section is the only part needed to submit.</p>
+                </div>
                 <div className="grid gap-4 sm:grid-cols-2">
                   <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Full Name
+                    Full Name *
                     <input
                       required
                       value={form.customer_name}
@@ -121,7 +124,7 @@ export default function RequestServicePage() {
                   </label>
 
                   <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Phone Number
+                    Phone Number *
                     <input
                       required
                       value={form.phone}
@@ -131,7 +134,7 @@ export default function RequestServicePage() {
                   </label>
 
                   <label className="space-y-2 text-sm font-medium text-slate-800">
-                    City
+                    City *
                     <input
                       required
                       value={form.city}
@@ -141,7 +144,7 @@ export default function RequestServicePage() {
                   </label>
 
                   <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Service Type
+                    Service Type *
                     <select
                       required
                       value={form.service_type}
@@ -174,7 +177,7 @@ export default function RequestServicePage() {
                 </label>
 
                 <label className="space-y-2 text-sm font-medium text-slate-800">
-                  Describe the problem
+                  Describe the problem *
                   <p className="text-xs font-normal leading-5 text-slate-500">
                     Please tell us what is happening and any details that may help us understand the issue.
                   </p>
@@ -187,8 +190,9 @@ export default function RequestServicePage() {
                   />
                 </label>
 
-                <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4 sm:p-5">
-                  <h2 className="text-base font-semibold text-slate-900">Optional Details</h2>
+                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 sm:p-5">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Optional Details (can skip)</h2>
+                  <p className="mt-1 text-xs text-slate-500">Add only if helpful. Your request can be submitted without these fields.</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2 text-sm font-medium text-slate-700">
                       Property Type (optional)
@@ -270,10 +274,10 @@ export default function RequestServicePage() {
             </>
           ) : (
             <div className="rounded-2xl border border-green-200 bg-green-50 p-6 sm:p-8">
-              <h2 className="text-2xl font-semibold text-slate-900">Your request has been received.</h2>
+              <h2 className="text-2xl font-semibold text-slate-900">Your request is in. A KCW team member will follow up soon.</h2>
               <p className="mt-3 text-sm leading-6 text-slate-700 sm:text-base">
-                Thank you for contacting KCW Construction & Plumbing. Our team will review your request and follow up
-                as soon as possible.
+                Thank you for contacting KCW Construction & Plumbing. We&apos;ll review your details and contact you with
+                next steps.
               </p>
               <p className="mt-2 text-sm text-slate-700">
                 If your issue is urgent, please call us directly at{' '}
@@ -283,6 +287,12 @@ export default function RequestServicePage() {
                 .
               </p>
               <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                <a
+                  href="tel:6265037777"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+                >
+                  Call 626-503-7777
+                </a>
                 <Link
                   href="/"
                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100"
@@ -292,7 +302,7 @@ export default function RequestServicePage() {
                 <button
                   type="button"
                   onClick={() => setSuccess(false)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100"
                 >
                   Submit Another Request
                 </button>
