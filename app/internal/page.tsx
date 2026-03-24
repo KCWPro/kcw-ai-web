@@ -179,6 +179,18 @@ function hasFollowUpSuggestionAvailable(snapshot: LeadRuntimeSnapshot) {
   return snapshot.followUpAvailability === "available" && isFollowUpEligibleStatus(snapshot.lead.status);
 }
 
+function isActiveReviewLead(snapshot: LeadRuntimeSnapshot) {
+  if (!isFollowUpEligibleStatus(snapshot.lead.status)) {
+    return false;
+  }
+
+  return (
+    snapshot.decisionStatus === "blocked" ||
+    snapshot.decisionStatus === "needs_review" ||
+    snapshot.continuityState === "needs_intake_completion"
+  );
+}
+
 function toRuntimeDrillDownBucket(
   snapshots: LeadRuntimeSnapshot[],
   summaryBuilder: (snapshots: LeadRuntimeSnapshot[]) => string,
@@ -213,7 +225,7 @@ function toNeedsReviewBucket(snapshots: LeadRuntimeSnapshot[]): RuntimeDrillDown
     ids: scopedIds,
     idsQuery: scopedIds.join(","),
     count: scopedSnapshots.length,
-    summaryText: `Runtime snapshot queue: ${scopedSnapshots.length} leads in a single Needs Review bucket.`,
+    summaryText: `Active review queue: ${scopedSnapshots.length} leads still pending manual review (excludes scheduled/completed/archived).`,
     previewNames: scopedSnapshots.slice(0, 3).map((snapshot) => snapshot.lead.customer_name),
   };
 }
@@ -241,12 +253,7 @@ export default async function InternalDashboardPage() {
   const urgentLeads = sortedLeads.filter((lead) => lead.urgency === "high");
 
   const needsReviewLeads = leadSnapshots
-    .filter(
-      (snapshot) =>
-        snapshot.decisionStatus === "blocked" ||
-        snapshot.decisionStatus === "needs_review" ||
-        snapshot.continuityState === "needs_intake_completion",
-    )
+    .filter((snapshot) => isActiveReviewLead(snapshot))
     .sort((a, b) => {
       const priorityA = a.decisionStatus === "blocked" ? 2 : a.decisionStatus === "needs_review" ? 1 : 0;
       const priorityB = b.decisionStatus === "blocked" ? 2 : b.decisionStatus === "needs_review" ? 1 : 0;
