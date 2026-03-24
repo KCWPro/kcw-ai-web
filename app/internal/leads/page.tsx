@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { LeadStatus, statusLabels } from "@/lib/internalLeads";
 
@@ -27,6 +28,7 @@ const statusOptions: Array<{ label: string; value: "all" | LeadStatus }> = [
 ];
 
 export default function InternalLeadsPage() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
   const [leads, setLeads] = useState<InternalLeadRow[]>([]);
@@ -62,7 +64,37 @@ export default function InternalLeadsPage() {
     return () => clearInterval(intervalId);
   }, []);
 
+  useEffect(() => {
+    const queryStatus = searchParams.get("status");
+    const querySearch = searchParams.get("q");
+    if (queryStatus && (queryStatus === "all" || statusOptions.some((option) => option.value === queryStatus))) {
+      setStatus(queryStatus as "all" | LeadStatus);
+    }
+    if (querySearch) {
+      setSearch(querySearch);
+    }
+  }, [searchParams]);
+
   const filteredLeads = useMemo(() => {
+    const createdFilter = searchParams.get("created");
+    const urgencyFilter = searchParams.get("urgency");
+    const reviewFilter = searchParams.get("review");
+    const followupFilter = searchParams.get("followup");
+    const estimateFilter = searchParams.get("estimate");
+    const idsFilter = searchParams.get("ids");
+    const matchedIds = new Set((idsFilter || "").split(",").map((id) => id.trim()).filter(Boolean));
+    const todayKey = new Date().toISOString().slice(0, 10);
+
+    const toDateKey = (value?: string) => {
+      if (!value) return "";
+      const normalized = value.trim().replace(" ", "T");
+      const parsed = new Date(normalized);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.toISOString().slice(0, 10);
+      }
+      return value.slice(0, 10);
+    };
+
     return leads.filter((lead) => {
       const q = search.toLowerCase();
       const matchSearch =
@@ -72,9 +104,26 @@ export default function InternalLeadsPage() {
         lead.service_type.toLowerCase().includes(q);
 
       const matchStatus = status === "all" || lead.status === status;
-      return matchSearch && matchStatus;
+      const matchCreated = createdFilter !== "today" || toDateKey(lead.created_at) === todayKey;
+      const matchUrgency = urgencyFilter !== "urgent" || lead.urgency === "high";
+      const matchIds = matchedIds.size === 0 || matchedIds.has(lead.id);
+      const matchReview = reviewFilter !== "1" || matchIds;
+      const matchFollowup = followupFilter !== "available" || matchIds;
+      const matchEstimate = estimateFilter !== "available" || matchIds;
+
+      return matchSearch && matchStatus && matchCreated && matchUrgency && matchReview && matchFollowup && matchEstimate;
     });
-  }, [leads, search, status]);
+  }, [leads, search, status, searchParams]);
+
+  const activeFilters = useMemo(() => {
+    const labels: string[] = [];
+    if (searchParams.get("created") === "today") labels.push("created=today");
+    if (searchParams.get("urgency") === "urgent") labels.push("urgency=urgent");
+    if (searchParams.get("review") === "1") labels.push("review=1");
+    if (searchParams.get("followup") === "available") labels.push("followup=available");
+    if (searchParams.get("estimate") === "available") labels.push("estimate=available");
+    return labels;
+  }, [searchParams]);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -82,6 +131,11 @@ export default function InternalLeadsPage() {
         <header className="rounded-2xl bg-white px-6 py-5 shadow-sm">
           <h1 className="text-2xl font-semibold">Leads Queue</h1>
           <p className="mt-1 text-sm text-slate-500">Live leads from intake → internal operations workflow.</p>
+          {activeFilters.length > 0 ? (
+            <p className="mt-2 text-xs text-slate-500">
+              Preview filter: {activeFilters.join(" · ")} (suggestion-only queue inspection)
+            </p>
+          ) : null}
         </header>
 
         <section className="grid gap-3 rounded-2xl bg-white p-4 shadow-sm sm:grid-cols-2">
