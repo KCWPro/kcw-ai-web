@@ -26,12 +26,24 @@ const statusOptions: Array<{ label: string; value: "all" | LeadStatus }> = [
   { label: "Archived", value: "archived" },
 ];
 
+type QueueFilter = "all" | "new_today" | "urgent" | "needs_review" | "follow_up_available" | "estimate_available";
+
+const queueFilterLabels: Record<QueueFilter, string> = {
+  all: "All leads",
+  new_today: "New today",
+  urgent: "Urgent leads",
+  needs_review: "Needs review queue",
+  follow_up_available: "Follow-up suggestion queue",
+  estimate_available: "Estimate draft queue",
+};
+
 export default function InternalLeadsPage() {
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
   const [leads, setLeads] = useState<InternalLeadRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
 
   async function loadLeads() {
     try {
@@ -62,6 +74,23 @@ export default function InternalLeadsPage() {
     return () => clearInterval(intervalId);
   }, []);
 
+  const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
+
+  useEffect(() => {
+    const rawFilter = new URLSearchParams(window.location.search).get("filter");
+    if (
+      rawFilter === "new_today" ||
+      rawFilter === "urgent" ||
+      rawFilter === "needs_review" ||
+      rawFilter === "follow_up_available" ||
+      rawFilter === "estimate_available"
+    ) {
+      setQueueFilter(rawFilter);
+      return;
+    }
+    setQueueFilter("all");
+  }, []);
+
   const filteredLeads = useMemo(() => {
     return leads.filter((lead) => {
       const q = search.toLowerCase();
@@ -72,9 +101,18 @@ export default function InternalLeadsPage() {
         lead.service_type.toLowerCase().includes(q);
 
       const matchStatus = status === "all" || lead.status === status;
-      return matchSearch && matchStatus;
+      const createdAtKey = lead.created_at?.slice(0, 10);
+      const matchQueueFilter =
+        queueFilter === "all" ||
+        (queueFilter === "new_today" && createdAtKey === todayKey) ||
+        (queueFilter === "urgent" && lead.urgency === "high") ||
+        (queueFilter === "needs_review" && (lead.status === "new" || lead.status === "follow_up")) ||
+        (queueFilter === "follow_up_available" && lead.status === "follow_up") ||
+        (queueFilter === "estimate_available" && lead.status === "quoted");
+
+      return matchSearch && matchStatus && matchQueueFilter;
     });
-  }, [leads, search, status]);
+  }, [leads, queueFilter, search, status, todayKey]);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
@@ -111,6 +149,20 @@ export default function InternalLeadsPage() {
               Refresh
             </button>
           </div>
+        </section>
+
+        <section className="rounded-2xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-700 shadow-sm">
+          <p>
+            Active dashboard filter: <span className="font-semibold text-slate-900">{queueFilterLabels[queueFilter]}</span>
+          </p>
+          {queueFilter !== "all" ? (
+            <Link
+              href="/internal/leads"
+              className="mt-2 inline-flex items-center font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
+            >
+              Clear dashboard filter
+            </Link>
+          ) : null}
         </section>
 
         <section className="overflow-hidden rounded-2xl bg-white shadow-sm">
