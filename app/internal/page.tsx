@@ -201,6 +201,10 @@ export default async function InternalDashboardPage() {
 
   const followUpAvailableCount = leadSnapshots.filter((snapshot) => snapshot.followUpAvailability === "available").length;
   const estimateAvailableCount = leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available").length;
+  const followUpAvailableIds = leadSnapshots
+    .filter((snapshot) => snapshot.followUpAvailability === "available")
+    .map((snapshot) => snapshot.lead.id)
+    .join(",");
 
   const stats = [
     {
@@ -221,7 +225,7 @@ export default async function InternalDashboardPage() {
     {
       label: "Follow-up Suggestions",
       value: `${followUpAvailableCount}/${leadSnapshots.length}`,
-      href: "/internal/leads?filter=follow_up_available",
+      href: `/internal/leads?filter=follow_up_available&followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`,
     },
   ];
 
@@ -341,7 +345,7 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Follow-up Suggestion Availability</h2>
               <Link
-                href="/internal/leads?filter=follow_up_available"
+                href={`/internal/leads?filter=follow_up_available&followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
                 View matching leads
