@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useMemo, useState } from "react";
 import { LeadStatus, statusLabels } from "@/lib/internalLeads";
 
 type InternalLeadRow = {
@@ -39,7 +40,8 @@ const queueFilterLabels: Record<QueueFilter, string> = {
 
 type DrillDownMode = "all" | "created_today" | "urgent" | "needs_review" | "follow_up_available" | "estimate_available";
 
-export default function InternalLeadsPage() {
+function InternalLeadsPageContent() {
+  const searchParams = useSearchParams();
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<"all" | LeadStatus>("all");
   const [leads, setLeads] = useState<InternalLeadRow[]>([]);
@@ -84,14 +86,13 @@ export default function InternalLeadsPage() {
   const todayKey = useMemo(() => new Date().toISOString().slice(0, 10), []);
 
   useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const rawFilter = params.get("filter");
-    const rawCreated = params.get("created");
-    const rawUrgency = params.get("urgency");
-    const rawReview = params.get("review");
-    const rawFollowUpScope = params.get("followup");
-    const rawEstimateScope = params.get("estimate");
-    const rawIds = params.get("ids");
+    const rawFilter = searchParams.get("filter");
+    const rawCreated = searchParams.get("created");
+    const rawUrgency = searchParams.get("urgency");
+    const rawReview = searchParams.get("review");
+    const rawFollowUpScope = searchParams.get("followup");
+    const rawEstimateScope = searchParams.get("estimate");
+    const rawIds = searchParams.get("ids");
 
     if (rawFollowUpScope === "available") {
       setFollowUpScope("available");
@@ -160,11 +161,12 @@ export default function InternalLeadsPage() {
     }
     setQueueFilter("all");
     setDrillDownMode("all");
-  }, []);
+  }, [searchParams]);
 
   const filteredLeads = useMemo(() => {
     const hasPinnedDrillDownIds = drillDownIds !== null;
     const matchesPinnedIds = (leadId: string) => !hasPinnedDrillDownIds || drillDownIds.has(leadId);
+    const hasExplicitPinnedIds = hasDrillDownIdsParam;
 
     return leads.filter((lead) => {
       const q = search.toLowerCase();
@@ -181,27 +183,41 @@ export default function InternalLeadsPage() {
         (drillDownMode === "created_today" && createdAtKey === todayKey) ||
         (drillDownMode === "urgent" && lead.urgency === "high") ||
         (drillDownMode === "needs_review" &&
-          ((hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : lead.status === "new" || lead.status === "follow_up")) ||
         (drillDownMode === "follow_up_available" &&
-          ((followUpScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : followUpScope === "available"
+              ? false
+              : lead.status === "follow_up")) ||
         (drillDownMode === "estimate_available" &&
-          ((estimateScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : estimateScope === "available"
+              ? false
+              : lead.status === "quoted"));
       const matchQueueFilter =
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
         (queueFilter === "urgent" && lead.urgency === "high") ||
         (queueFilter === "needs_review" &&
-          ((hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : lead.status === "new" || lead.status === "follow_up")) ||
         (queueFilter === "follow_up_available" &&
-          ((followUpScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : followUpScope === "available"
+              ? false
+              : lead.status === "follow_up")) ||
         (queueFilter === "estimate_available" &&
-          ((estimateScope === "available" && hasPinnedDrillDownIds && matchesPinnedIds(lead.id)) ||
-            (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
+          (hasExplicitPinnedIds
+            ? hasPinnedDrillDownIds && matchesPinnedIds(lead.id)
+            : estimateScope === "available"
+              ? false
+              : lead.status === "quoted"));
       const matchDrillDownIds = matchesPinnedIds(lead.id);
 
       return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
@@ -306,5 +322,24 @@ export default function InternalLeadsPage() {
         </section>
       </div>
     </main>
+  );
+}
+
+export default function InternalLeadsPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
+          <div className="mx-auto max-w-7xl">
+            <section className="rounded-2xl bg-white px-6 py-5 shadow-sm">
+              <h1 className="text-2xl font-semibold">Leads Queue</h1>
+              <p className="mt-1 text-sm text-slate-500">Loading dashboard drill-down…</p>
+            </section>
+          </div>
+        </main>
+      }
+    >
+      <InternalLeadsPageContent />
+    </Suspense>
   );
 }

@@ -63,6 +63,12 @@ type LeadRuntimeSnapshot = {
   nextReviewSuggestion: string;
 };
 
+type RuntimeDrillDownBucket = {
+  snapshots: LeadRuntimeSnapshot[];
+  ids: string;
+  count: number;
+};
+
 function toDashboardLead(lead: Awaited<ReturnType<typeof readInternalLeadsFromGoogleSheet>>[number]): KcwLead {
   const status = (lead.status || "new") as LeadStatus;
   const source = (lead.source || "website") as KcwLead["source"];
@@ -208,15 +214,27 @@ export default async function InternalDashboardPage() {
   ).length;
   const needsReviewOnlyCount = leadSnapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length;
 
-  const followUpAvailableSnapshots = leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot));
-  const followUpAvailableCount = followUpAvailableSnapshots.length;
-  const estimateAvailableCount = leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available").length;
-  const needsReviewIds = needsReviewLeads.map((snapshot) => snapshot.lead.id).join(",");
-  const followUpAvailableIds = followUpAvailableSnapshots.map((snapshot) => snapshot.lead.id).join(",");
-  const estimateAvailableIds = leadSnapshots
-    .filter((snapshot) => snapshot.estimateAvailability === "available")
-    .map((snapshot) => snapshot.lead.id)
-    .join(",");
+  const runtimeBuckets: Record<"needsReview" | "followUpAvailable" | "estimateAvailable", RuntimeDrillDownBucket> = {
+    needsReview: {
+      snapshots: needsReviewLeads,
+      ids: needsReviewLeads.map((snapshot) => snapshot.lead.id).join(","),
+      count: needsReviewLeads.length,
+    },
+    followUpAvailable: {
+      snapshots: leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot)),
+      ids: "",
+      count: 0,
+    },
+    estimateAvailable: {
+      snapshots: leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available"),
+      ids: "",
+      count: 0,
+    },
+  };
+  runtimeBuckets.followUpAvailable.ids = runtimeBuckets.followUpAvailable.snapshots.map((snapshot) => snapshot.lead.id).join(",");
+  runtimeBuckets.followUpAvailable.count = runtimeBuckets.followUpAvailable.snapshots.length;
+  runtimeBuckets.estimateAvailable.ids = runtimeBuckets.estimateAvailable.snapshots.map((snapshot) => snapshot.lead.id).join(",");
+  runtimeBuckets.estimateAvailable.count = runtimeBuckets.estimateAvailable.snapshots.length;
 
   const stats = [
     {
@@ -231,13 +249,13 @@ export default async function InternalDashboardPage() {
     },
     {
       label: "Needs Review",
-      value: needsReviewLeads.length,
-      href: `/internal/leads?review=1&ids=${encodeURIComponent(needsReviewIds)}`,
+      value: runtimeBuckets.needsReview.count,
+      href: `/internal/leads?review=1&ids=${encodeURIComponent(runtimeBuckets.needsReview.ids)}`,
     },
     {
       label: "Follow-up Suggestions",
-      value: `${followUpAvailableCount}/${leadSnapshots.length}`,
-      href: `/internal/leads?followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`,
+      value: `${runtimeBuckets.followUpAvailable.count}/${leadSnapshots.length}`,
+      href: `/internal/leads?followup=available&ids=${encodeURIComponent(runtimeBuckets.followUpAvailable.ids)}`,
     },
   ];
 
@@ -338,7 +356,7 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Needs Review Summary</h2>
               <Link
-                href={`/internal/leads?review=1&ids=${encodeURIComponent(needsReviewIds)}`}
+                href={`/internal/leads?review=1&ids=${encodeURIComponent(runtimeBuckets.needsReview.ids)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
                 View matching leads
@@ -368,14 +386,14 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Follow-up Suggestion Availability</h2>
               <Link
-                href={`/internal/leads?followup=available&ids=${encodeURIComponent(followUpAvailableIds)}`}
+                href={`/internal/leads?followup=available&ids=${encodeURIComponent(runtimeBuckets.followUpAvailable.ids)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
                 Preview matching leads
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Suggestion available: {followUpAvailableCount} · unavailable: {leadSnapshots.length - followUpAvailableCount}.
+              Suggestion available: {runtimeBuckets.followUpAvailable.count} · unavailable: {leadSnapshots.length - runtimeBuckets.followUpAvailable.count}.
             </p>
             <p className="mt-2 text-xs text-slate-500">
               Preview-only. Follow-up ideas remain operator-reviewed and do not contact customers automatically.
@@ -386,14 +404,14 @@ export default async function InternalDashboardPage() {
             <div className="flex items-center justify-between gap-3">
               <h2 className="text-lg font-semibold">Estimate Draft Availability</h2>
               <Link
-                href={`/internal/leads?estimate=available&ids=${encodeURIComponent(estimateAvailableIds)}`}
+                href={`/internal/leads?estimate=available&ids=${encodeURIComponent(runtimeBuckets.estimateAvailable.ids)}`}
                 className="text-sm font-semibold text-slate-900 underline decoration-slate-300 underline-offset-4 hover:text-slate-700"
               >
                 Preview matching leads
               </Link>
             </div>
             <p className="mt-2 text-sm text-slate-600">
-              Estimate draft suggestion available: {estimateAvailableCount} · unavailable: {leadSnapshots.length - estimateAvailableCount}.
+              Estimate draft suggestion available: {runtimeBuckets.estimateAvailable.count} · unavailable: {leadSnapshots.length - runtimeBuckets.estimateAvailable.count}.
             </p>
             <p className="mt-2 text-xs text-slate-500">
               Draft availability only. This does not indicate any formal quote has been generated or sent.
