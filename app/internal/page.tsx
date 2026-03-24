@@ -157,6 +157,15 @@ async function buildLeadRuntimeSnapshot(lead: KcwLead): Promise<LeadRuntimeSnaps
   };
 }
 
+
+function isFollowUpEligibleStatus(status: LeadStatus) {
+  return status !== "scheduled" && status !== "completed" && status !== "archived";
+}
+
+function hasFollowUpSuggestionAvailable(snapshot: LeadRuntimeSnapshot) {
+  return snapshot.followUpAvailability === "available" && isFollowUpEligibleStatus(snapshot.lead.status);
+}
+
 export default async function InternalDashboardPage() {
   noStore();
 
@@ -199,13 +208,11 @@ export default async function InternalDashboardPage() {
   ).length;
   const needsReviewCount = leadSnapshots.filter((snapshot) => snapshot.decisionStatus === "needs_review").length;
 
-  const followUpAvailableCount = leadSnapshots.filter((snapshot) => snapshot.followUpAvailability === "available").length;
+  const followUpAvailableSnapshots = leadSnapshots.filter((snapshot) => hasFollowUpSuggestionAvailable(snapshot));
+  const followUpAvailableCount = followUpAvailableSnapshots.length;
   const estimateAvailableCount = leadSnapshots.filter((snapshot) => snapshot.estimateAvailability === "available").length;
   const needsReviewIds = needsReviewLeads.map((snapshot) => snapshot.lead.id).join(",");
-  const followUpAvailableIds = leadSnapshots
-    .filter((snapshot) => snapshot.followUpAvailability === "available")
-    .map((snapshot) => snapshot.lead.id)
-    .join(",");
+  const followUpAvailableIds = followUpAvailableSnapshots.map((snapshot) => snapshot.lead.id).join(",");
   const estimateAvailableIds = leadSnapshots
     .filter((snapshot) => snapshot.estimateAvailability === "available")
     .map((snapshot) => snapshot.lead.id)
@@ -343,7 +350,9 @@ export default async function InternalDashboardPage() {
             <ul className="mt-3 space-y-2 text-sm text-slate-700">
               {needsReviewLeads.slice(0, 3).map((snapshot) => (
                 <li key={snapshot.lead.id} className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2">
-                  <p className="font-medium text-amber-900">{snapshot.lead.customer_name}</p>
+                  <Link href={`/internal/leads/${snapshot.lead.id}`} className="font-medium text-amber-900 underline decoration-amber-300 underline-offset-2 hover:text-amber-700">
+                    {snapshot.lead.customer_name}
+                  </Link>
                   <p className="text-xs text-amber-800">
                     {snapshot.decisionStatus} · {snapshot.continuityState}
                   </p>
