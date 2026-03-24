@@ -48,6 +48,7 @@ export default function InternalLeadsPage() {
   const [queueFilter, setQueueFilter] = useState<QueueFilter>("all");
   const [drillDownMode, setDrillDownMode] = useState<DrillDownMode>("all");
   const [drillDownIds, setDrillDownIds] = useState<Set<string> | null>(null);
+  const [hasDrillDownIdsParam, setHasDrillDownIdsParam] = useState(false);
   const [followUpScope, setFollowUpScope] = useState<"available" | null>(null);
   const [estimateScope, setEstimateScope] = useState<"available" | null>(null);
 
@@ -107,7 +108,8 @@ export default function InternalLeadsPage() {
       .split(",")
       .map((id) => id.trim())
       .filter((id) => id.length > 0);
-    setDrillDownIds(parsedIds.length > 0 ? new Set(parsedIds) : null);
+    setHasDrillDownIdsParam(rawIds !== null);
+    setDrillDownIds(rawIds !== null ? new Set(parsedIds) : null);
 
     if (rawCreated === "today") {
       setDrillDownMode("created_today");
@@ -176,27 +178,32 @@ export default function InternalLeadsPage() {
         (drillDownMode === "created_today" && createdAtKey === todayKey) ||
         (drillDownMode === "urgent" && lead.urgency === "high") ||
         (drillDownMode === "needs_review" &&
-          ((drillDownIds !== null && drillDownIds.has(lead.id)) || (drillDownIds === null && (lead.status === "new" || lead.status === "follow_up")))) ||
+          ((drillDownIds !== null && drillDownIds.has(lead.id)) ||
+            (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
         (drillDownMode === "follow_up_available" &&
           ((followUpScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
-            (followUpScope !== "available" && lead.status === "follow_up"))) ||
+            (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
         (drillDownMode === "estimate_available" &&
           ((estimateScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
-            (estimateScope !== "available" && lead.status === "quoted")));
+            (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
       const matchQueueFilter =
         queueFilter === "all" ||
         (queueFilter === "new_today" && createdAtKey === todayKey) ||
         (queueFilter === "urgent" && lead.urgency === "high") ||
-        (queueFilter === "needs_review" && (lead.status === "new" || lead.status === "follow_up")) ||
+        (queueFilter === "needs_review" &&
+          ((drillDownIds !== null && drillDownIds.has(lead.id)) ||
+            (drillDownIds === null && !hasDrillDownIdsParam && (lead.status === "new" || lead.status === "follow_up")))) ||
         (queueFilter === "follow_up_available" &&
           ((followUpScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
-            (followUpScope !== "available" && lead.status === "follow_up"))) ||
-        (queueFilter === "estimate_available" && lead.status === "quoted");
+            (followUpScope !== "available" && !hasDrillDownIdsParam && lead.status === "follow_up"))) ||
+        (queueFilter === "estimate_available" &&
+          ((estimateScope === "available" && drillDownIds !== null && drillDownIds.has(lead.id)) ||
+            (estimateScope !== "available" && !hasDrillDownIdsParam && lead.status === "quoted")));
       const matchDrillDownIds = drillDownIds === null || drillDownIds.has(lead.id);
 
       return matchSearch && matchStatus && matchQueueFilter && matchDrillDownMode && matchDrillDownIds;
     });
-  }, [drillDownIds, drillDownMode, estimateScope, followUpScope, leads, queueFilter, search, status, todayKey]);
+  }, [drillDownIds, drillDownMode, estimateScope, followUpScope, hasDrillDownIdsParam, leads, queueFilter, search, status, todayKey]);
 
   return (
     <main className="px-4 py-8 text-slate-900 sm:px-6 lg:px-10">
