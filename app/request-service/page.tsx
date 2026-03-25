@@ -6,7 +6,7 @@ import { FormEvent, useMemo, useState } from 'react';
 type FormState = {
   customer_name: string;
   phone: string;
-  city: string;
+  service_address: string;
   service_type: string;
   urgency: string;
   customer_notes: string;
@@ -21,7 +21,7 @@ type FormState = {
 const initialForm: FormState = {
   customer_name: '',
   phone: '',
-  city: '',
+  service_address: '',
   service_type: '',
   urgency: 'soon',
   customer_notes: '',
@@ -40,7 +40,13 @@ export default function RequestServicePage() {
   const [error, setError] = useState('');
 
   const canSubmit = useMemo(() => {
-    return Boolean(form.customer_name.trim() && form.phone.trim() && form.city.trim() && form.service_type.trim() && form.customer_notes.trim());
+    return Boolean(
+      form.customer_name.trim() &&
+        form.phone.trim() &&
+        form.service_address.trim() &&
+        form.service_type.trim() &&
+        form.customer_notes.trim(),
+    );
   }, [form]);
 
   function updateField<K extends keyof FormState>(field: K, value: FormState[K]) {
@@ -59,7 +65,8 @@ export default function RequestServicePage() {
         body: JSON.stringify({
           customer_name: form.customer_name,
           phone: form.phone,
-          city: form.city,
+          city: form.service_address,
+          service_address: form.service_address,
           service_type: form.service_type,
           urgency: form.urgency,
           customer_notes: form.customer_notes,
@@ -67,6 +74,7 @@ export default function RequestServicePage() {
           source: form.source,
           problem_duration: form.problem_duration,
           quote_amount: form.quote_amount,
+          contact_method: form.contact_method,
         }),
       });
 
@@ -97,102 +105,112 @@ export default function RequestServicePage() {
             <>
               <h1 className="text-3xl font-semibold tracking-tight">Request Service</h1>
               <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Share the essentials below. Our team will review and follow up as soon as possible.
+                Tell us a few details about your plumbing or construction issue. We&apos;ll review your request and
+                follow up as soon as possible.
               </p>
               <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                Urgent issue? Call{' '}
+                If your issue is urgent, please call us directly at{' '}
                 <a href="tel:6265037777" className="font-semibold text-amber-800 underline hover:text-amber-900">
                   626-503-7777
                 </a>
                 .
               </p>
 
-              <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                  <p className="text-sm font-semibold text-slate-900">Step 1 · Required Details</p>
-                  <p className="mt-1 text-xs text-slate-600">This section is the only part needed to submit.</p>
-                </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Full Name *
+              <form onSubmit={handleSubmit} className="mt-6 space-y-6">
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                  <h2 className="text-base font-semibold text-slate-900">Contact Information</h2>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2 text-sm font-medium text-slate-800">
+                      Full Name
+                      <input
+                        required
+                        value={form.customer_name}
+                        onChange={(e) => updateField('customer_name', e.target.value)}
+                        className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
+                      />
+                    </label>
+
+                    <label className="space-y-2 text-sm font-medium text-slate-800">
+                      Phone Number
+                      <input
+                        required
+                        value={form.phone}
+                        onChange={(e) => updateField('phone', e.target.value)}
+                        className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
+                      />
+                    </label>
+                  </div>
+
+                  <label className="mt-4 block space-y-2 text-sm font-medium text-slate-800">
+                    Service Address
                     <input
                       required
-                      value={form.customer_name}
-                      onChange={(e) => updateField('customer_name', e.target.value)}
+                      value={form.service_address}
+                      onChange={(e) => updateField('service_address', e.target.value)}
                       className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
                     />
+                    <p className="text-xs font-normal text-slate-500">
+                      You can enter the job site or property address where service is needed.
+                    </p>
                   </label>
+                </section>
 
-                  <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Phone Number *
-                    <input
+                <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
+                  <h2 className="text-base font-semibold text-slate-900">Service Details</h2>
+                  <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                    <label className="space-y-2 text-sm font-medium text-slate-800">
+                      Service Type
+                      <select
+                        required
+                        value={form.service_type}
+                        onChange={(e) => updateField('service_type', e.target.value)}
+                        className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
+                      >
+                        <option value="">Select service type</option>
+                        <option value="water_heater">Water Heater Services</option>
+                        <option value="leak_repair">Leak Detection & Repair</option>
+                        <option value="drain_cleaning">Drain Cleaning & Unclogging</option>
+                        <option value="gas_line">Gas Line Repair & Installation</option>
+                        <option value="repipe">Repipe Services</option>
+                        <option value="remodel_plumbing">Remodel Plumbing</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </label>
+
+                    <label className="space-y-2 text-sm font-medium text-slate-800">
+                      How urgent is this?
+                      <select
+                        value={form.urgency}
+                        onChange={(e) => updateField('urgency', e.target.value)}
+                        className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
+                      >
+                        <option value="urgent">Urgent (as soon as possible)</option>
+                        <option value="soon">Soon (next few days)</option>
+                        <option value="flexible">Flexible schedule</option>
+                      </select>
+                    </label>
+                  </div>
+
+                  <label className="mt-4 block space-y-2 text-sm font-medium text-slate-800">
+                    Describe the problem
+                    <p className="text-xs font-normal leading-5 text-slate-500">
+                      Please tell us what is happening and any details that may help us understand the issue.
+                    </p>
+                    <textarea
                       required
-                      value={form.phone}
-                      onChange={(e) => updateField('phone', e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
+                      rows={5}
+                      value={form.customer_notes}
+                      onChange={(e) => updateField('customer_notes', e.target.value)}
+                      className="w-full rounded-xl border border-slate-300 px-3 py-3 text-base outline-none ring-blue-600 transition focus:ring-2"
                     />
                   </label>
+                </section>
 
-                  <label className="space-y-2 text-sm font-medium text-slate-800">
-                    City *
-                    <input
-                      required
-                      value={form.city}
-                      onChange={(e) => updateField('city', e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
-                    />
-                  </label>
-
-                  <label className="space-y-2 text-sm font-medium text-slate-800">
-                    Service Type *
-                    <select
-                      required
-                      value={form.service_type}
-                      onChange={(e) => updateField('service_type', e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
-                    >
-                      <option value="">Select service type</option>
-                      <option value="water_heater">Water Heater Services</option>
-                      <option value="leak_repair">Leak Detection & Repair</option>
-                      <option value="drain_cleaning">Drain Cleaning & Unclogging</option>
-                      <option value="gas_line">Gas Line Repair & Installation</option>
-                      <option value="repipe">Repipe Services</option>
-                      <option value="remodel_plumbing">Remodel Plumbing</option>
-                      <option value="other">Other</option>
-                    </select>
-                  </label>
-                </div>
-
-                <label className="space-y-2 text-sm font-medium text-slate-800">
-                  How urgent is this?
-                  <select
-                    value={form.urgency}
-                    onChange={(e) => updateField('urgency', e.target.value)}
-                    className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
-                  >
-                    <option value="urgent">Urgent (as soon as possible)</option>
-                    <option value="soon">Soon (next few days)</option>
-                    <option value="flexible">Flexible schedule</option>
-                  </select>
-                </label>
-
-                <label className="space-y-2 text-sm font-medium text-slate-800">
-                  Describe the problem *
-                  <p className="text-xs font-normal leading-5 text-slate-500">
-                    Please tell us what is happening and any details that may help us understand the issue.
+                <section className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 sm:p-5">
+                  <h2 className="text-base font-semibold text-slate-700">Optional Details</h2>
+                  <p className="mt-1 text-sm text-slate-500">
+                    You can add more details if you&apos;d like, but this section is optional.
                   </p>
-                  <textarea
-                    required
-                    rows={5}
-                    value={form.customer_notes}
-                    onChange={(e) => updateField('customer_notes', e.target.value)}
-                    className="w-full rounded-xl border border-slate-300 px-3 py-3 text-base outline-none ring-blue-600 transition focus:ring-2"
-                  />
-                </label>
-
-                <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4 sm:p-5">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-600">Optional Details (can skip)</h2>
-                  <p className="mt-1 text-xs text-slate-500">Add only if helpful. Your request can be submitted without these fields.</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2 text-sm font-medium text-slate-700">
                       Property Type (optional)
@@ -232,7 +250,6 @@ export default function RequestServicePage() {
                         onChange={(e) => updateField('photos', e.target.files)}
                         className="block w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-slate-100 file:px-3 file:py-2 file:text-sm file:font-medium"
                       />
-                      <p className="text-xs font-normal text-slate-500">Photo upload is optional and currently for reference only.</p>
                     </label>
 
                     <label className="space-y-2 text-sm font-medium text-slate-700">
@@ -255,7 +272,7 @@ export default function RequestServicePage() {
                       placeholder="Optional"
                     />
                   </label>
-                </div>
+                </section>
 
                 {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 
@@ -273,11 +290,11 @@ export default function RequestServicePage() {
               </form>
             </>
           ) : (
-            <div className="rounded-2xl border border-green-200 bg-green-50 p-6 sm:p-8">
-              <h2 className="text-2xl font-semibold text-slate-900">Your request is in. A KCW team member will follow up soon.</h2>
+            <div className="mx-auto max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-6 text-center sm:p-8">
+              <h2 className="text-2xl font-semibold text-slate-900">Your request has been received.</h2>
               <p className="mt-3 text-sm leading-6 text-slate-700 sm:text-base">
-                Thank you for contacting KCW Construction & Plumbing. We&apos;ll review your details and contact you with
-                next steps.
+                Thank you for contacting KCW Construction & Plumbing. Our team will review your request and follow up
+                as soon as possible.
               </p>
               <p className="mt-2 text-sm text-slate-700">
                 If your issue is urgent, please call us directly at{' '}
@@ -286,13 +303,7 @@ export default function RequestServicePage() {
                 </a>
                 .
               </p>
-              <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-                <a
-                  href="tel:6265037777"
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
-                >
-                  Call 626-503-7777
-                </a>
+              <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:justify-center">
                 <Link
                   href="/"
                   className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100"
@@ -302,7 +313,7 @@ export default function RequestServicePage() {
                 <button
                   type="button"
                   onClick={() => setSuccess(false)}
-                  className="inline-flex min-h-11 items-center justify-center rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-800 hover:bg-slate-100"
+                  className="inline-flex min-h-11 items-center justify-center rounded-xl bg-blue-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-blue-800"
                 >
                   Submit Another Request
                 </button>
