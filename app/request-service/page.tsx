@@ -103,22 +103,27 @@ export default function RequestServicePage() {
         <section className="mt-4 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-8">
           {!success ? (
             <>
-              <h1 className="text-3xl font-semibold tracking-tight">Request Service</h1>
-              <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
-                Tell us a few details about your plumbing or construction issue. We&apos;ll review your request and
-                follow up as soon as possible.
-              </p>
-              <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                If your issue is urgent, please call us directly at{' '}
-                <a href="tel:6265037777" className="font-semibold text-amber-800 underline hover:text-amber-900">
-                  626-503-7777
-                </a>
-                .
-              </p>
+              <header>
+                <h1 className="text-3xl font-semibold tracking-tight">Request Service</h1>
+                <p className="mt-1 text-sm text-slate-500">提交服务申请</p>
+                <p className="mt-3 text-sm leading-6 text-slate-600 sm:text-base">
+                  Tell us a few details about your plumbing or construction issue. We&apos;ll review your request and
+                  follow up as soon as possible.
+                </p>
+                <p className="mt-1 text-xs text-slate-500 sm:text-sm">请填写一些基本信息，我们会尽快查看并与您联系。</p>
+                <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                  If your issue is urgent, please call us directly at{' '}
+                  <a href="tel:6265037777" className="font-semibold text-amber-800 underline hover:text-amber-900">
+                    626-503-7777
+                  </a>
+                  .
+                </p>
+              </header>
 
               <form onSubmit={handleSubmit} className="mt-6 space-y-6">
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                   <h2 className="text-base font-semibold text-slate-900">Contact Information</h2>
+                  <p className="mt-1 text-xs text-slate-500">联系信息</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2 text-sm font-medium text-slate-800">
                       Full Name
@@ -149,14 +154,16 @@ export default function RequestServicePage() {
                       onChange={(e) => updateField('service_address', e.target.value)}
                       className="h-12 w-full rounded-xl border border-slate-300 px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
                     />
-                    <p className="text-xs font-normal text-slate-500">
+                    <p className="text-xs font-normal leading-5 text-slate-500">
                       You can enter the job site or property address where service is needed.
                     </p>
+                    <p className="text-xs font-normal text-slate-400">请填写需要服务的工地或物业地址。</p>
                   </label>
                 </section>
 
                 <section className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
                   <h2 className="text-base font-semibold text-slate-900">Service Details</h2>
+                  <p className="mt-1 text-xs text-slate-500">服务情况</p>
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2 text-sm font-medium text-slate-800">
                       Service Type
@@ -167,10 +174,10 @@ export default function RequestServicePage() {
                         className="h-12 w-full rounded-xl border border-slate-300 bg-white px-3 text-base outline-none ring-blue-600 transition focus:ring-2"
                       >
                         <option value="">Select service type</option>
-                        <option value="water_heater">Water Heater Services</option>
-                        <option value="leak_repair">Leak Detection & Repair</option>
-                        <option value="drain_cleaning">Drain Cleaning & Unclogging</option>
-                        <option value="gas_line">Gas Line Repair & Installation</option>
+                        <option value="water_heater">Water Heater</option>
+                        <option value="leak_repair">Leak Repair</option>
+                        <option value="drain_cleaning">Drain Services</option>
+                        <option value="gas_line">Gas Line Work</option>
                         <option value="repipe">Repipe Services</option>
                         <option value="remodel_plumbing">Remodel Plumbing</option>
                         <option value="other">Other</option>
@@ -198,7 +205,7 @@ export default function RequestServicePage() {
                     </p>
                     <textarea
                       required
-                      rows={5}
+                      rows={6}
                       value={form.customer_notes}
                       onChange={(e) => updateField('customer_notes', e.target.value)}
                       className="w-full rounded-xl border border-slate-300 px-3 py-3 text-base outline-none ring-blue-600 transition focus:ring-2"
@@ -207,10 +214,12 @@ export default function RequestServicePage() {
                 </section>
 
                 <section className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/70 p-4 sm:p-5">
-                  <h2 className="text-base font-semibold text-slate-700">Optional Details</h2>
+                  <h2 className="text-base font-medium text-slate-700">Optional Details</h2>
+                  <p className="mt-1 text-xs text-slate-500">补充信息（选填）</p>
                   <p className="mt-1 text-sm text-slate-500">
                     You can add more details if you&apos;d like, but this section is optional.
                   </p>
+
                   <div className="mt-4 grid gap-4 sm:grid-cols-2">
                     <label className="space-y-2 text-sm font-medium text-slate-700">
                       Property Type (optional)
@@ -269,29 +278,32 @@ export default function RequestServicePage() {
                       value={form.quote_amount}
                       onChange={(e) => updateField('quote_amount', e.target.value)}
                       className="h-11 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm outline-none ring-blue-600 transition focus:ring-2"
-                      placeholder="Optional"
+                      placeholder="Only if you already have one in mind"
                     />
                   </label>
                 </section>
 
                 {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
 
-                <div className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-slate-700">
-                  We&apos;ll review your request and follow up as soon as possible after submission.
-                </div>
+                <section className="rounded-2xl border border-blue-100 bg-blue-50 px-4 py-3">
+                  <p className="text-sm text-slate-700">
+                    We&apos;ll review your request and follow up as soon as possible after submission.
+                  </p>
+                </section>
 
                 <button
                   type="submit"
                   disabled={!canSubmit || submitting}
                   className="inline-flex min-h-12 w-full items-center justify-center rounded-xl bg-blue-700 px-6 py-3 text-base font-semibold text-white transition hover:bg-blue-800 disabled:cursor-not-allowed disabled:bg-slate-400"
                 >
-                  {submitting ? 'Sending...' : 'Request Service'}
+                  {submitting ? 'Sending...' : 'Request Service 提交申请'}
                 </button>
               </form>
             </>
           ) : (
-            <div className="mx-auto max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-6 text-center sm:p-8">
+            <section className="mx-auto max-w-2xl rounded-2xl border border-green-200 bg-green-50 p-6 text-center sm:p-8">
               <h2 className="text-2xl font-semibold text-slate-900">Your request has been received.</h2>
+              <p className="mt-1 text-sm text-slate-600">我们已收到您的申请。</p>
               <p className="mt-3 text-sm leading-6 text-slate-700 sm:text-base">
                 Thank you for contacting KCW Construction & Plumbing. Our team will review your request and follow up
                 as soon as possible.
@@ -318,7 +330,7 @@ export default function RequestServicePage() {
                   Submit Another Request
                 </button>
               </div>
-            </div>
+            </section>
           )}
         </section>
       </div>
