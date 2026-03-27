@@ -41,6 +41,7 @@ export function buildDailyPlannerSnapshot() {
 }
 
 export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheetText?: string }) {
+  const warnings: string[] = [];
   const runtime = readContentOpsState();
   const imported = importInput?.csvText
     ? importPerformanceFromCsv(importInput.csvText)
@@ -48,29 +49,36 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
       ? importPerformanceFromSheetText(importInput.sheetText)
       : loadDefaultPerformanceRecords();
 
-  const records: PerformanceRecord[] = imported.records;
+  const records: PerformanceRecord[] = Array.isArray(imported.records) ? imported.records : [];
   const fiveDayReview = runFiveDayReview(records, "standard");
   const monetization = buildMonetizationPlanner(records);
-  const scriptStudioBase = runtime.scripts[0] ?? scriptSamples[0];
+  const scriptStudioBase = runtime.scripts.find((script) => script && Array.isArray(script.hook_variants) && typeof script.standard_script === "string") ?? scriptSamples[0];
+  if (!runtime.scripts.find((script) => script && Array.isArray(script.hook_variants) && typeof script.standard_script === "string")) {
+    warnings.push("Script store contained legacy or invalid data; using seed script fallback.");
+  }
   const scriptStudioPreview = buildScriptStudioDraft(scriptStudioBase, "en", 0);
   const cycleId = records[records.length - 1]?.cycle_id ?? "cycle_unknown";
-  const executionBoard = runtime.executionTasks.length > 0 ? buildExecutionBoardFromTasks(runtime.executionTasks) : buildDailyExecutionBoard(seedPostPlans);
+  const executionTasks = Array.isArray(runtime.executionTasks) ? runtime.executionTasks : [];
+  const executionBoard = executionTasks.length > 0 ? buildExecutionBoardFromTasks(executionTasks) : buildDailyExecutionBoard(seedPostPlans);
   const executionProgress = summarizeExecutionProgress(executionBoard);
-  const monetizationExecution = applyMonetizationOverride(buildMonetizationExecutionMap(records), runtime.monetizationOverrides);
+  const monetizationExecution = applyMonetizationOverride(buildMonetizationExecutionMap(records), runtime.monetizationOverrides ?? {});
   const mergedAssets = listAssetsWithUploads();
+  const scripts = Array.isArray(runtime.scripts) ? runtime.scripts : [];
+  const postPlans = Array.isArray(runtime.postPlans) ? runtime.postPlans : [];
+  const interactions = Array.isArray(runtime.interactions) ? runtime.interactions : [];
   const reviewFunnel = {
-    draft: runtime.scripts.filter((s) => s.review_status === "draft").length + runtime.postPlans.filter((p) => p.review_status === "draft").length,
-    reviewed: runtime.scripts.filter((s) => s.review_status === "reviewed").length + runtime.postPlans.filter((p) => p.review_status === "reviewed").length,
-    approved: runtime.scripts.filter((s) => s.review_status === "approved").length + runtime.postPlans.filter((p) => p.review_status === "approved").length,
-    rejected: runtime.scripts.filter((s) => s.review_status === "rejected").length + runtime.postPlans.filter((p) => p.review_status === "rejected").length,
+    draft: scripts.filter((s) => s.review_status === "draft").length + postPlans.filter((p) => p.review_status === "draft").length,
+    reviewed: scripts.filter((s) => s.review_status === "reviewed").length + postPlans.filter((p) => p.review_status === "reviewed").length,
+    approved: scripts.filter((s) => s.review_status === "approved").length + postPlans.filter((p) => p.review_status === "approved").length,
+    rejected: scripts.filter((s) => s.review_status === "rejected").length + postPlans.filter((p) => p.review_status === "rejected").length,
   };
-  const interactionBacklog = buildInteractionBacklogSummary(runtime.interactions);
+  const interactionBacklog = buildInteractionBacklogSummary(interactions);
 
   return {
     importSummary: {
       source: imported.source,
       count: records.length,
-      errors: imported.errors,
+      errors: [...(Array.isArray(imported.errors) ? imported.errors : []), ...warnings],
       sheetAdapter: imported.sheetAdapter,
       currentSource: runtime.importMeta.currentSource,
       lastImportedAt: runtime.importMeta.lastImportedAt,
@@ -83,7 +91,7 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
     monetization,
     scriptStudioBase,
     scriptStudioPreview,
-    postPlans: runtime.postPlans,
+    postPlans,
     reviewFunnel,
     assetLibrary: {
       records: mergedAssets,
@@ -95,7 +103,7 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
     monetizationExecution,
     duplication: detectDuplicationRisk(records, runtime.duplicationSettings),
     duplicationSettings: runtime.duplicationSettings,
-    interactions: runtime.interactions,
+    interactions,
     interactionBacklog,
     interactionReplyGroups: groupReplyBankByContentType(),
     dmReplyGroups: groupDmReplyByInquiryType(),

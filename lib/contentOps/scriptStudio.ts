@@ -41,39 +41,41 @@ function mapRisk(score: number): "low" | "medium" | "high" {
 }
 
 export function buildScriptStudioDraft(script: ScriptPack, language: "en" | "zh", hookVersionIndex = 0): ScriptStudioDraft {
-  const selectedHook = script.hook_variants[hookVersionIndex] ?? script.hook_variants[0] ?? "";
+  const safeScript = script && typeof script === "object" ? script : ({} as ScriptPack);
+  const safeHooks = Array.isArray(safeScript.hook_variants) ? safeScript.hook_variants : [];
+  const selectedHook = safeHooks[hookVersionIndex] ?? safeHooks[0] ?? "";
   const lang = localization[language];
 
   const generatedCaption =
     language === "en"
-      ? `${selectedHook} ${script.caption} ${lang.ctaSuffix}`
-      : `【本地真实场景】${selectedHook}。${script.caption} ${lang.ctaSuffix}`;
+      ? `${selectedHook} ${safeScript.caption ?? ""} ${lang.ctaSuffix}`
+      : `【本地真实场景】${selectedHook}。${safeScript.caption ?? ""} ${lang.ctaSuffix}`;
 
-  const generatedCTA = language === "en" ? script.CTA : `如果你在本地服务范围，${lang.ctaSuffix}`;
+  const generatedCTA = language === "en" ? (safeScript.CTA ?? "") : `如果你在本地服务范围，${lang.ctaSuffix}`;
   const generatedPinnedComment = `${lang.pinPrefix}，我们会按风险优先级回复。`;
 
   return {
-    scriptId: script.id,
+    scriptId: safeScript.id ?? "unknown_script",
     language,
     hookVersionIndex,
-    editableScript: [selectedHook, script.standard_script, lang.caution].join("\n\n"),
+    editableScript: [selectedHook, safeScript.standard_script ?? "", lang.caution].join("\n\n"),
     generatedCaption,
     generatedCTA,
     generatedPinnedComment,
-    authenticityRisk: mapRisk(script.exaggeration_risk),
-    aiSmellRisk: mapRisk(script.ai_smell_risk),
+    authenticityRisk: mapRisk(safeScript.exaggeration_risk ?? 100),
+    aiSmellRisk: mapRisk(safeScript.ai_smell_risk ?? 100),
     suggestions: [
       "Add one field-verified detail (date/location/scope).",
       "Keep first 3 seconds problem-specific instead of broad claims.",
       "End with review-before-publish cue for manual QC.",
     ],
-    reviewStatus: script.review_status,
-    reviewerNotes: script.reviewer_notes,
-    versionHistory: script.version_history,
-    requiresManualReview: script.review_status !== "approved",
-    realismScore: script.trustworthiness_score,
-    exaggerationRisk: mapRisk(script.exaggeration_risk),
-    duplicationRisk: mapRisk(script.ai_smell_risk + Math.max(0, 50 - script.trustworthiness_score)),
-    publishBlocked: script.review_status !== "approved" || script.exaggeration_risk >= 60 || script.ai_smell_risk >= 60,
+    reviewStatus: safeScript.review_status ?? "draft",
+    reviewerNotes: safeScript.reviewer_notes ?? "",
+    versionHistory: Array.isArray(safeScript.version_history) ? safeScript.version_history : [],
+    requiresManualReview: (safeScript.review_status ?? "draft") !== "approved",
+    realismScore: safeScript.trustworthiness_score ?? 0,
+    exaggerationRisk: mapRisk(safeScript.exaggeration_risk ?? 100),
+    duplicationRisk: mapRisk((safeScript.ai_smell_risk ?? 100) + Math.max(0, 50 - (safeScript.trustworthiness_score ?? 0))),
+    publishBlocked: (safeScript.review_status ?? "draft") !== "approved" || (safeScript.exaggeration_risk ?? 100) >= 60 || (safeScript.ai_smell_risk ?? 100) >= 60,
   };
 }

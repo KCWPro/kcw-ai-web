@@ -6,8 +6,20 @@ import ContentOpsWorkbench from "@/app/internal/content-ops/ContentOpsWorkbench"
 export const dynamic = "force-dynamic";
 
 export default function InternalContentOpsPage() {
-  const daily = buildDailyPlannerSnapshot();
-  const performance = buildPerformanceSnapshot();
+  let daily: ReturnType<typeof buildDailyPlannerSnapshot>;
+  let performance: ReturnType<typeof buildPerformanceSnapshot>;
+  let degradedMessage = "";
+
+  try {
+    daily = buildDailyPlannerSnapshot();
+    performance = buildPerformanceSnapshot();
+  } catch (error) {
+    const fallbackDaily = buildDailyPlannerSnapshot();
+    const fallbackPerformance = buildPerformanceSnapshot({ csvText: "" });
+    daily = fallbackDaily;
+    performance = fallbackPerformance;
+    degradedMessage = `部分数据加载失败，已回退到默认快照。${error instanceof Error ? `原因：${error.message}` : ""}`;
+  }
 
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-10">
@@ -25,6 +37,19 @@ export default function InternalContentOpsPage() {
             <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">Imported Performance: {performance.importSummary.count}</span>
           </div>
         </header>
+        {(degradedMessage || performance.importSummary.errors.length > 0) && (
+          <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
+            <p className="font-semibold">部分数据加载失败</p>
+            {degradedMessage && <p className="mt-1">{degradedMessage}</p>}
+            {performance.importSummary.errors.length > 0 && (
+              <ul className="mt-2 list-disc pl-5">
+                {performance.importSummary.errors.map((error: string, index: number) => (
+                  <li key={`${error}-${index}`}>{error}</li>
+                ))}
+              </ul>
+            )}
+          </section>
+        )}
 
         <ContentOpsWorkbench defaultSnapshot={performance} />
 
