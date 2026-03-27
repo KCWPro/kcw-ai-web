@@ -16,6 +16,7 @@ export type VideoFormat =
   | "talking_head"
   | "b_roll_subtitle"
   | "before_after"
+  | "maintenance"
   | "faq_quick_answer"
   | "myth_busting"
   | "top_3_tips"
