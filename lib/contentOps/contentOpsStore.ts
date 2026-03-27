@@ -37,6 +37,26 @@ export type ContentOpsRuntimeState = {
 const RUNTIME_DIR = path.join(process.cwd(), "data", "contentOps", "runtime");
 const STORE_PATH = path.join(RUNTIME_DIR, "content-ops-store.json");
 
+function coerceStorePathToFile() {
+  try {
+    if (fs.existsSync(STORE_PATH) && fs.statSync(STORE_PATH).isDirectory()) {
+      fs.rmSync(STORE_PATH, { recursive: true, force: true });
+    }
+  } catch {
+    // ignore cleanup failures and let downstream write attempts surface if still invalid
+  }
+}
+
+function safeWriteStore(state: ContentOpsRuntimeState) {
+  coerceStorePathToFile();
+  try {
+    fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 function buildInitialState(): ContentOpsRuntimeState {
   const today = new Date().toISOString().slice(0, 10);
   return {
@@ -118,8 +138,9 @@ function buildInitialState(): ContentOpsRuntimeState {
 
 function ensureRuntimeStore() {
   if (!fs.existsSync(RUNTIME_DIR)) fs.mkdirSync(RUNTIME_DIR, { recursive: true });
+  coerceStorePathToFile();
   if (!fs.existsSync(STORE_PATH)) {
-    fs.writeFileSync(STORE_PATH, JSON.stringify(buildInitialState(), null, 2), "utf-8");
+    safeWriteStore(buildInitialState());
   }
 }
 
@@ -171,21 +192,21 @@ export function readContentOpsState(): ContentOpsRuntimeState {
     const raw = fs.readFileSync(STORE_PATH, "utf-8");
     if (!raw.trim()) {
       const fallback = buildInitialState();
-      fs.writeFileSync(STORE_PATH, JSON.stringify(fallback, null, 2), "utf-8");
+      safeWriteStore(fallback);
       return fallback;
     }
     const normalized = normalizeState(JSON.parse(raw));
-    fs.writeFileSync(STORE_PATH, JSON.stringify(normalized, null, 2), "utf-8");
+    safeWriteStore(normalized);
     return normalized;
   } catch {
     const fallback = buildInitialState();
-    fs.writeFileSync(STORE_PATH, JSON.stringify(fallback, null, 2), "utf-8");
+    safeWriteStore(fallback);
     return fallback;
   }
 }
 
 export function writeContentOpsState(mutator: (state: ContentOpsRuntimeState) => ContentOpsRuntimeState) {
   const next = mutator(readContentOpsState());
-  fs.writeFileSync(STORE_PATH, JSON.stringify(next, null, 2), "utf-8");
+  safeWriteStore(next);
   return next;
 }
