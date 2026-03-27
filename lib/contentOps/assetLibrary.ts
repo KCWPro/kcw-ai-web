@@ -7,10 +7,28 @@ export type AssetBinding = {
   post_plan_id?: string;
 };
 
+export type AssetUploadInput = {
+  filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  preview_url: string;
+  project?: string;
+  service_type?: string;
+  tags?: string[];
+  safe_for_public?: boolean;
+  topic_id?: string;
+  script_id?: string;
+  post_plan_id?: string;
+};
+
 export const seedAssets: AssetRecord[] = [
   {
     asset_id: "asset_01",
     filename: "kitchen_sink_before_after.mp4",
+    mime_type: "video/mp4",
+    file_size_bytes: 5242880,
+    uploaded_at: "2026-03-12T09:12:00.000Z",
+    preview_url: "/internal/content-ops/previews/asset_01",
     project: "Austin Riverside",
     service_type: "drain_cleaning",
     tags: ["before-after", "kitchen", "odor"],
@@ -28,6 +46,10 @@ export const seedAssets: AssetRecord[] = [
   {
     asset_id: "asset_02",
     filename: "technician_voice_note.m4a",
+    mime_type: "audio/mp4",
+    file_size_bytes: 1835008,
+    uploaded_at: "2026-03-18T16:08:00.000Z",
+    preview_url: "/internal/content-ops/previews/asset_02",
     project: "Georgetown",
     service_type: "inspection",
     tags: ["voiceover", "B-roll"],
@@ -45,6 +67,10 @@ export const seedAssets: AssetRecord[] = [
   {
     asset_id: "asset_03",
     filename: "water_heater_valve_broll.mov",
+    mime_type: "video/quicktime",
+    file_size_bytes: 7864320,
+    uploaded_at: "2026-03-20T11:21:00.000Z",
+    preview_url: "/internal/content-ops/previews/asset_03",
     project: "Round Rock",
     service_type: "water_heater",
     tags: ["B-roll", "safety", "closeup"],
@@ -60,6 +86,35 @@ export const seedAssets: AssetRecord[] = [
     notes: "Great for quick safety hooks",
   },
 ];
+
+export function createAssetFromUpload(input: AssetUploadInput): AssetRecord {
+  const now = new Date().toISOString();
+  const normalizedTags = (input.tags ?? [])
+    .map((tag) => tag.trim())
+    .filter((tag) => tag.length > 0);
+
+  return {
+    asset_id: `asset_${now.replace(/[^0-9]/g, "").slice(-10)}`,
+    filename: input.filename,
+    mime_type: input.mime_type,
+    file_size_bytes: input.file_size_bytes,
+    uploaded_at: now,
+    preview_url: input.preview_url,
+    project: input.project ?? "Unassigned",
+    service_type: input.service_type ?? "general",
+    tags: normalizedTags,
+    project_date: now.slice(0, 10),
+    people_visible: false,
+    customer_sensitive: false,
+    safe_for_public: input.safe_for_public ?? false,
+    language_fit: ["en"],
+    best_platform: ["tiktok", "instagram_reels"],
+    can_reuse: true,
+    quality_score: 70,
+    reuse_score: 70,
+    notes: "Uploaded via lightweight Asset API.",
+  };
+}
 
 export type AssetFilter = {
   serviceType?: string;

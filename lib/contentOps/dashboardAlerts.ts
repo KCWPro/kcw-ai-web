@@ -10,6 +10,10 @@ export function buildDashboardTopAlert(input: {
   cycleId: string;
   review: ReviewSummary;
   monetizationStage: MonetizationStage;
+  executionProgress?: {
+    total: number;
+    posted: number;
+  };
 }) {
   const issueMap: Record<string, string> = {
     traffic_entry_problem: "开头 3 秒钩子不够具体，导致流量入口弱。",
@@ -40,5 +44,8 @@ export function buildDashboardTopAlert(input: {
     todayPriority: action,
     monetizationStage: input.monetizationStage,
     ctaAdvice: ctaByStage[input.monetizationStage],
+    executionOverview: input.executionProgress
+      ? `今日执行进度：${input.executionProgress.posted}/${input.executionProgress.total} 已到 posted。`
+      : "今日执行进度：暂无。",
   };
 }

@@ -41,5 +41,17 @@ export function generateScriptPack(topic: Topic): ScriptPack {
     trustworthiness_score: topic.trust_score,
     rewrite_required: topic.ai_smell_risk > 35 || topic.exaggeration_risk > 35,
     notes: "No fake quotes, no absolute claims, no fear CTA.",
+    review_status: "draft",
+    reviewer_notes: "待审核，人工确认后才可进入发布排期。",
+    version_history: [
+      {
+        version_id: `generated_${topic.id}_v1`,
+        created_at: new Date().toISOString(),
+        updated_by: "script_generator",
+        status: "draft",
+        notes: "自动生成初稿。",
+        summary: "等待人工 review / approval。",
+      },
+    ],
   };
 }

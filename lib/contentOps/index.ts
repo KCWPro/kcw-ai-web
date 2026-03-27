@@ -6,6 +6,8 @@ import { buildDashboardTopAlert } from "@/lib/contentOps/dashboardAlerts";
 import { detectDuplicationRisk } from "@/lib/contentOps/duplicationGuard";
 import { runFiveDayReview } from "@/lib/contentOps/fiveDayReview";
 import { buildMonetizationPlanner } from "@/lib/contentOps/monetizationPlanner";
+import { buildMonetizationExecutionMap } from "@/lib/contentOps/monetizationPlanner";
+import { buildDailyExecutionBoard, seedPostPlans, summarizeExecutionProgress } from "@/lib/contentOps/operationsExecution";
 import { importPerformanceFromCsv, importPerformanceFromSheetText, loadDefaultPerformanceRecords } from "@/lib/contentOps/performanceImport";
 import { analyzePerformance } from "@/lib/contentOps/performanceTracker";
 import { buildPublishingChecklist } from "@/lib/contentOps/publishingChecklist";
@@ -49,12 +51,16 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
   const scriptStudioBase = scriptSamples[0];
   const scriptStudioPreview = buildScriptStudioDraft(scriptStudioBase, "en", 0);
   const cycleId = records[records.length - 1]?.cycle_id ?? "cycle_unknown";
+  const executionBoard = buildDailyExecutionBoard(seedPostPlans);
+  const executionProgress = summarizeExecutionProgress(executionBoard);
+  const monetizationExecution = buildMonetizationExecutionMap(records);
 
   return {
     importSummary: {
       source: imported.source,
       count: records.length,
       errors: imported.errors,
+      sheetAdapter: imported.sheetAdapter,
     },
     performanceRecords: records,
     performanceAnalysis: analyzePerformance(records),
@@ -62,16 +68,24 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
     monetization,
     scriptStudioBase,
     scriptStudioPreview,
+    postPlans: seedPostPlans,
     assetLibrary: {
       records: seedAssets,
       missing: findAssetGaps(seedAssets),
       publicBeforeAfter: filterAssets(seedAssets, { safeForPublic: true, beforeAfter: true }).length,
     },
+    executionBoard,
+    executionProgress,
+    monetizationExecution,
     duplication: detectDuplicationRisk(records),
     dashboardAlert: buildDashboardTopAlert({
       cycleId,
       review: fiveDayReview.summary,
       monetizationStage: monetization.stage,
+      executionProgress: {
+        total: executionProgress.total,
+        posted: executionProgress.stageCount.posted,
+      },
     }),
   };
 }

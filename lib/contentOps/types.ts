@@ -29,6 +29,16 @@ export type VideoFormat =
 export type FunnelStage = "awareness" | "consideration" | "lead_capture" | "retention";
 
 export type Difficulty = "easy" | "medium" | "hard";
+export type ReviewStatus = "draft" | "reviewed" | "approved" | "rejected";
+
+export type ReviewVersion = {
+  version_id: string;
+  created_at: string;
+  updated_by: string;
+  status: ReviewStatus;
+  notes: string;
+  summary: string;
+};
 
 export type Topic = {
   id: string;
@@ -77,11 +87,18 @@ export type ScriptPack = {
   trustworthiness_score: number;
   rewrite_required: boolean;
   notes: string;
+  review_status: ReviewStatus;
+  reviewer_notes: string;
+  version_history: ReviewVersion[];
 };
 
 export type AssetRecord = {
   asset_id: string;
   filename: string;
+  mime_type: string;
+  file_size_bytes: number;
+  uploaded_at: string;
+  preview_url: string;
   project: string;
   service_type: string;
   tags: string[];
@@ -98,12 +115,16 @@ export type AssetRecord = {
 };
 
 export type PostPlan = {
+  id: string;
   planned_date: string;
   topic_id: string;
   script_id: string;
   target_platform: Platform;
   format: VideoFormat;
   status: "planned" | "filming" | "editing" | "ready_to_publish" | "published";
+  review_status: ReviewStatus;
+  reviewer_notes: string;
+  version_history: ReviewVersion[];
   publish_notes: string;
   cycle_id: string;
   target_metrics: Record<string, number>;
@@ -112,6 +133,18 @@ export type PostPlan = {
   underperform_reason_summary: string;
   next_test_plan: string;
 };
+
+export type ExecutionStatus = "planned" | "filmed" | "edited" | "posted" | "reviewed";
+
+export type DailyExecution = {
+  date: string;
+  status: ExecutionStatus;
+  comment_replied: boolean;
+  dm_processed: boolean;
+  high_intent_lead_handoff: boolean;
+};
+
+export type MonetizationExecutionLabel = "lead_capture" | "affiliate" | "sponsor_safe" | "education_only";
 
 export type PerformanceRecord = {
   post_id: string;

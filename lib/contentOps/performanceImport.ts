@@ -23,6 +23,11 @@ export type PerformanceImportResult = {
   records: PerformanceRecord[];
   errors: string[];
   source: "csv" | "sheet" | "default_seed";
+  sheetAdapter: {
+    provider: "google_sheet_readonly_stub";
+    ready: boolean;
+    next_step: string;
+  };
 };
 
 const requiredHeaders = [
@@ -114,11 +119,31 @@ function toRecord(row: Record<HeaderKey, string>, index: number): { record: Perf
 }
 
 function parseFromRows(rows: string[][]): PerformanceImportResult {
-  if (rows.length < 2) return { records: [], errors: ["import requires header + at least one data row"], source: "csv" };
+  if (rows.length < 2)
+    return {
+      records: [],
+      errors: ["import requires header + at least one data row"],
+      source: "csv",
+      sheetAdapter: {
+        provider: "google_sheet_readonly_stub",
+        ready: false,
+        next_step: "Provide sheet_id + range for readonly pull.",
+      },
+    };
 
   const header = rows[0] as string[];
   const missing = requiredHeaders.filter((key) => !header.includes(key));
-  if (missing.length > 0) return { records: [], errors: [`missing required columns: ${missing.join(", ")}`], source: "csv" };
+  if (missing.length > 0)
+    return {
+      records: [],
+      errors: [`missing required columns: ${missing.join(", ")}`],
+      source: "csv",
+      sheetAdapter: {
+        provider: "google_sheet_readonly_stub",
+        ready: false,
+        next_step: "Provide sheet_id + range for readonly pull.",
+      },
+    };
 
   const headerIndex = new Map(header.map((item, idx) => [item, idx]));
   const records: PerformanceRecord[] = [];
@@ -137,7 +162,20 @@ function parseFromRows(rows: string[][]): PerformanceImportResult {
     }
   });
 
-  return { records, errors, source: "csv" };
+  if (records.length === 0) {
+    errors.unshift("no valid rows parsed: check enum values and required fields");
+  }
+
+  return {
+    records,
+    errors,
+    source: "csv",
+    sheetAdapter: {
+      provider: "google_sheet_readonly_stub",
+      ready: false,
+      next_step: "Provide sheet_id + range for readonly pull.",
+    },
+  };
 }
 
 export function importPerformanceFromCsv(csvText: string): PerformanceImportResult {
@@ -156,4 +194,9 @@ export function loadDefaultPerformanceRecords() {
     ...parsed,
     source: "default_seed" as const,
   };
+}
+
+export async function importPerformanceFromCsvFile(file: File): Promise<PerformanceImportResult> {
+  const content = await file.text();
+  return importPerformanceFromCsv(content);
 }

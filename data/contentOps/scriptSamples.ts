@@ -37,6 +37,18 @@ function sample(id: number, topic_id: string, title: string, cta: string): Scrip
     trustworthiness_score: 90,
     rewrite_required: false,
     notes: "Avoid absolute claims. No fake pricing or case detail.",
+    review_status: "draft",
+    reviewer_notes: "待人工审核：补充 1 条本地真实案例细节后再发布。",
+    version_history: [
+      {
+        version_id: `${id}_v1`,
+        created_at: "2026-03-26T09:00:00.000Z",
+        updated_by: "ops_editor",
+        status: "draft",
+        notes: "初稿由 Script Generator 生成。",
+        summary: "包含 hook + 标准脚本结构，尚未过人工审核。",
+      },
+    ],
   };
 }
 

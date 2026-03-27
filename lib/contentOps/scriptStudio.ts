@@ -11,6 +11,10 @@ export type ScriptStudioDraft = {
   authenticityRisk: "low" | "medium" | "high";
   aiSmellRisk: "low" | "medium" | "high";
   suggestions: string[];
+  reviewStatus: ScriptPack["review_status"];
+  reviewerNotes: string;
+  versionHistory: ScriptPack["version_history"];
+  requiresManualReview: boolean;
 };
 
 const localization = {
@@ -59,5 +63,9 @@ export function buildScriptStudioDraft(script: ScriptPack, language: "en" | "zh"
       "Keep first 3 seconds problem-specific instead of broad claims.",
       "End with review-before-publish cue for manual QC.",
     ],
+    reviewStatus: script.review_status,
+    reviewerNotes: script.reviewer_notes,
+    versionHistory: script.version_history,
+    requiresManualReview: script.review_status !== "approved",
   };
 }
