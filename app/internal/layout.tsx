@@ -6,6 +6,7 @@ const navItems = [
   { href: "/internal/leads", label: "Leads" },
   { href: "/internal/quotes", label: "Quote Draft" },
   { href: "/internal/follow-up", label: "Follow-up" },
+  { href: "/internal/content-ops", label: "Content Ops" },
 ];
 
 export default function InternalLayout({ children }: { children: ReactNode }) {
