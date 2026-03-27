@@ -1,0 +1,64 @@
+import type { ScriptPack } from "@/lib/contentOps/types";
+
+function sample(id: number, topic_id: string, title: string, cta: string): ScriptPack {
+  return {
+    id: `script_sample_${id}`,
+    topic_id,
+    hook_variants: [
+      `If your ${title}, check this first before buying parts.`,
+      `Homeowners in SoCal: ${title} usually has one simple clue.`,
+      `Don’t panic when ${title} — here’s the practical sequence.`,
+    ],
+    main_script: `Opening hook: ${title}. Scene 1 show real fixture. Scene 2 explain symptom and likely cause in plain words. Scene 3 show safe first check and what not to do. Scene 4 give homeowner decision point for DIY stop vs call.` ,
+    short_script: `Hook + one cause + one safe action + soft CTA (15-25s).`,
+    standard_script: `Hook + symptom breakdown + risk boundary + practical action + CTA (25-45s).`,
+    long_script: `Hook + symptom + root cause options + what we inspect onsite + result expectations + CTA (45-60s).`,
+    on_screen_text: [
+      "What you are seeing",
+      "What usually causes it",
+      "Safe first step",
+      "When to call a pro",
+    ],
+    voiceover: `We see this a lot in local homes. Start with a simple check, avoid over-fixing, then decide if it needs onsite service.`,
+    subtitle_copy: `现场先看这个点，别急着买配件。先做安全检查，再判断要不要约上门。`,
+    caption: `${title} is common and fixable when handled early. This video is educational; onsite diagnosis can vary by home condition.`,
+    hashtags: ["#plumbing", "#homeowner", "#kcw", "#socalhomes", "#homemaintenance"],
+    CTA: cta,
+    pinned_comment: "If your symptom is similar, share where it happens (kitchen/bath/laundry) and we can suggest next checks.",
+    reply_seed: [
+      "Can you share if this is one fixture or whole house?",
+      "If there is active leak or gas smell, pause DIY and call local emergency support first.",
+      "If you’re in our service area, DM a short video and we can suggest next step.",
+    ],
+    realism_notes: "Use real KCW footage only. Mark as educational if no exact matching case footage.",
+    human_tone_notes: "Conversational, practical, no fear-based wording.",
+    ai_smell_risk: 18,
+    exaggeration_risk: 10,
+    trustworthiness_score: 90,
+    rewrite_required: false,
+    notes: "Avoid absolute claims. No fake pricing or case detail.",
+  };
+}
+
+export const scriptSamples: ScriptPack[] = [
+  sample(1, "topic_common_issues_1", "kitchen sink drains slowly", "Need help checking your setup? DM your sink layout."),
+  sample(2, "topic_common_issues_2", "shower hot water cuts out", "Want a quick triage checklist? Comment 'hot water'."),
+  sample(3, "topic_mistakes_to_avoid_1", "you are using boiling water on PVC", "Save this before your next DIY attempt."),
+  sample(4, "topic_mistakes_to_avoid_3", "you plunge without sealing overflow", "Send us a photo if your sink setup is unusual."),
+  sample(5, "topic_real_case_1", "a clog turns out to be root intrusion", "If backups keep returning, message for next-step checklist."),
+  sample(6, "topic_real_case_3", "water heater repair is no longer cost-effective", "Need help comparing repair vs replace? DM your model info."),
+  sample(7, "topic_maintenance_1", "you want a monthly drain routine", "Comment 'checklist' and we’ll share the 3-minute version."),
+  sample(8, "topic_maintenance_4", "water heater needs a sediment check", "If yours is older than 8 years, DM your symptoms."),
+  sample(9, "topic_quote_education_1", "drain cleaning quotes vary a lot", "Want our quote-comparison checklist? Reply 'quote'."),
+  sample(10, "topic_quote_education_4", "repair vs replace is confusing", "Send your current diagnosis and we’ll suggest what to compare."),
+  sample(11, "topic_trust_knowledge_1", "copper vs PEX decision", "If your home age is unknown, comment build year range."),
+  sample(12, "topic_trust_knowledge_3", "hydro jetting is recommended", "DM if you want to know whether snake or jet fits your symptom."),
+  sample(13, "topic_brand_trust_1", "we prioritize three daily calls safely", "Follow for real field workflow, not hype."),
+  sample(14, "topic_brand_trust_3", "sometimes waiting is smarter than rushing", "Ask us what signs mean 'watch' vs 'repair now'."),
+  sample(15, "topic_local_reminder_1", "older SoCal homes have hidden risk points", "If your house is pre-1980, save this list."),
+  sample(16, "topic_local_reminder_3", "rainy week prep for outdoor drains", "Need a pre-rain checklist? DM 'rain prep'."),
+  sample(17, "topic_common_issues_9", "morning brown water appears briefly", "Comment if it happens on hot, cold, or both."),
+  sample(18, "topic_mistakes_to_avoid_9", "flushable wipes keep causing blockages", "Share this with someone renting an older unit."),
+  sample(19, "topic_real_case_10", "condo stack issue looks like unit-only clog", "If you live in condo, include floor level when asking."),
+  sample(20, "topic_quote_education_12", "temporary fix can still be worth listing", "Need help prioritizing immediate vs long-term spend? DM us."),
+];
