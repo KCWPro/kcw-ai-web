@@ -1,11 +1,16 @@
 import { scriptSamples } from "@/data/contentOps/scriptSamples";
 import { scriptTemplates } from "@/data/contentOps/scriptTemplates";
 import { seedTopics, seedTopicCount } from "@/data/contentOps/seedTopics";
+import { findAssetGaps, filterAssets, seedAssets } from "@/lib/contentOps/assetLibrary";
+import { buildDashboardTopAlert } from "@/lib/contentOps/dashboardAlerts";
+import { detectDuplicationRisk } from "@/lib/contentOps/duplicationGuard";
 import { runFiveDayReview } from "@/lib/contentOps/fiveDayReview";
 import { buildMonetizationPlanner } from "@/lib/contentOps/monetizationPlanner";
+import { importPerformanceFromCsv, importPerformanceFromSheetText, loadDefaultPerformanceRecords } from "@/lib/contentOps/performanceImport";
 import { analyzePerformance } from "@/lib/contentOps/performanceTracker";
 import { buildPublishingChecklist } from "@/lib/contentOps/publishingChecklist";
 import { generateScriptPack } from "@/lib/contentOps/scriptGenerator";
+import { buildScriptStudioDraft } from "@/lib/contentOps/scriptStudio";
 import { buildContentStrategyEngine } from "@/lib/contentOps/strategyEngine";
 import { pickTopThreeForToday } from "@/lib/contentOps/topicGenerator";
 import type { PerformanceRecord } from "@/lib/contentOps/types";
@@ -31,65 +36,42 @@ export function buildDailyPlannerSnapshot() {
   };
 }
 
-export function buildPerformanceSnapshot() {
-  const mockPerformance: PerformanceRecord[] = [
-    {
-      post_id: "p1",
-      platform: "tiktok",
-      posted_at: "2026-03-22T18:00:00Z",
-      views: 2300,
-      retention: 0.33,
-      likes: 120,
-      comments: 18,
-      saves: 14,
-      shares: 8,
-      follows: 9,
-      profile_visits: 44,
-      dms: 4,
-      leads: 2,
-      topic_type: "faq",
-      format_type: "faq_quick_answer",
-      language: "en",
-      posting_time: "18:00",
-      analysis_summary: "solid",
-      cycle_id: "cycle_2026_03_5d_1",
-      goal_met: true,
-      missed_metrics: [],
-      root_causes: [],
-      optimization_actions: [],
-      next_cycle_strategy: "repeat",
-    },
-    {
-      post_id: "p2",
-      platform: "instagram_reels",
-      posted_at: "2026-03-23T18:00:00Z",
-      views: 1200,
-      retention: 0.21,
-      likes: 52,
-      comments: 8,
-      saves: 5,
-      shares: 3,
-      follows: 3,
-      profile_visits: 18,
-      dms: 2,
-      leads: 1,
-      topic_type: "education",
-      format_type: "quote_education",
-      language: "en_audio_zh_sub",
-      posting_time: "18:00",
-      analysis_summary: "mixed",
-      cycle_id: "cycle_2026_03_5d_1",
-      goal_met: false,
-      missed_metrics: ["retention"],
-      root_causes: ["hook weak"],
-      optimization_actions: ["shorter edit"],
-      next_cycle_strategy: "test",
-    },
-  ];
+export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheetText?: string }) {
+  const imported = importInput?.csvText
+    ? importPerformanceFromCsv(importInput.csvText)
+    : importInput?.sheetText
+      ? importPerformanceFromSheetText(importInput.sheetText)
+      : loadDefaultPerformanceRecords();
+
+  const records: PerformanceRecord[] = imported.records;
+  const fiveDayReview = runFiveDayReview(records, "standard");
+  const monetization = buildMonetizationPlanner(records);
+  const scriptStudioBase = scriptSamples[0];
+  const scriptStudioPreview = buildScriptStudioDraft(scriptStudioBase, "en", 0);
+  const cycleId = records[records.length - 1]?.cycle_id ?? "cycle_unknown";
 
   return {
-    performanceAnalysis: analyzePerformance([...mockPerformance]),
-    fiveDayReview: runFiveDayReview([...mockPerformance], "standard"),
-    monetization: buildMonetizationPlanner([...mockPerformance]),
+    importSummary: {
+      source: imported.source,
+      count: records.length,
+      errors: imported.errors,
+    },
+    performanceRecords: records,
+    performanceAnalysis: analyzePerformance(records),
+    fiveDayReview,
+    monetization,
+    scriptStudioBase,
+    scriptStudioPreview,
+    assetLibrary: {
+      records: seedAssets,
+      missing: findAssetGaps(seedAssets),
+      publicBeforeAfter: filterAssets(seedAssets, { safeForPublic: true, beforeAfter: true }).length,
+    },
+    duplication: detectDuplicationRisk(records),
+    dashboardAlert: buildDashboardTopAlert({
+      cycleId,
+      review: fiveDayReview.summary,
+      monetizationStage: monetization.stage,
+    }),
   };
 }

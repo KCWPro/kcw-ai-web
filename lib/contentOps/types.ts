@@ -138,6 +138,10 @@ export type PerformanceRecord = {
   root_causes: string[];
   optimization_actions: string[];
   next_cycle_strategy: string;
+  title: string;
+  hook: string;
+  script_expression: string;
+  structure_signature: string;
 };
 
 export type CommentReply = {
