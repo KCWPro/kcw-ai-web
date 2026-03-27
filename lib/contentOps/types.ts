@@ -112,6 +112,33 @@ export type AssetRecord = {
   quality_score: number;
   reuse_score: number;
   notes: string;
+  talking_head_compatible?: boolean;
+};
+
+export type InteractionStatus = "open" | "replied" | "waiting" | "escalated" | "closed";
+
+export type InteractionChannel = "comment" | "dm" | "lead";
+
+export type InteractionThread = {
+  id: string;
+  channel: InteractionChannel;
+  related_post_id?: string;
+  content_type: string;
+  inquiry_type?: string;
+  status: InteractionStatus;
+  intent_level: "low" | "medium" | "high";
+  urgency_level: "low" | "medium" | "high";
+  suggested_next_step: string;
+  risk_flag: boolean;
+  handoff_to_human: boolean;
+  last_message: string;
+  updated_at: string;
+};
+
+export type DuplicationSettings = {
+  threshold: number;
+  groupByPlatform: boolean;
+  groupByLanguage: boolean;
 };
 
 export type PostPlan = {

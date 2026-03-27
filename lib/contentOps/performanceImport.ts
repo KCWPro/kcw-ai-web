@@ -26,6 +26,8 @@ export type PerformanceImportResult = {
   sheetAdapter: {
     provider: "google_sheet_readonly_stub";
     ready: boolean;
+    sheet_id?: string;
+    range?: string;
     next_step: string;
   };
 };
@@ -178,6 +180,12 @@ function parseFromRows(rows: string[][]): PerformanceImportResult {
   };
 }
 
+export type GoogleSheetReadonlyConfig = {
+  sheet_id: string;
+  range: string;
+  mock_tsv?: string;
+};
+
 export function importPerformanceFromCsv(csvText: string): PerformanceImportResult {
   const parsed = parseFromRows(parseDelimited(csvText, ","));
   return { ...parsed, source: "csv" };
@@ -193,6 +201,40 @@ export function loadDefaultPerformanceRecords() {
   return {
     ...parsed,
     source: "default_seed" as const,
+  };
+}
+
+export function importPerformanceFromGoogleSheetReadonly(config: GoogleSheetReadonlyConfig): PerformanceImportResult {
+  if (!config.sheet_id.trim()) {
+    return {
+      records: [],
+      errors: ["sheet_id is required for readonly adapter"],
+      source: "sheet",
+      sheetAdapter: {
+        provider: "google_sheet_readonly_stub",
+        ready: false,
+        sheet_id: config.sheet_id,
+        range: config.range,
+        next_step: "Set GOOGLE_SHEETS_SERVICE_ACCOUNT_JSON and implement remote fetch in adapter.",
+      },
+    };
+  }
+
+  const fallback = config.mock_tsv ?? "";
+  const parsed = importPerformanceFromSheetText(fallback);
+  return {
+    ...parsed,
+    source: "sheet",
+    sheetAdapter: {
+      provider: "google_sheet_readonly_stub",
+      ready: fallback.trim().length > 0,
+      sheet_id: config.sheet_id,
+      range: config.range,
+      next_step:
+        fallback.trim().length > 0
+          ? "Using mock-compatible adapter payload; wire remote fetch when credentials are available."
+          : "No mock TSV provided. Adapter interface is ready for readonly pull.",
+    },
   };
 }
 

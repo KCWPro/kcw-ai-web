@@ -16,6 +16,8 @@ export type AssetUploadInput = {
   service_type?: string;
   tags?: string[];
   safe_for_public?: boolean;
+  notes?: string;
+  talking_head_compatible?: boolean;
   topic_id?: string;
   script_id?: string;
   post_plan_id?: string;
@@ -42,6 +44,7 @@ export const seedAssets: AssetRecord[] = [
     quality_score: 88,
     reuse_score: 90,
     notes: "Good natural lighting",
+    talking_head_compatible: false,
   },
   {
     asset_id: "asset_02",
@@ -63,6 +66,7 @@ export const seedAssets: AssetRecord[] = [
     quality_score: 61,
     reuse_score: 35,
     notes: "Needs redaction before reuse",
+    talking_head_compatible: true,
   },
   {
     asset_id: "asset_03",
@@ -84,6 +88,7 @@ export const seedAssets: AssetRecord[] = [
     quality_score: 82,
     reuse_score: 86,
     notes: "Great for quick safety hooks",
+    talking_head_compatible: true,
   },
 ];
 
@@ -113,6 +118,7 @@ export function createAssetFromUpload(input: AssetUploadInput): AssetRecord {
     quality_score: 70,
     reuse_score: 70,
     notes: "Uploaded via lightweight Asset API.",
+    talking_head_compatible: input.talking_head_compatible ?? false,
   };
 }
 
@@ -122,6 +128,7 @@ export type AssetFilter = {
   safeForPublic?: boolean;
   beforeAfter?: boolean;
   bRoll?: boolean;
+  talkingHeadCompatible?: boolean;
 };
 
 export function filterAssets(records: AssetRecord[], filter: AssetFilter) {
@@ -130,7 +137,13 @@ export function filterAssets(records: AssetRecord[], filter: AssetFilter) {
     if (typeof filter.safeForPublic === "boolean" && asset.safe_for_public !== filter.safeForPublic) return false;
     if (filter.beforeAfter && !asset.tags.includes("before-after")) return false;
     if (filter.bRoll && !asset.tags.map((tag) => tag.toLowerCase()).includes("b-roll")) return false;
-    if (filter.tags && filter.tags.length > 0 && !filter.tags.every((tag) => asset.tags.includes(tag))) return false;
+    if (filter.talkingHeadCompatible && !asset.talking_head_compatible) return false;
+    if (
+      filter.tags &&
+      filter.tags.length > 0 &&
+      !filter.tags.every((tag) => asset.tags.map((item) => item.toLowerCase()).includes(tag.toLowerCase()))
+    )
+      return false;
     return true;
   });
 }

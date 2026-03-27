@@ -1,4 +1,5 @@
 import type { PerformanceRecord } from "@/lib/contentOps/types";
+import type { DuplicationSettings } from "@/lib/contentOps/types";
 
 export type DuplicateRisk = {
   post_id: string;
@@ -33,11 +34,17 @@ function jaccard(a: string, b: string) {
   return union === 0 ? 0 : intersection / union;
 }
 
-export function detectDuplicationRisk(records: PerformanceRecord[]) {
+export function detectDuplicationRisk(records: PerformanceRecord[], settings?: DuplicationSettings) {
   const recent = records.slice(-20);
+  const threshold = settings?.threshold ?? 0.68;
 
   const risks = recent.map((record, idx) => {
-    const others = recent.filter((_, index) => index !== idx);
+    const others = recent.filter((other, index) => {
+      if (index === idx) return false;
+      if (settings?.groupByPlatform && other.platform !== record.platform) return false;
+      if (settings?.groupByLanguage && other.language !== record.language) return false;
+      return true;
+    });
 
     const titleRisk = Math.max(0, ...others.map((other) => jaccard(record.title, other.title)));
     const hookRisk = Math.max(0, ...others.map((other) => jaccard(record.hook, other.hook)));
@@ -56,7 +63,7 @@ export function detectDuplicationRisk(records: PerformanceRecord[]) {
       expressionRisk,
       structureRisk,
       totalRisk,
-      blockedFromRecommendation: totalRisk >= 0.68,
+      blockedFromRecommendation: totalRisk >= threshold,
       replacementDirection:
         structureRisk > 0.8
           ? "Switch to a different narrative structure (e.g. FAQ -> case timeline)."
@@ -71,6 +78,7 @@ export function detectDuplicationRisk(records: PerformanceRecord[]) {
 
   return {
     windowSize: recent.length,
+    threshold,
     risks,
     blocked,
     highestRisk,
