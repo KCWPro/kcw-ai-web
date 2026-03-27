@@ -36,7 +36,31 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
   const [interactionStatus, setInteractionStatus] = useState("");
   const [monetizationStatus, setMonetizationStatus] = useState("");
 
-  const snapshot = defaultSnapshot;
+  const snapshot = {
+    ...defaultSnapshot,
+    scriptStudioBase: defaultSnapshot?.scriptStudioBase ?? { id: "", topic_id: "", reviewer_notes: "", hook_variants: [""], standard_script: "", caption: "", CTA: "", ai_smell_risk: 0, exaggeration_risk: 0, trustworthiness_score: 0, review_status: "draft", version_history: [] },
+    fiveDayReview: defaultSnapshot?.fiveDayReview ?? { summary: { not_met: true } },
+    reviewFunnel: defaultSnapshot?.reviewFunnel ?? { draft: 0, reviewed: 0, approved: 0, rejected: 0 },
+    executionProgress: defaultSnapshot?.executionProgress ?? { total: 0, completed: 0, incomplete: 0, bottleneckStage: "-", todayPriorityAction: "-" },
+    interactionBacklog: defaultSnapshot?.interactionBacklog ?? { pendingComments: 0, pendingDms: 0, pendingHotLeads: 0 },
+    monetization: defaultSnapshot?.monetization ?? { stage: "-", ctaRecommendation: "-" },
+    duplication: defaultSnapshot?.duplication ?? { threshold: 0, blocked: [], highestRisk: null },
+    duplicationSettings: defaultSnapshot?.duplicationSettings ?? { groupByPlatform: false, groupByLanguage: false },
+    dashboardAlert: defaultSnapshot?.dashboardAlert ?? { weakestMetric: "-" },
+    postPlans: Array.isArray(defaultSnapshot?.postPlans) ? defaultSnapshot.postPlans : [],
+    executionBoard: Array.isArray(defaultSnapshot?.executionBoard) ? defaultSnapshot.executionBoard : [],
+    interactions: Array.isArray(defaultSnapshot?.interactions) ? defaultSnapshot.interactions : [],
+    monetizationExecution: Array.isArray(defaultSnapshot?.monetizationExecution) ? defaultSnapshot.monetizationExecution : [],
+    assetLibrary: {
+      records: Array.isArray(defaultSnapshot?.assetLibrary?.records) ? defaultSnapshot.assetLibrary.records : [],
+      missing: Array.isArray(defaultSnapshot?.assetLibrary?.missing) ? defaultSnapshot.assetLibrary.missing : [],
+    },
+    importSummary: {
+      ...defaultSnapshot?.importSummary,
+      errors: Array.isArray(defaultSnapshot?.importSummary?.errors) ? defaultSnapshot.importSummary.errors : [],
+      sheetAdapter: defaultSnapshot?.importSummary?.sheetAdapter ?? { provider: "-", next_step: "-" },
+    },
+  };
 
   const [uploadedAssets, setUploadedAssets] = useState<UploadedAssetView[]>(() =>
     snapshot.assetLibrary.records.slice(0, 20).map((asset: any) => ({
@@ -257,10 +281,10 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
           <p className="mt-1 text-xs">任务总数 {snapshot.executionProgress.total} / 已完成 {snapshot.executionProgress.completed} / 未完成 {snapshot.executionProgress.incomplete}</p>
           <p className="text-xs">卡住最多步骤：{snapshot.executionProgress.bottleneckStage}</p>
           <ul className="mt-2 space-y-1 text-xs">
-            {defaultSnapshot.executionBoard.map((task: any, index: number) => (
+            {snapshot.executionBoard.map((task: any, index: number) => (
               <li key={`${task.date}-${index}`} className="rounded bg-slate-50 p-2">
                 {task.date} · {task.status}
-                <button className="ml-2 rounded border px-1" onClick={() => updateExecution(defaultSnapshot.executionBoard[index] ? `task_${defaultSnapshot.postPlans[index]?.id}` : "", { checked_in: true })}>完成打卡</button>
+                <button className="ml-2 rounded border px-1" onClick={() => updateExecution(snapshot.executionBoard[index] ? `task_${snapshot.postPlans[index]?.id}` : "", { checked_in: true })}>完成打卡</button>
               </li>
             ))}
           </ul>

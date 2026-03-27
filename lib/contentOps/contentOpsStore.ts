@@ -1,3 +1,4 @@
+import "server-only";
 import fs from "node:fs";
 import path from "node:path";
 import { scriptSamples } from "@/data/contentOps/scriptSamples";
@@ -122,11 +123,60 @@ function ensureRuntimeStore() {
   }
 }
 
+function safeObject(value: unknown): Record<string, unknown> {
+  return value && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {};
+}
+
+function normalizeState(input: unknown): ContentOpsRuntimeState {
+  const fallback = buildInitialState();
+  const root = safeObject(input);
+  const scripts = Array.isArray(root.scripts) ? root.scripts.filter((item) => item && typeof item === "object") as ScriptPack[] : fallback.scripts;
+  const postPlans = Array.isArray(root.postPlans) ? root.postPlans.filter((item) => item && typeof item === "object") as PostPlan[] : fallback.postPlans;
+  const executionTasks = Array.isArray(root.executionTasks)
+    ? root.executionTasks.filter((item) => item && typeof item === "object") as ExecutionTask[]
+    : fallback.executionTasks;
+  const interactions = Array.isArray(root.interactions)
+    ? root.interactions.filter((item) => item && typeof item === "object") as InteractionThread[]
+    : fallback.interactions;
+  const duplicationSettings = { ...fallback.duplicationSettings, ...safeObject(root.duplicationSettings) } as DuplicationSettings;
+  const monetizationOverrides = safeObject(root.monetizationOverrides) as Record<string, MonetizationExecutionLabel>;
+  const importMetaRaw = safeObject(root.importMeta);
+  const sheetConfigRaw = safeObject(root.sheetConfig);
+
+  return {
+    scripts: scripts.length > 0 ? scripts : fallback.scripts,
+    postPlans: postPlans.length > 0 ? postPlans : fallback.postPlans,
+    executionTasks,
+    interactions,
+    duplicationSettings,
+    monetizationOverrides,
+    importMeta: {
+      currentSource:
+        importMetaRaw.currentSource === "csv" || importMetaRaw.currentSource === "sheet" || importMetaRaw.currentSource === "default_seed"
+          ? importMetaRaw.currentSource
+          : fallback.importMeta.currentSource,
+      lastImportedAt: typeof importMetaRaw.lastImportedAt === "string" && importMetaRaw.lastImportedAt.trim() ? importMetaRaw.lastImportedAt : fallback.importMeta.lastImportedAt,
+      cycleQualified: typeof importMetaRaw.cycleQualified === "boolean" ? importMetaRaw.cycleQualified : fallback.importMeta.cycleQualified,
+    },
+    sheetConfig: {
+      sheet_id: typeof sheetConfigRaw.sheet_id === "string" ? sheetConfigRaw.sheet_id : fallback.sheetConfig.sheet_id,
+      range: typeof sheetConfigRaw.range === "string" && sheetConfigRaw.range.trim() ? sheetConfigRaw.range : fallback.sheetConfig.range,
+    },
+  };
+}
+
 export function readContentOpsState(): ContentOpsRuntimeState {
   ensureRuntimeStore();
   try {
     const raw = fs.readFileSync(STORE_PATH, "utf-8");
-    return JSON.parse(raw) as ContentOpsRuntimeState;
+    if (!raw.trim()) {
+      const fallback = buildInitialState();
+      fs.writeFileSync(STORE_PATH, JSON.stringify(fallback, null, 2), "utf-8");
+      return fallback;
+    }
+    const normalized = normalizeState(JSON.parse(raw));
+    fs.writeFileSync(STORE_PATH, JSON.stringify(normalized, null, 2), "utf-8");
+    return normalized;
   } catch {
     const fallback = buildInitialState();
     fs.writeFileSync(STORE_PATH, JSON.stringify(fallback, null, 2), "utf-8");

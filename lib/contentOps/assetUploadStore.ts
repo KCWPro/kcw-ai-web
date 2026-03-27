@@ -1,3 +1,4 @@
+import "server-only";
 import { createAssetFromUpload, seedAssets, type AssetUploadInput, type AssetBinding } from "@/lib/contentOps/assetLibrary";
 import type { AssetRecord } from "@/lib/contentOps/types";
 import fs from "node:fs";
@@ -23,10 +24,17 @@ function hydrateState() {
     return;
   }
   try {
-    const parsed = JSON.parse(fs.readFileSync(STORE_PATH, "utf-8")) as AssetStoreState;
-    state.uploadedAssets = parsed.uploadedAssets ?? [];
-    state.bindings = parsed.bindings ?? [];
+    const raw = fs.readFileSync(STORE_PATH, "utf-8");
+    if (!raw.trim()) {
+      fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
+      return;
+    }
+    const parsed = JSON.parse(raw) as Partial<AssetStoreState>;
+    state.uploadedAssets = Array.isArray(parsed.uploadedAssets) ? parsed.uploadedAssets : [];
+    state.bindings = Array.isArray(parsed.bindings) ? parsed.bindings : [];
   } catch {
+    state.uploadedAssets = [];
+    state.bindings = [];
     fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
   }
 }
