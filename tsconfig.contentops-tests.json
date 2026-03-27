@@ -1,0 +1,19 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp-contentops-tests",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "target": "ES2021",
+    "lib": ["es2021"],
+    "incremental": false,
+    "isolatedModules": false,
+    "jsx": "preserve"
+  },
+  "include": [
+    "lib/contentOps/**/*.ts",
+    "data/contentOps/**/*.ts",
+    "tests/contentOps*.test.ts"
+  ]
+}
