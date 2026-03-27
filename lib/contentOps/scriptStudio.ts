@@ -15,6 +15,10 @@ export type ScriptStudioDraft = {
   reviewerNotes: string;
   versionHistory: ScriptPack["version_history"];
   requiresManualReview: boolean;
+  realismScore: number;
+  exaggerationRisk: "low" | "medium" | "high";
+  duplicationRisk: "low" | "medium" | "high";
+  publishBlocked: boolean;
 };
 
 const localization = {
@@ -67,5 +71,9 @@ export function buildScriptStudioDraft(script: ScriptPack, language: "en" | "zh"
     reviewerNotes: script.reviewer_notes,
     versionHistory: script.version_history,
     requiresManualReview: script.review_status !== "approved",
+    realismScore: script.trustworthiness_score,
+    exaggerationRisk: mapRisk(script.exaggeration_risk),
+    duplicationRisk: mapRisk(script.ai_smell_risk + Math.max(0, 50 - script.trustworthiness_score)),
+    publishBlocked: script.review_status !== "approved" || script.exaggeration_risk >= 60 || script.ai_smell_risk >= 60,
   };
 }

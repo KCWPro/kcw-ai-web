@@ -47,17 +47,46 @@ export function inferExecutionLabel(record: PerformanceRecord): MonetizationExec
 }
 
 export function buildMonetizationExecutionMap(records: PerformanceRecord[]) {
-  return records.map((record) => ({
-    post_id: record.post_id,
-    title: record.title,
-    label: inferExecutionLabel(record),
-    recommended_cta:
-      inferExecutionLabel(record) === "lead_capture"
-        ? "引导 DM：留下症状 + 城市，人工接管高意向线索。"
-        : inferExecutionLabel(record) === "affiliate"
-          ? "仅在教学上下文轻量推荐工具，并保留 lead 入口。"
-          : inferExecutionLabel(record) === "sponsor_safe"
-            ? "可放 sponsor-safe 口播，但不要覆盖本地 lead CTA。"
-            : "教育向内容，CTA 以问题收集为主。",
-  }));
+  return records.map((record) => {
+    const label = inferExecutionLabel(record);
+    return {
+      post_id: record.post_id,
+      title: record.title,
+      label,
+      recommended_cta:
+        label === "lead_capture"
+          ? "引导 DM：留下症状 + 城市，人工接管高意向线索。"
+          : label === "affiliate"
+            ? "仅在教学上下文轻量推荐工具，并保留 lead 入口。"
+            : label === "sponsor_safe"
+              ? "可放 sponsor-safe 口播，但不要覆盖本地 lead CTA。"
+              : "教育向内容，CTA 以问题收集为主。",
+      lead_capture_route: label === "lead_capture" ? "DM/form/phone" : "none",
+      authenticity_guard:
+        label === "affiliate" || label === "sponsor_safe"
+          ? "Must disclose relationship and keep local service trust-first phrasing."
+          : "Standard realism guard.",
+      blocked_monetization_modes:
+        label === "lead_capture"
+          ? ["hard_sponsor_pitch"]
+          : label === "education_only"
+            ? ["affiliate", "sponsor"]
+            : [],
+    };
+  });
+}
+
+export function applyMonetizationOverride(
+  items: Array<{ post_id: string; label: MonetizationExecutionLabel; recommended_cta: string }>,
+  overrides: Record<string, MonetizationExecutionLabel>,
+) {
+  return items.map((item) => {
+    const override = overrides[item.post_id];
+    if (!override) return item;
+    return {
+      ...item,
+      label: override,
+      recommended_cta: `Manual override applied: ${override}`,
+    };
+  });
 }

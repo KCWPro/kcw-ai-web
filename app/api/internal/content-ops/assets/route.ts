@@ -22,6 +22,8 @@ export async function POST(request: Request) {
       topic_id?: string;
       script_id?: string;
       post_plan_id?: string;
+      notes?: string;
+      talking_head_compatible?: boolean;
     };
 
     if (!body.filename || !body.mime_type || !body.preview_url) {
@@ -37,6 +39,8 @@ export async function POST(request: Request) {
       service_type: body.service_type,
       tags: body.tags ?? [],
       safe_for_public: body.safe_for_public,
+      notes: body.notes,
+      talking_head_compatible: body.talking_head_compatible,
       topic_id: body.topic_id,
       script_id: body.script_id,
       post_plan_id: body.post_plan_id,
@@ -53,6 +57,8 @@ export async function PATCH(request: Request) {
       asset_id?: string;
       tags?: string[];
       safe_for_public?: boolean;
+      notes?: string;
+      service_type?: string;
     };
     if (!body.asset_id) {
       return Response.json({ success: false, error: "asset_id required" }, { status: 400 });
@@ -61,6 +67,8 @@ export async function PATCH(request: Request) {
     const updated = updateAssetMeta(body.asset_id, {
       tags: body.tags,
       safe_for_public: body.safe_for_public,
+      notes: body.notes,
+      service_type: body.service_type,
     });
     if (!updated) {
       return Response.json({ success: false, error: "asset not found in upload store" }, { status: 404 });

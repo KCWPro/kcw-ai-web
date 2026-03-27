@@ -1,4 +1,5 @@
 import type { DailyExecution, ExecutionStatus, PostPlan } from "@/lib/contentOps/types";
+import type { ExecutionTask } from "@/lib/contentOps/contentOpsStore";
 
 const executionOrder: ExecutionStatus[] = ["planned", "filmed", "edited", "posted", "reviewed"];
 
@@ -103,11 +104,33 @@ export function summarizeExecutionProgress(items: DailyExecution[]) {
     stageCount[item.status] += 1;
   });
 
+  const incomplete = items.filter((item) => item.status !== "reviewed").length;
+  const stageRank = Object.entries(stageCount).sort((a, b) => b[1] - a[1])[0]?.[0] ?? "planned";
+
   return {
     total: items.length,
+    completed: items.filter((item) => item.status === "reviewed").length,
+    incomplete,
+    bottleneckStage: stageRank as ExecutionStatus,
     stageCount,
     commentReplied: items.filter((item) => item.comment_replied).length,
     dmProcessed: items.filter((item) => item.dm_processed).length,
     leadHandoff: items.filter((item) => item.high_intent_lead_handoff).length,
+    todayPriorityAction:
+      stageRank === "planned"
+        ? "Complete filming for planned items first."
+        : stageRank === "edited"
+          ? "Clear editing queue and prepare publish package."
+          : "Close review and interaction follow-ups.",
   };
+}
+
+export function buildExecutionBoardFromTasks(tasks: ExecutionTask[]): DailyExecution[] {
+  return tasks.map((task) => ({
+    date: task.date,
+    status: task.status,
+    comment_replied: task.comments_replied,
+    dm_processed: task.dms_handled,
+    high_intent_lead_handoff: task.hot_lead_escalated,
+  }));
 }

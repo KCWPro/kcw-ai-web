@@ -51,3 +51,29 @@ export function detectLeadIntent(text: string) {
         : "Collect city + symptom + timeline, then guide to DM/form.",
   };
 }
+
+export function buildInteractionBacklogSummary(items: Array<{ channel: "comment" | "dm" | "lead"; status: string; handoff_to_human: boolean }>) {
+  return {
+    pendingComments: items.filter((item) => item.channel === "comment" && item.status === "open").length,
+    pendingDms: items.filter((item) => item.channel === "dm" && ["open", "waiting"].includes(item.status)).length,
+    pendingHotLeads: items.filter((item) => item.channel === "lead" && item.handoff_to_human && item.status !== "closed").length,
+  };
+}
+
+export function groupReplyBankByContentType() {
+  return {
+    real_case: commentReplyBank.filter((item) => ["my_house_too", "service_area"].includes(item.comment_type)),
+    quote_education: commentReplyBank.filter((item) => item.comment_type === "price_question"),
+    safety: commentReplyBank.filter((item) => item.comment_type === "diy_question"),
+  };
+}
+
+export function groupDmReplyByInquiryType() {
+  return dmReplyBank.reduce(
+    (acc, item) => {
+      acc[item.inquiry_type] = [...(acc[item.inquiry_type] ?? []), item];
+      return acc;
+    },
+    {} as Record<string, DmReply[]>,
+  );
+}
