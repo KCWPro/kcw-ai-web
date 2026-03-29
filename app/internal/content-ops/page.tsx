@@ -9,17 +9,22 @@ export default function InternalContentOpsPage() {
   let daily: ReturnType<typeof buildDailyPlannerSnapshot>;
   let performance: ReturnType<typeof buildPerformanceSnapshot>;
   let degradedMessage = "";
+  let productionSafeMode = false;
 
   try {
     daily = buildDailyPlannerSnapshot();
     performance = buildPerformanceSnapshot();
+    productionSafeMode = performance.importSummary.errors.some((error: string) => error.includes("Production safe degraded mode"));
   } catch (error) {
     const fallbackDaily = buildDailyPlannerSnapshot();
     const fallbackPerformance = buildPerformanceSnapshot({ csvText: "" });
     daily = fallbackDaily;
     performance = fallbackPerformance;
+    productionSafeMode = fallbackPerformance.importSummary.errors.some((item: string) => item.includes("Production safe degraded mode"));
     degradedMessage = `部分数据加载失败，已回退到默认快照。${error instanceof Error ? `原因：${error.message}` : ""}`;
   }
+
+  const nonModeErrors = performance.importSummary.errors.filter((error: string) => !error.includes("Production safe degraded mode"));
 
   return (
     <main className="px-4 py-8 sm:px-6 lg:px-10">
@@ -37,13 +42,20 @@ export default function InternalContentOpsPage() {
             <span className="rounded-full bg-amber-50 px-3 py-1 text-amber-700">Imported Performance: {performance.importSummary.count}</span>
           </div>
         </header>
-        {(degradedMessage || performance.importSummary.errors.length > 0) && (
+        {productionSafeMode && (
+          <section className="rounded-2xl border border-blue-300 bg-blue-50 p-4 text-sm text-blue-900">
+            <p className="font-semibold">Production safe degraded mode</p>
+            <p className="mt-1">当前环境已禁用 runtime 本地写入，页面以只读 / 内存快照模式运行。</p>
+          </section>
+        )}
+
+        {(degradedMessage || nonModeErrors.length > 0) && (
           <section className="rounded-2xl border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900">
             <p className="font-semibold">部分数据加载失败</p>
             {degradedMessage && <p className="mt-1">{degradedMessage}</p>}
-            {performance.importSummary.errors.length > 0 && (
+            {nonModeErrors.length > 0 && (
               <ul className="mt-2 list-disc pl-5">
-                {performance.importSummary.errors.map((error: string, index: number) => (
+                {nonModeErrors.map((error: string, index: number) => (
                   <li key={`${error}-${index}`}>{error}</li>
                 ))}
               </ul>

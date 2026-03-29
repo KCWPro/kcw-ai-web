@@ -36,8 +36,10 @@ export type ContentOpsRuntimeState = {
 
 const RUNTIME_DIR = path.join(process.cwd(), "data", "contentOps", "runtime");
 const STORE_PATH = path.join(RUNTIME_DIR, "content-ops-store.json");
+const FILE_WRITES_ENABLED = process.env.VERCEL !== "1" && process.env.NODE_ENV !== "production";
 
 function coerceStorePathToFile() {
+  if (!FILE_WRITES_ENABLED) return;
   try {
     if (fs.existsSync(STORE_PATH) && fs.statSync(STORE_PATH).isDirectory()) {
       fs.rmSync(STORE_PATH, { recursive: true, force: true });
@@ -48,6 +50,7 @@ function coerceStorePathToFile() {
 }
 
 function safeWriteStore(state: ContentOpsRuntimeState) {
+  if (!FILE_WRITES_ENABLED) return false;
   coerceStorePathToFile();
   try {
     fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
@@ -136,7 +139,14 @@ function buildInitialState(): ContentOpsRuntimeState {
   };
 }
 
+let memoryState: ContentOpsRuntimeState | null = null;
+
 function ensureRuntimeStore() {
+  if (!FILE_WRITES_ENABLED) {
+    if (!memoryState) memoryState = buildInitialState();
+    return;
+  }
+
   if (!fs.existsSync(RUNTIME_DIR)) fs.mkdirSync(RUNTIME_DIR, { recursive: true });
   coerceStorePathToFile();
   if (!fs.existsSync(STORE_PATH)) {
@@ -186,8 +196,18 @@ function normalizeState(input: unknown): ContentOpsRuntimeState {
   };
 }
 
+export function isContentOpsWriteDisabledInProduction() {
+  return !FILE_WRITES_ENABLED;
+}
+
 export function readContentOpsState(): ContentOpsRuntimeState {
   ensureRuntimeStore();
+
+  if (!FILE_WRITES_ENABLED) {
+    if (!memoryState) memoryState = buildInitialState();
+    return normalizeState(memoryState);
+  }
+
   try {
     const raw = fs.readFileSync(STORE_PATH, "utf-8");
     if (!raw.trim()) {
@@ -206,7 +226,13 @@ export function readContentOpsState(): ContentOpsRuntimeState {
 }
 
 export function writeContentOpsState(mutator: (state: ContentOpsRuntimeState) => ContentOpsRuntimeState) {
-  const next = mutator(readContentOpsState());
+  const next = normalizeState(mutator(readContentOpsState()));
+
+  if (!FILE_WRITES_ENABLED) {
+    memoryState = next;
+    return next;
+  }
+
   safeWriteStore(next);
   return next;
 }

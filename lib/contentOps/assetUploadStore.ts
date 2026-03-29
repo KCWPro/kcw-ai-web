@@ -16,8 +16,11 @@ const state: AssetStoreState = {
 
 const RUNTIME_DIR = path.join(process.cwd(), "data", "contentOps", "runtime");
 const STORE_PATH = path.join(RUNTIME_DIR, "asset-upload-store.json");
+const FILE_WRITES_ENABLED = process.env.VERCEL !== "1" && process.env.NODE_ENV !== "production";
 
 function hydrateState() {
+  if (!FILE_WRITES_ENABLED) return;
+
   if (!fs.existsSync(RUNTIME_DIR)) fs.mkdirSync(RUNTIME_DIR, { recursive: true });
   if (!fs.existsSync(STORE_PATH)) {
     fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
@@ -40,8 +43,13 @@ function hydrateState() {
 }
 
 function persistState() {
+  if (!FILE_WRITES_ENABLED) return;
   if (!fs.existsSync(RUNTIME_DIR)) fs.mkdirSync(RUNTIME_DIR, { recursive: true });
   fs.writeFileSync(STORE_PATH, JSON.stringify(state, null, 2), "utf-8");
+}
+
+export function isAssetUploadWriteDisabledInProduction() {
+  return !FILE_WRITES_ENABLED;
 }
 
 hydrateState();
