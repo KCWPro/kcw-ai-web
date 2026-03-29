@@ -2,7 +2,7 @@ import { scriptSamples } from "@/data/contentOps/scriptSamples";
 import { scriptTemplates } from "@/data/contentOps/scriptTemplates";
 import { seedTopics, seedTopicCount } from "@/data/contentOps/seedTopics";
 import { findAssetGaps, filterAssets, seedAssets } from "@/lib/contentOps/assetLibrary";
-import { listAssetsWithUploads } from "@/lib/contentOps/assetUploadStore";
+import { isAssetUploadWriteDisabledInProduction, listAssetsWithUploads } from "@/lib/contentOps/assetUploadStore";
 import { buildDashboardTopAlert } from "@/lib/contentOps/dashboardAlerts";
 import { detectDuplicationRisk } from "@/lib/contentOps/duplicationGuard";
 import { runFiveDayReview } from "@/lib/contentOps/fiveDayReview";
@@ -17,7 +17,7 @@ import { buildContentStrategyEngine } from "@/lib/contentOps/strategyEngine";
 import { pickTopThreeForToday } from "@/lib/contentOps/topicGenerator";
 import type { PerformanceRecord } from "@/lib/contentOps/types";
 import { buildInteractionBacklogSummary, groupDmReplyByInquiryType, groupReplyBankByContentType } from "@/lib/contentOps/interactionStudio";
-import { readContentOpsState } from "@/lib/contentOps/contentOpsStore";
+import { isContentOpsWriteDisabledInProduction, readContentOpsState } from "@/lib/contentOps/contentOpsStore";
 
 export const contentOpsSeeds = {
   topics: seedTopics,
@@ -43,6 +43,9 @@ export function buildDailyPlannerSnapshot() {
 export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheetText?: string }) {
   const warnings: string[] = [];
   const runtime = readContentOpsState();
+  if (isContentOpsWriteDisabledInProduction() || isAssetUploadWriteDisabledInProduction()) {
+    warnings.push("Production safe degraded mode: runtime writes disabled (read-only seed/in-memory snapshot).");
+  }
   const imported = importInput?.csvText
     ? importPerformanceFromCsv(importInput.csvText)
     : importInput?.sheetText
