@@ -6,13 +6,16 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "target": "ES2021",
-    "lib": ["es2021"],
+    "lib": [
+      "es2021"
+    ],
     "incremental": false,
     "isolatedModules": false,
     "jsx": "preserve"
   },
   "include": [
     "lib/contentOps/**/*.ts",
+    "lib/socialAutomation/**/*.ts",
     "data/contentOps/**/*.ts",
     "tests/contentOps*.test.ts"
   ]
