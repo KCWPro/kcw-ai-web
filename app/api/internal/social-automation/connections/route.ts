@@ -3,6 +3,11 @@ import { updateConnectionState } from "@/lib/socialAutomation/controlPlane";
 import { readSocialAutomationState, writeSocialAutomationState } from "@/lib/socialAutomation/store";
 import type { ConnectionState, SocialPlatform } from "@/lib/socialAutomation/types";
 
+export async function GET() {
+  const snapshot = readSocialAutomationState();
+  return Response.json({ success: true, connections: snapshot.connections, degraded: snapshot.degraded });
+}
+
 export async function PATCH(req: Request) {
   const body = (await req.json().catch(() => ({}))) as { platform?: SocialPlatform; state?: ConnectionState };
   if (!body.platform || !body.state) {
