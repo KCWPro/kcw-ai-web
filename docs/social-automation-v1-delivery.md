@@ -14,3 +14,12 @@
 ## Human authorization requirements
 - Account owner must authorize each platform via OAuth.
 - Controlled auto publish should only be enabled after policy review and connector verification.
+
+## Repository verification checklist
+- Confirm route files exist with:
+  - `find app -path "*social-automation*" 2>/dev/null`
+  - `find app/api -path "*social-automation*" 2>/dev/null`
+  - `find lib -path "*socialAutomation*" 2>/dev/null`
+  - `find docs -iname "social-automation-*.md"`
+- Open the internal page locally with:
+  - `npm run dev` then visit `http://localhost:3000/internal/social-automation`
