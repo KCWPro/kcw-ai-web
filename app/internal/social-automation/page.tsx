@@ -1,21 +1,26 @@
-import SocialAutomationWorkbench from "@/app/internal/social-automation/SocialAutomationWorkbench";
-import { readSocialAutomationState } from "@/lib/socialAutomation/store";
-
-export const dynamic = "force-dynamic";
-
 export default function SocialAutomationPage() {
-  const snapshot = readSocialAutomationState();
-
   return (
-    <main className="px-4 py-8 sm:px-6 lg:px-10">
-      <div className="mx-auto max-w-7xl space-y-6">
-        <header className="rounded-2xl bg-white p-6 shadow-sm">
-          <p className="text-xs uppercase tracking-[0.15em] text-slate-500">KCW Internal · Social Automation V1</p>
-          <h1 className="mt-2 text-2xl font-semibold text-slate-900">Auto Topic → Script → Video → Publish Queue → Reply → Analytics → 5-Day Review</h1>
-          <p className="mt-2 text-sm text-slate-600">Official OAuth only. No account-password automation. Default mode is manual/auto-draft controlled operation.</p>
-        </header>
-        <SocialAutomationWorkbench defaultSnapshot={snapshot} />
-      </div>
+    <main style={{ padding: '24px', fontFamily: 'system-ui, sans-serif' }}>
+      <h1>Social Automation</h1>
+      <section>
+        <h2>Platform Connections</h2>
+        <p>Minimal placeholder for connection status.</p>
+      </section>
+      <section>
+        <h2>Publish Queue</h2>
+        <p>Minimal placeholder for queued publish jobs.</p>
+      </section>
+      <section
+        style={{
+          marginTop: '16px',
+          padding: '12px',
+          border: '1px solid #f59e0b',
+          background: '#fffbeb',
+        }}
+      >
+        <strong>Degraded Mode Notice</strong>
+        <p>This page is running in a minimal, scope-locked mode.</p>
+      </section>
     </main>
   );
 }

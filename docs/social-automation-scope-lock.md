@@ -1,18 +1,23 @@
-# Social Automation V1 Scope Lock
+# Social Automation Scope Lock (MVP)
 
-## Included in V1
-- Unified social automation control plane under `lib/socialAutomation/*`.
-- Internal control UI at `/internal/social-automation`.
-- Internal API endpoints for overview, mode switching, connection state updates, and queue transitions.
-- Topic→script→video-package→publish-queue transformation pipeline.
-- Draft-first reply hub and 5-day analytics normalization/review automation.
+## Scope
+This document locks the current implementation to a **minimal verifiable landing** only.
 
-## Explicitly Out of Scope for V1
-- Production-grade external persistent database migrations.
-- Full media transcoding/render farm.
-- Unreviewed mass auto-send for comments/DMs.
+## Done in this round
+- Added route page at `app/internal/social-automation/page.tsx`.
+- Added minimal type definitions at `lib/socialAutomation/types.ts`.
+- Added this scope-lock document.
 
-## Safety + Reality Constraints
-- OAuth token storage is server-side only (no frontend token persistence).
-- Default flow is manual review or auto draft.
-- Platform restrictions are represented as degraded states and visibility downgrade rules.
+## Explicitly not done
+- No backend integration.
+- No real platform OAuth/connect flows.
+- No real publish scheduling/worker pipeline.
+- No persistence/storage model.
+- No analytics/observability implementation.
+
+## Verification intent
+The page must be directly openable and display:
+- Social Automation
+- Platform Connections
+- Publish Queue
+- Degraded Mode Notice
