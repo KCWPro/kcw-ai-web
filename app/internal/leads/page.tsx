@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import InternalLeadsClientPage from "./InternalLeadsClientPage";
 import { internalLeads } from "@/lib/internalLeads";
 import { readInternalLeadsFromGoogleSheet } from "@/lib/internalLeadsStore";
@@ -42,9 +41,5 @@ async function loadInitialLeads(): Promise<InternalLeadRow[]> {
 export default async function InternalLeadsPage() {
   const initialLeads = await loadInitialLeads();
 
-  return (
-    <Suspense fallback={<InternalLeadsClientPage initialLeads={initialLeads} />}>
-      <InternalLeadsClientPage initialLeads={initialLeads} />
-    </Suspense>
-  );
+  return <InternalLeadsClientPage initialLeads={initialLeads} />;
 }
