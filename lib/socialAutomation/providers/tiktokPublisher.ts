@@ -17,6 +17,6 @@ export const tiktokPublisher: PublisherProvider = {
         message: "TikTok client in restricted mode; downgrade to private/draft compatible flow.",
       };
     }
-    return { accepted: true, queuedAs: "pending_platform", platformPostId: `tt_${Date.now()}`, message: "TikTok Content Posting accepted." };
+    return { accepted: true, queuedAs: "publish_attempted", platformPostId: `tt_${Date.now()}`, message: "TikTok Content Posting accepted." };
   },
 };

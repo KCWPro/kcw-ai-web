@@ -12,7 +12,7 @@ export const youtubePublisher: PublisherProvider = {
   async publish(request: PublishRequest): Promise<ProviderPublishResult> {
     return {
       accepted: true,
-      queuedAs: request.visibility === "public" ? "pending_platform" : "draft_ready",
+      queuedAs: request.visibility === "public" ? "publish_attempted" : "draft_ready",
       platformPostId: `yt_${Date.now()}`,
       message: request.isShortsReady ? "YouTube upload accepted with shorts metadata." : "Upload accepted.",
     };
