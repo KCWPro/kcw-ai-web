@@ -1,29 +1,21 @@
-# Social Automation V1 Architecture
+# Social Automation V1.5 Architecture
 
-## Core Namespaces
-- `lib/socialAutomation/types.ts`: contracts for connections, queue, analytics, replies, degraded states.
-- `lib/socialAutomation/controlPlane.ts`: orchestrates daily snapshot generation.
-- `lib/socialAutomation/topicAutomation.ts`: generates daily topic plan from existing Content Ops topic seeds.
-- `lib/socialAutomation/scriptAutomation.ts`: builds EN/ZH script packs from existing script generator.
-- `lib/socialAutomation/videoPipeline.ts`: outputs platform-ready draft post package (9:16, subtitle manifest, payload).
-- `lib/socialAutomation/queue.ts`: queue creation + status transition policy.
-- `lib/socialAutomation/analytics.ts`: normalization + auto 5-day review recommendation.
-- `lib/socialAutomation/replyHub.ts`: auto-draft comments/DM replies + lead/risk routing.
-- `lib/socialAutomation/providers/*.ts`: provider-safe OAuth/publish scaffold (TikTok/Instagram/YouTube).
+## Core
+- `lib/socialAutomation/connectionModel.ts`: 统一连接状态与发布能力推导。
+- `lib/socialAutomation/oauthPersistence.ts`: OAuth state/nonce/anti-CSRF in-memory contract。
+- `lib/socialAutomation/controlPlane.ts`: 快照编排（连接、队列、回复、分析、degraded）。
+- `lib/socialAutomation/queue.ts`: 模式 + 能力 gate 驱动的队列决策与降级。
+- `lib/socialAutomation/videoPipeline.ts`: 稳定输出 draft publish package（title/caption/hashtags/pinned/subtitle/assets）。
 
-## Server Control Plane API
+## API Contracts
+- `POST /api/internal/social-automation/oauth/initiate`
+- `GET /api/internal/social-automation/oauth/callback`
+- `POST /api/internal/social-automation/oauth/refresh`
+- `POST /api/internal/social-automation/oauth/revoke`
 - `GET /api/internal/social-automation/overview`
 - `PATCH /api/internal/social-automation/mode`
-- `PATCH /api/internal/social-automation/connections`
 - `PATCH /api/internal/social-automation/queue`
 
-## UI
-- `app/internal/social-automation/page.tsx`
-- `app/internal/social-automation/SocialAutomationWorkbench.tsx`
-
-## Degraded Mode Coverage
-- platform not connected
-- token expired
-- audit restricted
-- publish downgraded to draft/private
-- analytics unavailable
+## Production-safe
+- 当前 social automation store 为内存 fallback；不触发 `/var/task` 写入。
+- 即使没有 OAuth env/token，页面也降级展示 `not connected/auth required`，不报 500。

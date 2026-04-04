@@ -8,6 +8,7 @@ export function normalizeAnalyticsRecord(input: Partial<NormalizedAnalytics> & {
     hookVariant: input.hookVariant ?? "hook_a",
     ctaType: input.ctaType ?? "comment",
     monetizationLabel: input.monetizationLabel ?? "lead_capture",
+    sourceType: input.sourceType ?? "normalized",
     views: input.views ?? 0,
     watchTime: input.watchTime ?? 0,
     retention: input.retention ?? 0,
@@ -41,11 +42,16 @@ export function buildFiveDayReviewFromAnalytics(records: NormalizedAnalytics[]):
   if (avgRetention < 0.28) weakMetrics.push("retention");
   if (totals.leadSignals < 8) weakMetrics.push("lead_signals");
 
+  const recommendedAction = weakMetrics.includes("retention")
+    ? "Tighten first 3 seconds, keep one CTA per short, and run manual quality review for 5 days."
+    : weakMetrics.length
+      ? "Keep draft-only mode and revise CTA mapping by platform before expanding."
+      : "Expand winning format to all connected platforms with controlled publish gates.";
+
   return {
     goalMet,
     weakMetrics,
-    rootCauses: weakMetrics.length ? ["Hook clarity mismatch", "CTA too soft for local homeowner intent"] : ["Momentum stable"],
-    nextCycleStrategy: weakMetrics.includes("retention") ? "Shift to FAQ and before-after formats with tighter first 3 seconds." : "Scale winning hooks to all 3 platforms.",
+    recommendedAction,
     recommendation: goalMet ? "expand" : weakMetrics.length > 1 ? "stop" : "repeat",
   };
 }

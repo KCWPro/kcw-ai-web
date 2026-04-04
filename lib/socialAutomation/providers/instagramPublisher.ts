@@ -13,6 +13,6 @@ export const instagramPublisher: PublisherProvider = {
     if (request.visibility === "draft") {
       return { accepted: true, queuedAs: "draft_ready", message: "Instagram reel container created; waiting manual publish confirm." };
     }
-    return { accepted: true, queuedAs: "pending_platform", platformPostId: `ig_${Date.now()}`, message: "Instagram reel publish request accepted." };
+    return { accepted: true, queuedAs: "publish_attempted", platformPostId: `ig_${Date.now()}`, message: "Instagram reel publish request accepted." };
   },
 };

@@ -4,6 +4,7 @@ export function buildVideoProductionTasks(topics: TopicPlan[], scripts: ScriptAu
   return topics.map((topic) => {
     const script = scripts.find((item) => item.topicPlanId === topic.id);
     const usedScript = script?.standardScript ?? "Script unavailable";
+    const subtitleFilename = `${topic.id}.srt`;
     return {
       id: `vt_${topic.id}`,
       topicPlanId: topic.id,
@@ -16,14 +17,17 @@ export function buildVideoProductionTasks(topics: TopicPlan[], scripts: ScriptAu
         aspectRatio: "9:16",
         coverText: topic.title.slice(0, 40),
         postPackage: {
-          finalScript: usedScript,
-          subtitleFile: `${topic.id}.srt`,
-          caption: script?.caption ?? "",
-          assetManifest: topic.requiredAssets,
+          title: topic.title,
+          caption: script?.caption ?? "Draft caption pending manual enhancement.",
+          hashtags: script?.hashtags ?? [],
+          pinnedComment: script?.pinnedComment ?? "Comment \"QUOTE\" for next steps.",
+          subtitleFilename,
+          subtitleManifest: `manifest/${topic.id}.json`,
+          assetList: topic.requiredAssets,
           publishPayload: {
             platform: topic.targetPlatform,
             title: topic.title,
-            description: `${script?.caption ?? ""}\nCTA: ${topic.recommendedCTA}`,
+            description: `${script?.caption ?? "Draft package"}\nCTA: ${topic.recommendedCTA}`,
             hashtags: script?.hashtags ?? [],
             visibility: "draft",
             mediaUrl: `https://cdn.kcw.local/draft/${topic.id}.mp4`,

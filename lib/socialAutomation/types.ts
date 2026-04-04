@@ -2,8 +2,9 @@ import type { LanguageMode, Platform, Topic, VideoFormat } from "@/lib/contentOp
 
 export type SocialPlatform = Extract<Platform, "tiktok" | "instagram_reels" | "youtube_shorts">;
 export type ControlMode = "manual_review" | "auto_draft" | "controlled_auto_publish";
-export type ConnectionState = "connected" | "not_connected" | "expired" | "restricted";
-export type QueueStatus = "queued" | "draft_ready" | "pending_platform" | "published" | "failed" | "needs_review";
+export type ConnectionState = "not_connected" | "auth_url_ready" | "connected" | "token_expired" | "restricted" | "degraded";
+export type PublishCapability = "manual_only" | "draft_only" | "private_only" | "restricted" | "public_ready";
+export type QueueStatus = "queued" | "draft_ready" | "waiting_manual_review" | "publish_attempted" | "published" | "failed" | "downgraded";
 
 export type PlatformConnection = {
   platform: SocialPlatform;
@@ -11,12 +12,17 @@ export type PlatformConnection = {
   oauthProvider: "official_oauth";
   scopes: string[];
   scopeStatus: "ok" | "missing";
+  oauthConfigured: boolean;
+  authUrlReady: boolean;
+  authRequired: boolean;
   tokenExpiresAt: string | null;
   refreshable: boolean;
   auditRestricted: boolean;
   connectedUser: string | null;
   lastSyncedAt: string | null;
   accountId: string | null;
+  capability: PublishCapability;
+  capabilityReason: string;
 };
 
 export type TokenHealth = {
@@ -61,6 +67,27 @@ export type ScriptAutomationPack = {
 
 export type VideoTemplate = "talking_head" | "b_roll_subtitle" | "faq_quick_answer" | "before_after";
 
+export type PublishRequest = {
+  platform: SocialPlatform;
+  title: string;
+  description: string;
+  hashtags: string[];
+  visibility: "public" | "private" | "draft" | "unlisted";
+  mediaUrl: string;
+  isShortsReady: boolean;
+};
+
+export type VideoPostPackage = {
+  title: string;
+  caption: string;
+  hashtags: string[];
+  pinnedComment: string;
+  subtitleFilename: string;
+  subtitleManifest: string;
+  assetList: string[];
+  publishPayload: PublishRequest;
+};
+
 export type VideoProductionTask = {
   id: string;
   topicPlanId: string;
@@ -72,24 +99,8 @@ export type VideoProductionTask = {
   output: {
     aspectRatio: "9:16";
     coverText: string;
-    postPackage: {
-      finalScript: string;
-      subtitleFile: string;
-      caption: string;
-      assetManifest: string[];
-      publishPayload: PublishRequest;
-    };
+    postPackage: VideoPostPackage;
   };
-};
-
-export type PublishRequest = {
-  platform: SocialPlatform;
-  title: string;
-  description: string;
-  hashtags: string[];
-  visibility: "public" | "private" | "draft" | "unlisted";
-  mediaUrl: string;
-  isShortsReady: boolean;
 };
 
 export type PublishQueueItem = {
@@ -98,11 +109,17 @@ export type PublishQueueItem = {
   status: QueueStatus;
   topicPlanId: string;
   scriptPackId: string;
+  language: LanguageMode;
+  cta: string;
+  capability: PublishCapability;
+  downgradeReason: string | null;
   payload: PublishRequest;
   error?: string;
   needsManualReview: boolean;
   createdAt: string;
 };
+
+export type AnalyticsSourceType = "imported" | "mocked" | "normalized" | "simulated/internal seed";
 
 export type NormalizedAnalytics = {
   postId: string;
@@ -111,6 +128,7 @@ export type NormalizedAnalytics = {
   hookVariant: string;
   ctaType: string;
   monetizationLabel: string;
+  sourceType: AnalyticsSourceType;
   views: number;
   watchTime: number;
   retention: number;
@@ -127,19 +145,19 @@ export type NormalizedAnalytics = {
 export type FiveDayAutoReview = {
   goalMet: boolean;
   weakMetrics: string[];
-  rootCauses: string[];
-  nextCycleStrategy: string;
+  recommendedAction: string;
   recommendation: "repeat" | "stop" | "expand";
 };
 
 export type ReplyDraft = {
   id: string;
   channel: "comment" | "dm";
+  messageType: string;
   inquiry: string;
   draft: string;
-  leadIntent: "low" | "medium" | "high";
-  riskLevel: "low" | "medium" | "high";
-  suggestedNextStep: string;
+  leadLevel: "low" | "medium" | "high";
+  urgency: "low" | "medium" | "high";
+  suggestedAction: string;
   escalateToHuman: boolean;
   autoSendAllowed: boolean;
 };
@@ -168,7 +186,7 @@ export type SocialAutomationSnapshot = {
 export type ProviderPublishResult = {
   accepted: boolean;
   platformPostId?: string;
-  queuedAs: "published" | "draft_ready" | "pending_platform" | "failed";
+  queuedAs: "published" | "draft_ready" | "publish_attempted" | "failed";
   message: string;
 };
 

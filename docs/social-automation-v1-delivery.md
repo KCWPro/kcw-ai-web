@@ -1,25 +1,16 @@
-# Social Automation V1 Delivery Statement
+# Social Automation V1.5 Delivery Statement
 
-## What is implemented and runnable now
-- End-to-end internal pipeline from topic planning to publish queue payload generation.
-- Draft-capable provider adapters for TikTok/Instagram/YouTube using official OAuth contract surfaces.
-- Internal dashboard with connections, queue, plan, reply queue, analytics snapshot, and degraded state banner.
-- Contract-tested queue transitions, token model, degraded mode, analytics normalization, and 5-day ingestion.
+## 已完成能力
+- 可运行控制台 + API：连接状态真实化、模式 gate、队列状态机、回复分流、分析快照。
+- OAuth 最小闭环 contract：initiate/callback/refresh/revoke + state/nonce 防 CSRF。
+- 发布包稳定输出：title/caption/hashtags/pinned comment/subtitle filename+manifest/assets。
+- Production-safe fallback：无 token/无配置也能打开页面并降级，不写本地 runtime 文件。
 
-## What is scaffold / draft-only / restricted
-- Real external OAuth callback exchange and provider publish polling are scaffold contracts in V1.
-- TikTok unrestricted public posting depends on platform audit approval and is modeled as restricted fallback by default.
-- Production persistence is intentionally not local-file-based; V1 runtime store is in-memory for safe fallback.
+## Scaffold / Restricted
+- 真实平台 token exchange、长期 refresh、发布回执轮询仍需对接官方 API。
+- TikTok 默认按审核限制建模，通常非 `public_ready`。
+- 当前 analytics 默认源是 `simulated/internal seed`。
 
-## Human authorization requirements
-- Account owner must authorize each platform via OAuth.
-- Controlled auto publish should only be enabled after policy review and connector verification.
-
-## Repository verification checklist
-- Confirm route files exist with:
-  - `find app -path "*social-automation*" 2>/dev/null`
-  - `find app/api -path "*social-automation*" 2>/dev/null`
-  - `find lib -path "*socialAutomation*" 2>/dev/null`
-  - `find docs -iname "social-automation-*.md"`
-- Open the internal page locally with:
-  - `npm run dev` then visit `http://localhost:3000/internal/social-automation`
+## 需要用户本人授权
+- 平台开发者后台配置与账号 owner OAuth 授权。
+- 真实发布前完成平台 policy/audit 审核。

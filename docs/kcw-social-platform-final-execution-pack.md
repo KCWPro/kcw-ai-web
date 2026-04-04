@@ -1,5 +1,13 @@
 # KCW Social Platform Final Execution Pack
 
+## 0) 与 Social Automation V1.5 术语对齐
+
+- 连接状态统一为：`not_connected` / `auth_url_ready` / `connected` / `token_expired` / `restricted` / `degraded`。
+- 发布能力统一为：`manual_only` / `draft_only` / `private_only` / `restricted` / `public_ready`。
+- 当前执行包默认按“受控发布”落地：未达到 `public_ready` 时必须降级，不可伪装自动公开发布。
+
+---
+
 ## 1) 平台总策略摘要
 
 - **目标**：在 30 天内建立「可持续输出 + 可复用转化」的内容系统，核心指标为：
