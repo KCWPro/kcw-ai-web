@@ -9,7 +9,7 @@ function unauthorizedResponse(realm: string) {
   });
 }
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const user = process.env.INTERNAL_BETA_USER;
   const pass = process.env.INTERNAL_BETA_PASS;
 
