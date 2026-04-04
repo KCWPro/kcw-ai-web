@@ -1,6 +1,7 @@
 import { NextRequest } from "next/server";
 import { buildIntakeAnalysis } from "@/lib/aiIntakeAnalysis";
 import { LeadStatus } from "@/lib/internalLeads";
+import { directorLeadStatuses, canTransitionStatus, type DirectorLeadStatus } from "@/lib/directorConsole/status";
 import {
   readInternalLeadByIdFromGoogleSheet,
   updateInternalLeadInGoogleSheet,
@@ -8,7 +9,8 @@ import {
 
 const ALLOWED_INTENTS = ["manual_reanalyze", "status_update", "notes_update"] as const;
 type AllowedIntent = (typeof ALLOWED_INTENTS)[number];
-const ALLOWED_STATUSES: LeadStatus[] = ["new", "follow_up", "quoted", "scheduled", "completed", "archived"];
+const LEGACY_ALLOWED_STATUSES: LeadStatus[] = ["new", "follow_up", "quoted", "scheduled", "completed", "archived"];
+const ALLOWED_STATUSES = [...LEGACY_ALLOWED_STATUSES, ...directorLeadStatuses] as const;
 
 function hasMultiObjectPayload(payload: unknown) {
   if (!payload || typeof payload !== "object") {
@@ -101,10 +103,16 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 
       const parsedPayload = payload as Record<string, unknown>;
       const status = parsedPayload.status;
-      if (typeof status !== "string" || !ALLOWED_STATUSES.includes(status as LeadStatus)) {
+      if (typeof status !== "string" || !(ALLOWED_STATUSES as readonly string[]).includes(status)) {
         return Response.json({ success: false, error: "Invalid status value" }, { status: 422 });
       }
 
+
+      const currentStatus = (lead.status || "new") as DirectorLeadStatus;
+      const nextStatus = status as DirectorLeadStatus;
+      if ((directorLeadStatuses as readonly string[]).includes(currentStatus) && (directorLeadStatuses as readonly string[]).includes(nextStatus) && !canTransitionStatus(currentStatus, nextStatus)) {
+        return Response.json({ success: false, error: `Invalid transition: ${currentStatus} -> ${nextStatus}` }, { status: 422 });
+      }
       const updatedLead = await updateInternalLeadInGoogleSheet(id, { status });
       return Response.json({
         success: true,
