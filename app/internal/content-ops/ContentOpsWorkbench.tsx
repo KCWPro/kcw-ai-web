@@ -43,7 +43,7 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
     reviewFunnel: defaultSnapshot?.reviewFunnel ?? { draft: 0, reviewed: 0, approved: 0, rejected: 0 },
     executionProgress: defaultSnapshot?.executionProgress ?? { total: 0, completed: 0, incomplete: 0, bottleneckStage: "-", todayPriorityAction: "-" },
     interactionBacklog: defaultSnapshot?.interactionBacklog ?? { pendingComments: 0, pendingDms: 0, pendingHotLeads: 0 },
-    monetization: defaultSnapshot?.monetization ?? { stage: "-", ctaRecommendation: "-" },
+    monetization: defaultSnapshot?.monetization ?? { stage: "-", stage_name: "-", ctaRecommendation: "-", stage_policy: { primary_revenue_focus: "-" } },
     duplication: defaultSnapshot?.duplication ?? { threshold: 0, blocked: [], highestRisk: null },
     duplicationSettings: defaultSnapshot?.duplicationSettings ?? { groupByPlatform: false, groupByLanguage: false },
     dashboardAlert: defaultSnapshot?.dashboardAlert ?? { weakestMetric: "-" },
@@ -51,6 +51,14 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
     executionBoard: Array.isArray(defaultSnapshot?.executionBoard) ? defaultSnapshot.executionBoard : [],
     interactions: Array.isArray(defaultSnapshot?.interactions) ? defaultSnapshot.interactions : [],
     monetizationExecution: Array.isArray(defaultSnapshot?.monetizationExecution) ? defaultSnapshot.monetizationExecution : [],
+    revenueDashboard: defaultSnapshot?.revenueDashboard ?? {
+      current_primary_revenue_mode: "-",
+      weekly_ratio: { lead_capture: 0, affiliate_candidate: 0, sponsor_safe: 0, education_only: 0, platform_growth_only: 0, local_ad_collab_candidate: 0 },
+      risk_warnings: [],
+      highest_priority_action: "-",
+      next_5d_recommendation: [],
+      should_not_monetize: [],
+    },
     assetLibrary: {
       records: Array.isArray(defaultSnapshot?.assetLibrary?.records) ? defaultSnapshot.assetLibrary.records : [],
       missing: Array.isArray(defaultSnapshot?.assetLibrary?.missing) ? defaultSnapshot.assetLibrary.missing : [],
@@ -199,7 +207,9 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
         <p className="text-sm text-amber-800">最弱指标：{snapshot.dashboardAlert.weakestMetric}</p>
         <p className="text-sm text-amber-800">执行进度：{snapshot.executionProgress.completed}/{snapshot.executionProgress.total}</p>
         <p className="text-sm text-amber-800">待回复评论/DM/hot lead：{snapshot.interactionBacklog.pendingComments}/{snapshot.interactionBacklog.pendingDms}/{snapshot.interactionBacklog.pendingHotLeads}</p>
-        <p className="text-sm text-amber-900">变现阶段：{snapshot.monetization.stage} · 推荐 CTA：{snapshot.monetization.ctaRecommendation}</p>
+        <p className="text-sm text-amber-900">变现阶段：{snapshot.monetization.stage_name}（{snapshot.monetization.stage}）</p>
+        <p className="text-sm text-amber-900">主收入方向：{snapshot.revenueDashboard.current_primary_revenue_mode}</p>
+        <p className="text-sm text-amber-900">推荐 CTA：{snapshot.monetization.ctaRecommendation}</p>
         <p className="text-sm text-amber-900">重复风险最高：{snapshot.duplication.highestRisk?.post_id ?? "-"}</p>
         <p className="text-sm text-amber-900">今日最优先动作：{snapshot.executionProgress.todayPriorityAction}</p>
       </section>
@@ -302,18 +312,34 @@ export default function ContentOpsWorkbench({ defaultSnapshot }: Props) {
       </section>
 
       <section className="rounded-2xl border border-slate-200 bg-white p-4">
-        <h3 className="font-semibold">E/G/I 变现执行 + 重复防机械化 + 审核漏斗</h3>
+        <h3 className="font-semibold">E/G/I 变现执行 + 比例防失控 + 审核漏斗</h3>
         <p className="text-xs">审核漏斗 draft/reviewed/approved/rejected: {snapshot.reviewFunnel.draft}/{snapshot.reviewFunnel.reviewed}/{snapshot.reviewFunnel.approved}/{snapshot.reviewFunnel.rejected}</p>
         <p className="text-xs">重复阈值：{snapshot.duplication.threshold}（platform={snapshot.duplicationSettings.groupByPlatform ? "on" : "off"}, language={snapshot.duplicationSettings.groupByLanguage ? "on" : "off"}）</p>
         <p className="text-xs">超阈值阻断推荐：{snapshot.duplication.blocked.length}</p>
         <ul className="mt-2 space-y-1 text-xs">
           {snapshot.monetizationExecution.slice(0, 5).map((item: any) => (
             <li key={item.post_id} className="rounded bg-slate-50 p-2">
-              {item.post_id} · {item.label} · {item.recommended_cta}
-              <button className="ml-2 rounded border px-1" onClick={() => overrideMonetization(item.post_id, "lead_capture")}>override lead</button>
+              {item.post_id} · {item.primary_label} · CTA({item.cta_type}) {item.recommended_cta}
+              <div className="mt-1 text-[11px] text-slate-600">
+                labels: {(item.labels ?? []).join(", ")} | lead={item.score?.lead_score ?? 0} | affiliate={item.score?.affiliate_score ?? 0} | sponsor={item.score?.sponsor_score ?? 0}
+              </div>
+              <div className="text-[11px] text-slate-600">risk trust={item.score?.trust_risk_score ?? 0} / commercial={item.score?.commercialization_risk_score ?? 0}</div>
+              <div className="text-[11px] text-slate-600">affiliate: {item.affiliate?.product_category ?? "-"} · sponsorSafe={item.sponsor?.sponsor_safe ? "yes" : "no"} · localCollab={item.local_collab?.local_partner_fit ?? "-"}</div>
+              <button className="ml-2 mt-1 rounded border px-1" onClick={() => overrideMonetization(item.post_id, "lead_capture")}>override lead</button>
             </li>
           ))}
         </ul>
+        <div className="mt-3 rounded border border-amber-200 bg-amber-50 p-2 text-xs text-amber-900">
+          <p>本周比例 lead/affiliate/sponsor/education/local: {(snapshot.revenueDashboard.weekly_ratio.lead_capture * 100).toFixed(0)}% / {(snapshot.revenueDashboard.weekly_ratio.affiliate_candidate * 100).toFixed(0)}% / {(snapshot.revenueDashboard.weekly_ratio.sponsor_safe * 100).toFixed(0)}% / {(snapshot.revenueDashboard.weekly_ratio.education_only * 100).toFixed(0)}% / {(snapshot.revenueDashboard.weekly_ratio.local_ad_collab_candidate * 100).toFixed(0)}%</p>
+          <p>最优先盈利动作：{snapshot.revenueDashboard.highest_priority_action}</p>
+          <p>5-day monetization：{snapshot.fiveDayReview.monetization_review?.monetization_summary ?? "-"}</p>
+          <p>风险：{snapshot.fiveDayReview.monetization_review?.monetization_risk ?? "-"}</p>
+          <ul className="mt-1 list-disc pl-4">
+            {(snapshot.revenueDashboard.risk_warnings ?? []).slice(0, 3).map((warn: any, idx: number) => (
+              <li key={`${warn.code}-${idx}`}>{warn.code}: {warn.detail}</li>
+            ))}
+          </ul>
+        </div>
         <p className="mt-1 text-xs text-slate-600">{monetizationStatus}</p>
         <p className="mt-1 text-xs text-slate-600">{interactionStatus}</p>
       </section>

@@ -6,7 +6,7 @@ import { isAssetUploadWriteDisabledInProduction, listAssetsWithUploads } from "@
 import { buildDashboardTopAlert } from "@/lib/contentOps/dashboardAlerts";
 import { detectDuplicationRisk } from "@/lib/contentOps/duplicationGuard";
 import { runFiveDayReview } from "@/lib/contentOps/fiveDayReview";
-import { applyMonetizationOverride, buildMonetizationExecutionMap, buildMonetizationPlanner } from "@/lib/contentOps/monetizationPlanner";
+import { applyMonetizationOverride, buildMonetizationExecutionMap, buildMonetizationFiveDayReview, buildMonetizationPlanner, buildRevenueDashboard } from "@/lib/contentOps/monetizationPlanner";
 import { buildDailyExecutionBoard, buildExecutionBoardFromTasks, seedPostPlans, summarizeExecutionProgress } from "@/lib/contentOps/operationsExecution";
 import { importPerformanceFromCsv, importPerformanceFromSheetText, loadDefaultPerformanceRecords } from "@/lib/contentOps/performanceImport";
 import { analyzePerformance } from "@/lib/contentOps/performanceTracker";
@@ -53,8 +53,9 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
       : loadDefaultPerformanceRecords();
 
   const records: PerformanceRecord[] = Array.isArray(imported.records) ? imported.records : [];
-  const fiveDayReview = runFiveDayReview(records, "standard");
   const monetization = buildMonetizationPlanner(records);
+  const monetizationFiveDay = buildMonetizationFiveDayReview(records);
+  const fiveDayReview = runFiveDayReview(records, "standard", monetizationFiveDay);
   const scriptStudioBase = runtime.scripts.find((script) => script && Array.isArray(script.hook_variants) && typeof script.standard_script === "string") ?? scriptSamples[0];
   if (!runtime.scripts.find((script) => script && Array.isArray(script.hook_variants) && typeof script.standard_script === "string")) {
     warnings.push("Script store contained legacy or invalid data; using seed script fallback.");
@@ -65,6 +66,7 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
   const executionBoard = executionTasks.length > 0 ? buildExecutionBoardFromTasks(executionTasks) : buildDailyExecutionBoard(seedPostPlans);
   const executionProgress = summarizeExecutionProgress(executionBoard);
   const monetizationExecution = applyMonetizationOverride(buildMonetizationExecutionMap(records), runtime.monetizationOverrides ?? {});
+  const revenueDashboard = buildRevenueDashboard(records);
   const mergedAssets = listAssetsWithUploads();
   const scripts = Array.isArray(runtime.scripts) ? runtime.scripts : [];
   const postPlans = Array.isArray(runtime.postPlans) ? runtime.postPlans : [];
@@ -104,6 +106,7 @@ export function buildPerformanceSnapshot(importInput?: { csvText?: string; sheet
     executionBoard,
     executionProgress,
     monetizationExecution,
+    revenueDashboard,
     duplication: detectDuplicationRisk(records, runtime.duplicationSettings),
     duplicationSettings: runtime.duplicationSettings,
     interactions,
