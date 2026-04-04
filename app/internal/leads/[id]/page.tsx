@@ -26,6 +26,7 @@ import { buildBoundedWritePathContract } from "@/lib/boundedWritePathContract";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
 import { listControlledSubmissionMutationIntentAuditLog } from "@/lib/controlledSubmissionMutationIntent";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "@/lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import DirectorConsoleModules from "./DirectorConsoleModules";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -407,6 +408,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <WorkflowContinuitySection summary={workflowContinuity} />
 
             <FollowUpWorkflowSuggestionSection suggestion={followUpWorkflowSuggestion} continuity={workflowContinuity} />
+
+            <DirectorConsoleModules lead={lead} analysis={analysis} />
 
             <EstimateSuggestionSection draftJson={JSON.stringify(estimateDraft, null, 2)} />
 
