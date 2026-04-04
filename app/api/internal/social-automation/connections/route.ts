@@ -1,7 +1,6 @@
-import { buildDegradedState } from "@/lib/socialAutomation/degradedMode";
-import { updateConnectionState } from "@/lib/socialAutomation/controlPlane";
-import { readSocialAutomationState, writeSocialAutomationState } from "@/lib/socialAutomation/store";
-import type { ConnectionState, SocialPlatform } from "@/lib/socialAutomation/types";
+import { resolveCapability } from "@/lib/socialAutomation/connectionModel";
+import { savePlatformConnection, readSocialAutomationState } from "@/lib/socialAutomation/store";
+import type { SocialPlatform } from "@/lib/socialAutomation/types";
 
 export async function GET() {
   const snapshot = readSocialAutomationState();
@@ -9,15 +8,26 @@ export async function GET() {
 }
 
 export async function PATCH(req: Request) {
-  const body = (await req.json().catch(() => ({}))) as { platform?: SocialPlatform; state?: ConnectionState };
-  if (!body.platform || !body.state) {
-    return Response.json({ success: false, error: "platform_and_state_required" }, { status: 400 });
+  const body = (await req.json().catch(() => ({}))) as { platform?: SocialPlatform; hasToken?: boolean; tokenExpiresAt?: string | null; connectedUser?: string | null; accountId?: string | null; auditRestricted?: boolean };
+  if (!body.platform) {
+    return Response.json({ success: false, error: "platform_required" }, { status: 400 });
   }
 
   const current = readSocialAutomationState();
-  const connections = updateConnectionState(current.connections, body.platform, body.state);
-  const degraded = buildDegradedState(connections, current.queue);
-  const next = writeSocialAutomationState({ ...current, connections, degraded });
+  const existing = current.connections.find((item) => item.platform === body.platform);
+  if (!existing) {
+    return Response.json({ success: false, error: "unknown_platform" }, { status: 404 });
+  }
+
+  const merged = { ...existing, ...body };
+  const resolved = resolveCapability(merged);
+  const next = savePlatformConnection(body.platform, {
+    ...body,
+    state: resolved.state,
+    publishCapability: resolved.publishCapability,
+    capabilityReason: resolved.capabilityReason,
+    authRequired: resolved.authRequired,
+  });
 
   return Response.json({ success: true, connections: next.connections, degraded: next.degraded });
 }

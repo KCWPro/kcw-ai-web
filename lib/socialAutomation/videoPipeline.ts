@@ -18,7 +18,11 @@ export function buildVideoProductionTasks(topics: TopicPlan[], scripts: ScriptAu
         postPackage: {
           finalScript: usedScript,
           subtitleFile: `${topic.id}.srt`,
+          subtitleManifest: [`${topic.id}.srt`, `${topic.id}.vtt`],
           caption: script?.caption ?? "",
+          hashtags: script?.hashtags ?? [],
+          pinnedComment: script?.pinnedComment ?? "",
+          cta: script?.cta ?? topic.recommendedCTA,
           assetManifest: topic.requiredAssets,
           publishPayload: {
             platform: topic.targetPlatform,

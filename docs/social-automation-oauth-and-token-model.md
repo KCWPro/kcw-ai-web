@@ -1,24 +1,23 @@
-# Social Automation OAuth and Token Model
+# OAuth & Token Model (V1.5)
 
-## OAuth Policy (Official Only)
-- TikTok connector uses OAuth + Content Posting scope scaffold (`user.info.basic`, `video.publish`).
-- Instagram connector uses OAuth + Instagram content publishing scopes.
-- YouTube connector uses OAuth 2.0 upload scope.
+## Model Guarantees
+- Connection status is derived from one unified model, not UI hardcode.
+- Auth/token truth directly drives publish capability and queue downgrade.
 
-## Token Handling
-- Tokens are modeled only in backend state (`PlatformConnection`), never in client state storage.
-- Connection model includes:
-  - scope status
-  - token expiry
-  - refresh capability
-  - connected user/account id
-  - last sync timestamp
-  - revoke/disconnect-ready state transitions
+## Platform Contract
+- TikTok: may stay `restricted` until platform-side review allows broader publish scope.
+- Instagram Reels: if only contract scaffold/no real token, remains `manual_only` or `auth_url_ready`.
+- YouTube Shorts: expired token must show `token_expired` and require re-auth/refresh.
 
-## Refresh / Revoke
-- V1 provides contract and state model; refresh/revoke endpoint integrations are scaffold-level.
-- Expired token state automatically feeds degraded mode and analytics unavailability banners.
+## Minimal OAuth Flow
+1. Initiate route generates `state` + `nonce` and returns official OAuth URL.
+2. Callback validates state and stores minimal connection marker.
+3. Refresh/revoke routes provide explicit token lifecycle contracts.
 
-## Security Notes
-- No account/password automation path exists in V1.
-- Secrets expected via environment variables.
+## Required User-Owned Setup
+You must configure platform developer apps yourself:
+- TikTok developer app key/secret + redirect URI.
+- Meta app (Instagram permissions) + business asset linking.
+- Google Cloud OAuth client + YouTube Data API scope consent.
+
+If these are missing, UI/API intentionally show `oauth_not_configured` / `auth_required`.
