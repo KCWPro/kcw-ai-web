@@ -26,6 +26,7 @@ import { buildBoundedWritePathContract } from "@/lib/boundedWritePathContract";
 import DecisionSurfaceSection from "./DecisionSurfaceSection";
 import { listControlledSubmissionMutationIntentAuditLog } from "@/lib/controlledSubmissionMutationIntent";
 import { buildControlledSubmissionMutationIntentLifecycleReadModel } from "@/lib/controlledSubmissionMutationIntentLifecycleSurfacing";
+import DirectorConsoleModules from "./DirectorConsoleModules";
 
 function Field({ label, value }: { label: string; value?: string }) {
   return (
@@ -382,12 +383,12 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">customer_notes</h2>
+              <h2 className="text-lg font-semibold">Lead Intake Notes</h2>
               <p className="mt-3 text-sm leading-6 text-slate-700">{lead.customer_notes || "No notes provided."}</p>
             </div>
 
             <div className="rounded-2xl bg-white p-5 shadow-sm">
-              <h2 className="text-lg font-semibold">ai_summary</h2>
+              <h2 className="text-lg font-semibold">AI Intake Summary</h2>
               <p className="mt-3 text-sm leading-6 text-slate-700">{lead.ai_summary || "No AI summary available."}</p>
             </div>
 
@@ -407,6 +408,8 @@ export default async function LeadDetailPage({ params }: { params: Promise<{ id:
             <WorkflowContinuitySection summary={workflowContinuity} />
 
             <FollowUpWorkflowSuggestionSection suggestion={followUpWorkflowSuggestion} continuity={workflowContinuity} />
+
+            <DirectorConsoleModules lead={lead} analysis={analysis} />
 
             <EstimateSuggestionSection draftJson={JSON.stringify(estimateDraft, null, 2)} />
 
