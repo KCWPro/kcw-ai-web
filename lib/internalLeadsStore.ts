@@ -1,4 +1,5 @@
 import { google } from 'googleapis';
+import { internalLeads, type LeadStatus } from "./internalLeads";
 
 type GoogleApiErrorShape = {
   code?: number;
@@ -17,6 +18,27 @@ export type StoredLead = {
   id: string;
   created_at: string;
   status: string;
+  customer_name: string;
+  phone: string;
+  city: string;
+  service_type: string;
+  urgency: string;
+  property_type: string;
+  source: string;
+  quote_amount: string;
+  problem_duration: string;
+  customer_notes: string;
+  ai_summary: string;
+  internal_notes: string;
+  last_updated_at: string;
+};
+
+const ALLOWED_STATUSES: LeadStatus[] = ["new", "follow_up", "quoted", "scheduled", "completed", "archived"];
+
+type MockLeadRuntimeRecord = {
+  id: string;
+  created_at: string;
+  status: LeadStatus;
   customer_name: string;
   phone: string;
   city: string;
@@ -204,6 +226,61 @@ function toRowValues(lead: StoredLead): string[] {
   ];
 }
 
+function mapMockLeadToStoredLead(id: string): StoredLead | undefined {
+  const lead = getMockLeadRuntimeStore().find((item) => item.id === id);
+  if (!lead) {
+    return undefined;
+  }
+
+  return {
+    id: lead.id,
+    created_at: lead.created_at,
+    status: lead.status,
+    customer_name: lead.customer_name,
+    phone: lead.phone,
+    city: lead.city,
+    service_type: lead.service_type,
+    urgency: lead.urgency,
+    property_type: "",
+    source: lead.source,
+    quote_amount: "",
+    problem_duration: "",
+    customer_notes: lead.customer_notes,
+    ai_summary: lead.ai_summary,
+    internal_notes: lead.internal_notes,
+    last_updated_at: "",
+  };
+}
+
+function createMockLeadRuntimeStore(): MockLeadRuntimeRecord[] {
+  return internalLeads.map((lead) => ({
+    id: lead.id,
+    created_at: lead.created_at,
+    status: lead.status,
+    customer_name: lead.customer_name,
+    phone: lead.phone,
+    city: lead.city,
+    service_type: lead.service_type,
+    urgency: lead.urgency,
+    property_type: "",
+    source: lead.source,
+    quote_amount: "",
+    problem_duration: "",
+    customer_notes: lead.intake_raw,
+    ai_summary: lead.ai_summary,
+    internal_notes: lead.internal_notes,
+    last_updated_at: "",
+  }));
+}
+
+function getMockLeadRuntimeStore() {
+  const runtimeGlobal = globalThis as { __kcwInternalMockLeadStore?: MockLeadRuntimeRecord[] };
+  if (!runtimeGlobal.__kcwInternalMockLeadStore) {
+    runtimeGlobal.__kcwInternalMockLeadStore = createMockLeadRuntimeStore();
+  }
+  return runtimeGlobal.__kcwInternalMockLeadStore;
+}
+
 export async function appendInternalLeadToGoogleSheet(lead: StoredLead) {
   const { sheets, spreadsheetId } = await getSheetsClient();
 
@@ -245,6 +322,31 @@ export async function readInternalLeadsFromGoogleSheet(): Promise<StoredLead[]> 
 export async function readInternalLeadByIdFromGoogleSheet(id: string) {
   const leads = await readInternalLeadsFromGoogleSheet();
   return leads.find((lead) => String(lead.id) === String(id));
+}
+
+export function readInternalLeadByIdFromMock(id: string): StoredLead | undefined {
+  return mapMockLeadToStoredLead(id);
+}
+
+export function readInternalLeadsFromMock(): StoredLead[] {
+  return getMockLeadRuntimeStore().map((lead) => ({ ...lead }));
+}
+
+export function updateInternalLeadInMock(id: string, updates: Partial<StoredLead>) {
+  const lead = getMockLeadRuntimeStore().find((item) => item.id === id);
+  if (!lead) {
+    return undefined;
+  }
+
+  if (typeof updates.status === "string" && ALLOWED_STATUSES.includes(updates.status as LeadStatus)) {
+    lead.status = updates.status as LeadStatus;
+  }
+
+  if (typeof updates.internal_notes === "string") {
+    lead.internal_notes = updates.internal_notes;
+  }
+
+  return mapMockLeadToStoredLead(id);
 }
 
 export async function updateInternalLeadInGoogleSheet(id: string, updates: Partial<StoredLead>) {
