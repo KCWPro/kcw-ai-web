@@ -1,4 +1,4 @@
-import type { PerformanceRecord } from "@/lib/contentOps/types";
+import type { MonetizationFiveDayReview, PerformanceRecord } from "@/lib/contentOps/types";
 
 export type FiveDayMode = "conservative" | "standard" | "sprint";
 
@@ -22,7 +22,7 @@ const modeTarget: Record<FiveDayMode, FiveDayKPI> = {
   sprint: { total_views: 18000, avg_views: 3600, avg_retention: 0.34, likes: 700, comments: 120, saves: 90, shares: 55, follows: 80, profile_visits: 220, dms: 35, local_lead_signals: 18 },
 };
 
-export function runFiveDayReview(records: PerformanceRecord[], mode: FiveDayMode) {
+export function runFiveDayReview(records: PerformanceRecord[], mode: FiveDayMode, monetizationReview?: MonetizationFiveDayReview) {
   const target = modeTarget[mode];
   const totalViews = records.reduce((sum, item) => sum + item.views, 0);
   const avgViews = records.length ? totalViews / records.length : 0;
@@ -93,5 +93,24 @@ export function runFiveDayReview(records: PerformanceRecord[], mode: FiveDayMode
       "Day5: local trust day-on-job clip (test talking head vs b-roll)",
     ],
     score_decay_rule: "If same pillar underperforms for two cycles, auto-lower weight and require new angle before scheduling.",
+    monetization_review:
+      monetizationReview ??
+      ({
+        monetization_summary: "Monetization review pending.",
+        monetization_risk: "No data",
+        next_cycle_monetization_plan: ["Keep education-first ratio."],
+        lead_performance_5d: 0,
+        affiliate_candidate_performance_5d: 0,
+        sponsor_safe_performance_5d: 0,
+        over_commercialized: false,
+        natural_content_impact: "Unknown",
+        next_ratio_recommendation: {
+          education_only: 0.5,
+          lead_capture: 0.3,
+          affiliate_candidate: 0.1,
+          sponsor_safe: 0.05,
+          local_ad_collab_candidate: 0.05,
+        },
+      } as MonetizationFiveDayReview),
   };
 }

@@ -172,7 +172,13 @@ export type DailyExecution = {
   high_intent_lead_handoff: boolean;
 };
 
-export type MonetizationExecutionLabel = "lead_capture" | "affiliate" | "sponsor_safe" | "education_only";
+export type MonetizationExecutionLabel =
+  | "lead_capture"
+  | "affiliate_candidate"
+  | "sponsor_safe"
+  | "education_only"
+  | "platform_growth_only"
+  | "local_ad_collab_candidate";
 
 export type PerformanceRecord = {
   post_id: string;
@@ -235,4 +241,105 @@ export type MonetizationPlan = {
   lead_capture_fit: number;
   platform_monetization_fit: number;
   notes: string;
+};
+
+export type CTAType = "lead" | "affiliate" | "sponsor" | "education";
+
+export type ContentMonetizationScore = {
+  lead_score: number;
+  affiliate_score: number;
+  sponsor_score: number;
+  trust_risk_score: number;
+  commercialization_risk_score: number;
+  audience_fit_score: number;
+};
+
+export type AffiliateRecommendation = {
+  recommended: boolean;
+  product_fit_reason: string;
+  affiliate_angle: string;
+  soft_affiliate_cta: string;
+  trust_risk_if_promoted: number;
+  product_category: "homeowner_basic_tool" | "drain_maintenance_supply" | "repair_assist_item" | "safe_low_risk_home_repair" | "not_recommended";
+  educational_script_variant: string;
+  soft_affiliate_script_variant: string;
+};
+
+export type SponsorRecommendation = {
+  sponsor_safe: boolean;
+  brand_fit_reason: string;
+  integration_style: string;
+  disclosure_required: boolean;
+  trust_risk: number;
+  sponsor_proposal_draft: string;
+  collaboration_angle_suggestion: string;
+  local_partner_fit_suggestion: string;
+};
+
+export type LocalCollabRecommendation = {
+  local_partner_fit: "strong" | "medium" | "weak";
+  collaboration_type: "real_estate" | "insurance" | "material_supplier" | "appliance_heater" | "property_management" | "not_recommended";
+  likely_risk: string;
+  intro_angle: string;
+  outreach_draft: string;
+};
+
+export type MonetizationExecutionDecision = {
+  post_id: string;
+  title: string;
+  labels: MonetizationExecutionLabel[];
+  primary_label: MonetizationExecutionLabel;
+  recommended_cta: string;
+  cta_type: CTAType;
+  lead_capture_route: "DM/form/phone" | "DM/form" | "none";
+  authenticity_guard: string;
+  blocked_monetization_modes: string[];
+  score: ContentMonetizationScore;
+  affiliate: AffiliateRecommendation;
+  sponsor: SponsorRecommendation;
+  local_collab: LocalCollabRecommendation;
+};
+
+export type RatioGuardWarning = {
+  code: "commercial_overload" | "sponsor_streak" | "affiliate_trust_erosion" | "hard_lead_cta" | "ad_account_risk";
+  severity: "low" | "medium" | "high";
+  detail: string;
+};
+
+export type RatioGuardResult = {
+  recommended_ratio: {
+    education_only: number;
+    lead_capture: number;
+    affiliate_candidate: number;
+    sponsor_safe: number;
+    local_ad_collab_candidate: number;
+  };
+  actual_ratio: Record<MonetizationExecutionLabel, number>;
+  warnings: RatioGuardWarning[];
+  suggested_rebalance_plan: string[];
+  what_to_reduce: MonetizationExecutionLabel[];
+  what_to_increase: MonetizationExecutionLabel[];
+};
+
+export type StagePolicy = {
+  stage: MonetizationStage;
+  stage_name: string;
+  primary_revenue_focus: string;
+  avoid_revenue_modes: string[];
+  recommended_content_ratio: RatioGuardResult["recommended_ratio"];
+  recommended_cta_ratio: Record<CTAType, number>;
+  commercialization_cap: number;
+  forbidden_actions: string[];
+};
+
+export type MonetizationFiveDayReview = {
+  monetization_summary: string;
+  monetization_risk: string;
+  next_cycle_monetization_plan: string[];
+  lead_performance_5d: number;
+  affiliate_candidate_performance_5d: number;
+  sponsor_safe_performance_5d: number;
+  over_commercialized: boolean;
+  natural_content_impact: string;
+  next_ratio_recommendation: RatioGuardResult["recommended_ratio"];
 };

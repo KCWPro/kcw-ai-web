@@ -45,7 +45,7 @@ function run() {
 
   const monetization = buildMonetizationExecutionMap(imported.records.slice(0, 2));
   const overridden = applyMonetizationOverride(monetization, { [monetization[0].post_id]: "education_only" });
-  assert.equal(overridden[0].label, "education_only");
+  assert.equal(overridden[0].primary_label, "education_only");
 
   const badCsv = "post_id,platform\na,b";
   const validation = importPerformanceFromCsv(badCsv);
