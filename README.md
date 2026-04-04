@@ -20,6 +20,34 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Internal Console deployment/access checklist
+
+The `/internal/*` and `/api/internal/*` routes are protected by `middleware.ts` using HTTP Basic Auth.
+
+### Required production environment variables
+
+- `INTERNAL_BETA_USER`
+- `INTERNAL_BETA_PASS`
+
+If either variable is missing at runtime, middleware returns HTTP 403 with:
+
+`Internal area is disabled until Beta gate credentials are configured.`
+
+### Access URL and login flow
+
+- Internal workspace entry: `https://ops.kcwpro.com/internal`
+- Auth mechanism: browser-native Basic Auth prompt (not a custom login page)
+- Login: use `INTERNAL_BETA_USER` / `INTERNAL_BETA_PASS`
+
+### Minimum deployment closure for internal access
+
+1. Ensure the latest branch containing `app/internal/*` is deployed to the production project bound to `ops.kcwpro.com`.
+2. Configure `INTERNAL_BETA_USER` and `INTERNAL_BETA_PASS` in the production environment.
+3. Redeploy production so middleware reads the credentials.
+4. Validate with:
+   - `curl -I https://ops.kcwpro.com/internal` should return `401` and include `WWW-Authenticate: Basic ...` when unauthenticated.
+   - opening `https://ops.kcwpro.com/internal` in a browser should show the Basic Auth prompt.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
