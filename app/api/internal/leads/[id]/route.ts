@@ -3,7 +3,9 @@ import { buildIntakeAnalysis } from "@/lib/aiIntakeAnalysis";
 import { LeadStatus } from "@/lib/internalLeads";
 import {
   readInternalLeadByIdFromGoogleSheet,
+  readInternalLeadByIdFromMock,
   updateInternalLeadInGoogleSheet,
+  updateInternalLeadInMock,
 } from "@/lib/internalLeadsStore";
 
 const ALLOWED_INTENTS = ["manual_reanalyze", "status_update", "notes_update"] as const;
@@ -44,6 +46,11 @@ export async function GET(_: NextRequest, { params }: { params: Promise<{ id: st
 
     return Response.json({ success: true, lead });
   } catch (error: unknown) {
+    const fallbackLead = readInternalLeadByIdFromMock(id);
+    if (fallbackLead) {
+      const message = error instanceof Error ? error.message : "Failed to read lead";
+      return Response.json({ success: true, lead: fallbackLead, source: "mock", warning: message });
+    }
     const message = error instanceof Error ? error.message : "Failed to read lead";
     return Response.json({ success: false, error: message }, { status: 500 });
   }
@@ -89,7 +96,9 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   }
 
   try {
-    const lead = await readInternalLeadByIdFromGoogleSheet(id);
+    const lead =
+      (await readInternalLeadByIdFromGoogleSheet(id).catch(() => undefined)) ||
+      readInternalLeadByIdFromMock(id);
     if (!lead) {
       return Response.json({ success: false, error: "Lead not found" }, { status: 404 });
     }
@@ -105,7 +114,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         return Response.json({ success: false, error: "Invalid status value" }, { status: 422 });
       }
 
-      const updatedLead = await updateInternalLeadInGoogleSheet(id, { status });
+      const updatedLead =
+        (await updateInternalLeadInGoogleSheet(id, { status }).catch(() => undefined)) ||
+        updateInternalLeadInMock(id, { status });
+      if (!updatedLead) {
+        return Response.json({ success: false, error: "Lead not found" }, { status: 404 });
+      }
       return Response.json({
         success: true,
         intent,
@@ -129,7 +143,12 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
         return Response.json({ success: false, error: "internal_notes exceeds 5000 characters" }, { status: 422 });
       }
 
-      const updatedLead = await updateInternalLeadInGoogleSheet(id, { internal_notes: notes });
+      const updatedLead =
+        (await updateInternalLeadInGoogleSheet(id, { internal_notes: notes }).catch(() => undefined)) ||
+        updateInternalLeadInMock(id, { internal_notes: notes });
+      if (!updatedLead) {
+        return Response.json({ success: false, error: "Lead not found" }, { status: 404 });
+      }
       return Response.json({
         success: true,
         intent,

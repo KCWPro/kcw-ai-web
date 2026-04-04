@@ -1,24 +1,4 @@
-import { internalLeads } from '@/lib/internalLeads';
-import { readInternalLeadsFromGoogleSheet } from '@/lib/internalLeadsStore';
-
-function buildMockFallback() {
-  return internalLeads.map((lead) => ({
-    id: lead.id,
-    customer_name: lead.customer_name,
-    phone: lead.phone,
-    city: lead.city,
-    service_type: lead.service_type,
-    urgency: lead.urgency,
-    property_type: '',
-    source: lead.source,
-    quote_amount: '',
-    problem_duration: '',
-    customer_notes: lead.intake_raw,
-    ai_summary: lead.ai_summary,
-    status: lead.status,
-    created_at: lead.created_at,
-  }));
-}
+import { readInternalLeadsFromGoogleSheet, readInternalLeadsFromMock } from '@/lib/internalLeadsStore';
 
 export async function GET() {
   try {
@@ -31,7 +11,7 @@ export async function GET() {
 
     return Response.json({
       success: true,
-      leads: buildMockFallback(),
+      leads: readInternalLeadsFromMock(),
       source: 'mock',
       warning: 'Google Sheet has no lead rows yet.',
     });
@@ -40,7 +20,7 @@ export async function GET() {
 
     return Response.json({
       success: false,
-      leads: buildMockFallback(),
+      leads: readInternalLeadsFromMock(),
       source: 'mock',
       error: message,
     });

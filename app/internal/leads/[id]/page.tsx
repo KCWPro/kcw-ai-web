@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { statusLabels } from "@/lib/internalLeads";
-import { readInternalLeadByIdFromGoogleSheet } from "@/lib/internalLeadsStore";
+import { readInternalLeadByIdFromGoogleSheet, readInternalLeadByIdFromMock } from "@/lib/internalLeadsStore";
 import LeadStatusUpdater from "./LeadStatusUpdater";
 import LeadNotesEditor from "./LeadNotesEditor";
 import { buildIntakeAnalysis, type IntakeAnalysisResult } from "@/lib/aiIntakeAnalysis";
@@ -235,7 +235,9 @@ function FollowUpWorkflowSuggestionSection({
 export default async function LeadDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const lead = await readInternalLeadByIdFromGoogleSheet(id).catch(() => undefined);
+  const lead =
+    (await readInternalLeadByIdFromGoogleSheet(id).catch(() => undefined)) ||
+    readInternalLeadByIdFromMock(id);
 
   if (!lead) {
     notFound();
