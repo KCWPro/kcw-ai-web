@@ -19,6 +19,7 @@ export function normalizeAnalyticsRecord(input: Partial<NormalizedAnalytics> & {
     profileVisits: input.profileVisits ?? 0,
     dmSignals: input.dmSignals ?? 0,
     leadSignals: input.leadSignals ?? 0,
+    source: input.source ?? "normalized",
   };
 }
 
@@ -46,6 +47,7 @@ export function buildFiveDayReviewFromAnalytics(records: NormalizedAnalytics[]):
     weakMetrics,
     rootCauses: weakMetrics.length ? ["Hook clarity mismatch", "CTA too soft for local homeowner intent"] : ["Momentum stable"],
     nextCycleStrategy: weakMetrics.includes("retention") ? "Shift to FAQ and before-after formats with tighter first 3 seconds." : "Scale winning hooks to all 3 platforms.",
+    recommendedAction: weakMetrics.length ? "Adjust hooks and CTA, then rerun with manual review." : "Increase volume on winning topic clusters.",
     recommendation: goalMet ? "expand" : weakMetrics.length > 1 ? "stop" : "repeat",
   };
 }

@@ -2,8 +2,9 @@ import type { LanguageMode, Platform, Topic, VideoFormat } from "@/lib/contentOp
 
 export type SocialPlatform = Extract<Platform, "tiktok" | "instagram_reels" | "youtube_shorts">;
 export type ControlMode = "manual_review" | "auto_draft" | "controlled_auto_publish";
-export type ConnectionState = "connected" | "not_connected" | "expired" | "restricted";
-export type QueueStatus = "queued" | "draft_ready" | "pending_platform" | "published" | "failed" | "needs_review";
+export type ConnectionState = "not_connected" | "auth_url_ready" | "connected" | "token_expired" | "restricted" | "degraded";
+export type PublishCapability = "manual_only" | "draft_only" | "private_only" | "restricted" | "public_ready";
+export type QueueStatus = "queued" | "draft_ready" | "waiting_manual_review" | "publish_attempted" | "published" | "failed" | "downgraded";
 
 export type PlatformConnection = {
   platform: SocialPlatform;
@@ -17,6 +18,20 @@ export type PlatformConnection = {
   connectedUser: string | null;
   lastSyncedAt: string | null;
   accountId: string | null;
+  authConfigured: boolean;
+  hasToken: boolean;
+  authRequired: boolean;
+  publishCapability: PublishCapability;
+  capabilityReason: string;
+};
+
+export type OAuthStateRecord = {
+  platform: SocialPlatform;
+  state: string;
+  nonce: string;
+  redirectUri: string;
+  createdAt: string;
+  expiresAt: string;
 };
 
 export type TokenHealth = {
@@ -75,7 +90,11 @@ export type VideoProductionTask = {
     postPackage: {
       finalScript: string;
       subtitleFile: string;
+      subtitleManifest: string[];
       caption: string;
+      hashtags: string[];
+      pinnedComment: string;
+      cta: string;
       assetManifest: string[];
       publishPayload: PublishRequest;
     };
@@ -98,7 +117,11 @@ export type PublishQueueItem = {
   status: QueueStatus;
   topicPlanId: string;
   scriptPackId: string;
+  language: LanguageMode;
+  cta: string;
+  publishCapability: PublishCapability;
   payload: PublishRequest;
+  downgradedReason?: string;
   error?: string;
   needsManualReview: boolean;
   createdAt: string;
@@ -122,6 +145,7 @@ export type NormalizedAnalytics = {
   profileVisits: number;
   dmSignals: number;
   leadSignals: number;
+  source: "imported" | "mocked" | "normalized" | "simulated/internal seed";
 };
 
 export type FiveDayAutoReview = {
@@ -129,16 +153,19 @@ export type FiveDayAutoReview = {
   weakMetrics: string[];
   rootCauses: string[];
   nextCycleStrategy: string;
+  recommendedAction: string;
   recommendation: "repeat" | "stop" | "expand";
 };
 
 export type ReplyDraft = {
   id: string;
   channel: "comment" | "dm";
+  messageType: string;
   inquiry: string;
   draft: string;
   leadIntent: "low" | "medium" | "high";
   riskLevel: "low" | "medium" | "high";
+  urgency: "low" | "medium" | "high";
   suggestedNextStep: string;
   escalateToHuman: boolean;
   autoSendAllowed: boolean;
@@ -168,7 +195,7 @@ export type SocialAutomationSnapshot = {
 export type ProviderPublishResult = {
   accepted: boolean;
   platformPostId?: string;
-  queuedAs: "published" | "draft_ready" | "pending_platform" | "failed";
+  queuedAs: QueueStatus;
   message: string;
 };
 

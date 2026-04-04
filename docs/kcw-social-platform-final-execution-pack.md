@@ -261,3 +261,9 @@
 2. 每条内容只设置一个主 CTA。 
 3. 每日固定发布时间优先于“追求完美”。
 4. 先连续 7 天，再谈优化。
+
+
+## V1.5 terminology alignment note
+- “Controlled Auto Publish” now always means capability-gated publish with automatic downgrade when platform is not `public_ready`.
+- Connection truth states follow unified model: `not_connected` / `auth_url_ready` / `connected` / `token_expired` / `restricted` / `degraded`.
+- When analytics are not imported from platforms, they must be labeled `simulated/internal seed`.
