@@ -1,0 +1,18 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "outDir": ".tmp-director-tests",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "jsx": "react-jsx",
+    "isolatedModules": false
+  },
+  "include": [
+    "tests/directorConsoleV1.test.tsx",
+    "app/director/**/*.tsx",
+    "components/director/**/*.tsx",
+    "lib/director/**/*.ts",
+    "lib/internalLeads.ts"
+  ]
+}
